@@ -42,20 +42,23 @@ CREATE TABLE IF NOT EXISTS raw_responses (
     fetched_at  TIMESTAMPTZ NOT NULL
 );
 
+-- `observed_at`, not `at`: `at` is a reserved word in DuckDB and CREATE TABLE fails with
+-- "syntax error at or near \"at\"". Nothing caught this until the first live run, because
+-- replay mode never opens a cache.
 CREATE TABLE IF NOT EXISTS observations (
     zone         VARCHAR NOT NULL,
     signal       VARCHAR NOT NULL,
-    at           TIMESTAMPTZ NOT NULL,
+    observed_at  TIMESTAMPTZ NOT NULL,
     value        DOUBLE,
     provenance   VARCHAR NOT NULL,
     is_estimated BOOLEAN NOT NULL DEFAULT FALSE,
     payload      VARCHAR,
     recorded_at  TIMESTAMPTZ NOT NULL,
-    PRIMARY KEY (zone, signal, at)
+    PRIMARY KEY (zone, signal, observed_at)
 );
 
 CREATE INDEX IF NOT EXISTS observations_zone_signal_at
-    ON observations (zone, signal, at);
+    ON observations (zone, signal, observed_at);
 """
 
 
@@ -172,8 +175,10 @@ class Cache:
         with self._lock:
             self._connection.executemany(
                 """
-                INSERT OR REPLACE INTO observations
-                    (zone, signal, at, value, provenance, is_estimated, payload, recorded_at)
+                INSERT OR REPLACE INTO observations (
+                    zone, signal, observed_at, value,
+                    provenance, is_estimated, payload, recorded_at
+                )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 rows,
@@ -186,10 +191,10 @@ class Cache:
         with self._lock:
             rows = self._connection.execute(
                 """
-                SELECT at, value, provenance, is_estimated
+                SELECT observed_at, value, provenance, is_estimated
                 FROM observations
-                WHERE zone = ? AND signal = ? AND at BETWEEN ? AND ?
-                ORDER BY at
+                WHERE zone = ? AND signal = ? AND observed_at BETWEEN ? AND ?
+                ORDER BY observed_at
                 """,
                 [zone, signal, start, end],
             ).fetchall()
@@ -200,7 +205,7 @@ class Cache:
         with self._lock:
             raw = self._connection.execute("SELECT count(*) FROM raw_responses").fetchone()
             obs = self._connection.execute(
-                "SELECT count(*), min(at), max(at) FROM observations"
+                "SELECT count(*), min(observed_at), max(observed_at) FROM observations"
             ).fetchone()
         return {
             "path": str(self.path),

@@ -30,6 +30,7 @@ import structlog
 
 from gridlab.emaps import errors
 from gridlab.emaps.signals import (
+    FORECAST_NEEDS_WINDOW,
     PAST_RANGE_MAX_DAYS,
     BreakdownType,
     EmissionFactorType,
@@ -38,6 +39,7 @@ from gridlab.emaps.signals import (
     SourceType,
     Temporality,
     path_for,
+    supported_horizons,
 )
 
 log = structlog.get_logger(__name__)
@@ -171,6 +173,9 @@ class EMapsClient:
         """
         path = path_for(signal, temporality, source_type=source_type)
 
+        if temporality is Temporality.FORECAST:
+            horizon_hours = self._check_horizon(signal, horizon_hours, start=start, end=end)
+
         params: dict[str, Any] = {"disableCallerLookup": "true"}
         if zone is not None:
             params["zone"] = zone
@@ -202,6 +207,44 @@ class EMapsClient:
             params["dataCenterRegion"] = data_center_region
 
         return await self._get(path, params)
+
+    @staticmethod
+    def _check_horizon(
+        signal: Signal,
+        horizon_hours: int | None,
+        *,
+        start: datetime | None,
+        end: datetime | None,
+    ) -> int | None:
+        """Validate ``horizonHours`` against what this signal actually accepts.
+
+        Forecast horizons are per signal, not merely plan-dependent: carbon intensity and
+        the percentage signals take 6/24/48/72, while mix, flows and the load signals
+        accept **only 24** and return 400 for the rest. Catching that here turns a 400
+        during a demo into an error at the call site, with the valid values in it.
+        """
+        from gridlab.emaps.errors import UnsupportedEndpoint
+
+        if signal in FORECAST_NEEDS_WINDOW:
+            if horizon_hours is not None:
+                raise UnsupportedEndpoint(
+                    f"{signal.value}/forecast rejects horizonHours; it requires start and "
+                    f"end. For a forward view without picking bounds, use "
+                    f"{signal.value}/combined, which needs only a zone."
+                )
+            if start is None or end is None:
+                raise UnsupportedEndpoint(f"{signal.value}/forecast requires both start and end.")
+            return None
+
+        allowed = supported_horizons(signal)
+        if horizon_hours is None or not allowed:
+            return horizon_hours
+        if horizon_hours not in allowed:
+            raise UnsupportedEndpoint(
+                f"{signal.value}/forecast accepts horizonHours {list(allowed)}, "
+                f"not {horizon_hours}. This is a per-signal limit, not a plan limit."
+            )
+        return horizon_hours
 
     async def fetch_range(
         self,

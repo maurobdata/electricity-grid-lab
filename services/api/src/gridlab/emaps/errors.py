@@ -77,6 +77,16 @@ def from_status(status: int, body: str, *, url: str) -> ElectricityMapsError:
         case 400:
             return BadRequestError(f"400 from {url}: {excerpt}")
         case 401:
+            # Electricity Maps returns 401 for *authorization* failures too, not only for
+            # a bad token: a valid key asking for a signal outside its plan gets
+            # "Request unauthorized for zoneKey=..., dataType=...". Reporting that as
+            # "check your token" sends you to debug the wrong thing entirely, so the two
+            # are separated by what the body says.
+            if "unauthorized for" in body or "do not have access" in body:
+                return AccessDeniedError(
+                    f"401 from {url}. The token is valid but your plan does not cover this "
+                    f"signal or zone. Run `make probe` to see what it can reach. {excerpt}"
+                )
             return AuthenticationError(
                 f"401 from {url}. Check ELECTRICITY_MAPS_API_TOKEN in .env. {excerpt}"
             )

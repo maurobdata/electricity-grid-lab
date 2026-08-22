@@ -14,13 +14,17 @@ import pytest
 
 from gridlab.emaps.errors import UnsupportedEndpoint
 from gridlab.emaps.signals import (
+    FORECAST_NEEDS_WINDOW,
+    NODE_ADDRESSED,
     PAST_RANGE_MAX_DAYS,
     SUPPORTED,
+    BreakdownType,
     Granularity,
     Signal,
     SourceType,
     Temporality,
     path_for,
+    supported_horizons,
     supports,
 )
 
@@ -40,7 +44,7 @@ DOCS = _find_docs()
 
 def _signal_table_rows() -> list[list[str]]:
     text = DOCS.read_text(encoding="utf-8")
-    table = text.split("### Endpoint grammar", 1)[1].split("Temporalities:", 1)[0]
+    table = text.split("## Endpoints", 1)[1].split("Temporalities:", 1)[0]
     rows = []
     for line in table.splitlines():
         if line.startswith("|"):
@@ -114,17 +118,19 @@ def test_lmp_has_no_forecast() -> None:
     Encoding it here means a wrong call fails locally and instantly.
     """
     assert not supports(Signal.LMP_DAY_AHEAD, Temporality.FORECAST)
-    with pytest.raises(UnsupportedEndpoint, match="does not document"):
+    with pytest.raises(UnsupportedEndpoint, match="does not offer"):
         path_for(Signal.LMP_DAY_AHEAD, Temporality.FORECAST)
 
 
-def test_level_signals_are_realtime_only() -> None:
+def test_level_signals_reject_history() -> None:
+    """The access list advertises level/history, but the API returns 400 for it."""
     for signal in (
         Signal.CARBON_INTENSITY_LEVEL,
-        Signal.RENEWABLE_LEVEL,
-        Signal.CARBON_FREE_LEVEL,
+        Signal.RENEWABLE_PERCENTAGE_LEVEL,
+        Signal.CARBON_FREE_PERCENTAGE_LEVEL,
     ):
-        assert SUPPORTED[signal] == {Temporality.LATEST}
+        assert Temporality.HISTORY not in SUPPORTED[signal]
+        assert Temporality.LATEST in SUPPORTED[signal]
 
 
 def test_price_has_the_extra_temporalities() -> None:
@@ -161,6 +167,35 @@ def test_source_type_is_rejected_for_other_signals() -> None:
     """Otherwise a typo silently produces carbon-intensity data labelled as wind."""
     with pytest.raises(UnsupportedEndpoint, match="only meaningful"):
         path_for(Signal.CARBON_INTENSITY, Temporality.LATEST, source_type=SourceType.WIND)
+
+
+def test_forecast_horizons_are_per_signal() -> None:
+    """Contradicts the documentation, which says horizons are plan-dependent.
+
+    Swept against the live API: the intensity and percentage signals take 6/24/48/72, while
+    mix, flows and the load signals accept only 24 and return 400 for the rest.
+    """
+    assert supported_horizons(Signal.CARBON_INTENSITY) == (6, 24, 48, 72)
+    assert supported_horizons(Signal.ELECTRICITY_MIX) == (24,)
+    assert supported_horizons(Signal.NET_LOAD) == (24,)
+
+
+def test_price_forecast_takes_no_horizon_at_all() -> None:
+    """`price-day-ahead/forecast` requires start and end; horizonHours is rejected."""
+    assert supported_horizons(Signal.PRICE_DAY_AHEAD) == ()
+    assert Signal.PRICE_DAY_AHEAD in FORECAST_NEEDS_WINDOW
+
+
+def test_lmp_is_addressed_by_node_not_zone() -> None:
+    """A zone-only request returns 400 "Missing arguments \\"node\\"", so nothing in this
+    lab should treat it as an ordinary zone signal."""
+    assert Signal.LMP_DAY_AHEAD in NODE_ADDRESSED
+
+
+def test_breakdown_type_values_are_the_ones_the_api_accepts() -> None:
+    """`production` and `consumption` are rejected. The first version of the matrix used
+    exactly those two names and would have 400'd on the first live mix request."""
+    assert {b.value for b in BreakdownType} == {"normal", "flow-traced"}
 
 
 def test_documented_range_caps() -> None:

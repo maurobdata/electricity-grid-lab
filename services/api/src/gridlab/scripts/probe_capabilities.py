@@ -24,9 +24,10 @@ from pathlib import Path
 from gridlab.config import get_settings
 from gridlab.emaps.capabilities import probe
 from gridlab.emaps.client import EMapsClient
+from gridlab.emaps.signals import Signal, Temporality
 
 
-async def run(zone: str, out: Path, include_beta: bool) -> int:
+async def run(zone: str, out: Path) -> int:
     settings = get_settings()
 
     if not settings.has_api_token:
@@ -50,22 +51,23 @@ async def run(zone: str, out: Path, include_beta: bool) -> int:
         timeout=settings.gridlab_http_timeout,
         retries=settings.gridlab_http_retries,
     ) as client:
-        print(f"Probing with zone {zone}. One request per signal; this takes a moment.\n")
-        capabilities = await probe(client, zone=zone, include_beta=include_beta)
+        print("Reading the access list published by /v4/zones.\n")
+        capabilities = await probe(client, zone=zone)
 
     out.write_text(capabilities.model_dump_json(indent=2) + "\n", encoding="utf-8")
 
     # -- report --------------------------------------------------------------
 
-    print(f"Accessible zones: {capabilities.zone_count}")
+    print(f"Accessible zones: {capabilities.zone_count}  tiers={capabilities.tier_counts}")
     reachable = capabilities.reachable_signals()
     print(f"Reachable signals: {len(reachable)}/{len(capabilities.signals)}\n")
 
     for access in capabilities.signals:
         mark = "  ok" if access.reachable else "MISS"
-        horizons = f"  horizons: {list(access.horizons)}" if access.horizons else ""
+        temporalities = f"  {','.join(access.temporalities)}" if access.temporalities else ""
+        horizons = f"  horizons={list(access.horizons)}" if access.horizons else ""
         note = f"  ({access.note})" if access.note else ""
-        print(f"  [{mark}] {access.signal}{horizons}{note}")
+        print(f"  [{mark}] {access.signal:36s}{temporalities}{horizons}{note}")
 
     if capabilities.warnings:
         print("\nWorth knowing:")
@@ -74,14 +76,24 @@ async def run(zone: str, out: Path, include_beta: bool) -> int:
 
     print(f"\nWritten to {out}")
 
-    # A single-zone token changes what is worth building, so say so loudly rather than
-    # leaving it as one line among forty.
+    # Two findings change what is worth building. Say them loudly rather than leaving
+    # them as one line among forty.
     if capabilities.zone_count <= 1:
         print(
             "\n"
             "  ! This token reaches at most one zone.\n"
-            "  ! Comparison, flows-between-neighbours and anything league-shaped are out.\n"
-            "  ! Design for a single zone, and treat multi-zone as an enhancement."
+            "  ! Comparison, cross-border flow stories and anything league-shaped are out.\n"
+            "  ! Design for a single zone; treat multi-zone as an enhancement."
+        )
+
+    if not capabilities.can(Signal.CARBON_INTENSITY, Temporality.PAST_RANGE):
+        print(
+            "\n"
+            "  ! No arbitrary history: `past` and `past-range` are not in this plan, and\n"
+            "  ! `history` returns only the trailing 24 hours.\n"
+            "  ! Forecast-error scoring, replaying a named event and backtesting all need\n"
+            "  ! a window this key cannot fetch. Record scenarios from the live 24h now,\n"
+            "  ! and plan to re-record once a trial or event key is available."
         )
     return 0
 
@@ -94,13 +106,8 @@ def main() -> int:
         help="Zone to probe with. DK-DK2 is Copenhagen, and the host's home grid.",
     )
     parser.add_argument("--out", type=Path, default=Path("capabilities.json"))
-    parser.add_argument(
-        "--no-beta",
-        action="store_true",
-        help="Skip the beta level signals.",
-    )
     args = parser.parse_args()
-    return asyncio.run(run(args.zone, args.out, include_beta=not args.no_beta))
+    return asyncio.run(run(args.zone, args.out))
 
 
 if __name__ == "__main__":

@@ -10,6 +10,10 @@ dependencies = [
     "pydantic>=2.9",
     "pydantic-settings>=2.6",
     "duckdb>=1.1",
+    # Required by DuckDB to convert timezone-aware datetimes for TIMESTAMPTZ columns.
+    # Without it every read of `observations` raises ModuleNotFoundError at runtime -- and
+    # only in live mode, because replay never opens a cache.
+    "pytz>=2024.1",
     "python-dotenv>=1.0",
     "structlog>=24.4",
     "anthropic>=0.69",

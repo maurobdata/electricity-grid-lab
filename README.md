@@ -54,14 +54,29 @@ Requirements: Docker with Compose. Nothing else — Python and Node both live in
    started today expires before 11 September. Start it 5–8 September.
 2. Put it in `.env` as `ELECTRICITY_MAPS_API_TOKEN`. `.env` is gitignored; `.env.example`
    documents the shape and holds no values.
-3. **Run `make probe` first.** It asks `/v4/zones` and each signal what your plan can
-   actually reach and writes `capabilities.json`. Every research pass into this event
-   flagged the access tier as the highest-leverage unknown — the free tier is reported to
-   cover roughly one zone, which would rule out every multi-zone idea. Find out in August,
-   not on stage in September.
+3. **Run `make probe` first.** `/v4/zones` publishes an `access` list of exactly the
+   `signal/temporality` pairs your plan permits, so this costs one request and is
+   authoritative. It writes `capabilities.json`, which the UI then reads.
 4. Set `GRIDLAB_MODE=live` and `make restart`.
 
 If the token is missing, live mode falls back to replay with a warning rather than failing.
+
+### What a free-tier key actually gives you
+
+Measured on 22 August 2026, and **the opposite of what the research predicted**
+([ADR 0008](docs/adr/0008-history-not-breadth-is-the-constraint.md)):
+
+| | |
+|---|---|
+| Zones | **350** — not one. Comparison and cross-border flows are fully available. |
+| `latest`, `forecast` | yes, all signals |
+| `history` | yes — but **only the trailing ~24 hours** |
+| `past` / `past-range` | **no.** 401 for every signal. |
+
+The constraint is **depth, not breadth**. Anything needing a real historical window —
+scoring a forecast against its outcome, replaying a named storm, backtesting — needs a
+trial or event key. So: **record scenarios from the rolling window now**, and re-record
+when a deeper key exists. What is reachable today is gone tomorrow.
 
 ---
 
@@ -96,7 +111,7 @@ that does and does not guarantee.
 | | |
 |---|---|
 | [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md) | The canonical brief |
-| [`docs/electricity-maps-api.md`](docs/electricity-maps-api.md) | The verified API surface — and what could **not** be verified |
+| [`docs/electricity-maps-api.md`](docs/electricity-maps-api.md) | The API surface, verified against the live API — including four things the first pass guessed wrong |
 | [`docs/adr/`](docs/adr/) | Decisions, and what would reverse them |
 | [`docs/research/`](docs/research/) | Four contradictory research passes. Hypotheses, not requirements. |
 | [`CLAUDE.md`](CLAUDE.md) | Working rules for this repository |
@@ -128,11 +143,16 @@ exercised and always works. The whole test suite is offline and deterministic.
 | 0 · Repo, docs, ADRs, containers | done |
 | 1 · Electricity Maps adapter + domain model | done |
 | 2 · Clock, sources, DuckDB cache, HTTP API | done |
+| 2b · Live mode verified against the real API; schema corrected | done |
 | 3 · PWA — zone picker, now panel, mix, forecast, flows, compare | next |
 | 4 · Agent sandbox — seven tools, tracing | not started |
 | 5 · Evals, observability, demo scenarios | not started |
 
-130 tests, offline. `ruff` and `mypy --strict` clean.
+202 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
+
+21 real API responses are committed in [`fixtures/`](fixtures/) and every one of them is
+parsed by the test suite, so the adapter is pinned to what the API actually sends rather
+than to what the documentation implies.
 
 ---
 

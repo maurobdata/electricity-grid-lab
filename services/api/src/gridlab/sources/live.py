@@ -124,6 +124,19 @@ class LiveSource(GridSource):
     def _mark_stale[T: Observation](observation: T, is_stale: bool) -> T:
         return observation.model_copy(update={"is_stale": True}) if is_stale else observation
 
+    @staticmethod
+    def _row(body: dict[str, Any]) -> dict[str, Any] | None:
+        """The first record of a response, whatever envelope it arrived in.
+
+        The `latest` endpoints are not consistent: carbon-intensity, the percentages and the
+        load signals return a bare object, while electricity-mix, electricity-flows, price
+        and the level signals wrap a single row in `{"data": [...]}`. Passing the envelope
+        straight to a normalizer works for the first group and fails for the second, which
+        is exactly what happened on the first live run.
+        """
+        records = normalize.rows(body)
+        return dict(records[0]) if records else None
+
     # -- point reads ---------------------------------------------------------
 
     async def carbon_intensity(self, zone: str) -> CarbonIntensity | None:
@@ -131,7 +144,8 @@ class LiveSource(GridSource):
         if result is None:
             return None
         body, stale = result
-        return self._mark_stale(normalize.carbon_intensity(body, zone=zone), stale)
+        row = self._row(body)
+        return self._mark_stale(normalize.carbon_intensity(row, zone=zone), stale) if row else None
 
     async def renewable_percentage(self, zone: str) -> Percentage | None:
         return await self._percentage(zone, Signal.RENEWABLE_ENERGY, "renewable_percentage")
@@ -144,41 +158,50 @@ class LiveSource(GridSource):
         if result is None:
             return None
         body, stale = result
+        row = self._row(body)
+        if row is None:
+            return None
         keys = list(_SERIES_SIGNALS[name][1])
-        return self._mark_stale(normalize.percentage(body, zone=zone, keys=keys), stale)
+        return self._mark_stale(normalize.percentage(row, zone=zone, keys=keys), stale)
 
     async def price(self, zone: str) -> Price | None:
         result = await self._fetch(Signal.PRICE_DAY_AHEAD, Temporality.LATEST, zone=zone)
         if result is None:
             return None
         body, stale = result
-        return self._mark_stale(normalize.price(body, zone=zone), stale)
+        row = self._row(body)
+        return self._mark_stale(normalize.price(row, zone=zone), stale) if row else None
 
     async def load(self, zone: str) -> Load | None:
         result = await self._fetch(Signal.TOTAL_LOAD, Temporality.LATEST, zone=zone)
         if result is None:
             return None
         body, stale = result
-        return self._mark_stale(normalize.load(body, zone=zone), stale)
+        row = self._row(body)
+        return self._mark_stale(normalize.load(row, zone=zone), stale) if row else None
 
     async def mix(self, zone: str, *, flow_traced: bool = True) -> MixBreakdown | None:
         result = await self._fetch(
             Signal.ELECTRICITY_MIX,
             Temporality.LATEST,
             zone=zone,
-            breakdown_type=BreakdownType.FLOW_TRACED if flow_traced else BreakdownType.PRODUCTION,
+            breakdown_type=BreakdownType.FLOW_TRACED if flow_traced else BreakdownType.NORMAL,
         )
         if result is None:
             return None
         body, stale = result
-        return self._mark_stale(normalize.mix(body, zone=zone, flow_traced=flow_traced), stale)
+        row = self._row(body)
+        if row is None:
+            return None
+        return self._mark_stale(normalize.mix(row, zone=zone, flow_traced=flow_traced), stale)
 
     async def flows(self, zone: str) -> Flows | None:
         result = await self._fetch(Signal.ELECTRICITY_FLOWS, Temporality.LATEST, zone=zone)
         if result is None:
             return None
         body, stale = result
-        return self._mark_stale(normalize.flows(body, zone=zone), stale)
+        row = self._row(body)
+        return self._mark_stale(normalize.flows(row, zone=zone), stale) if row else None
 
     # -- series reads --------------------------------------------------------
 
@@ -217,9 +240,10 @@ class LiveSource(GridSource):
             return None
         emaps_signal, _ = entry
 
-        # fetch_range chunks around the documented 10-day/100-day caps. Individual chunks
-        # are not cached: history windows are rarely requested twice with identical bounds,
-        # and caching them would fill the store with near-duplicates.
+        # `past-range` is the right endpoint: it takes an explicit window and chunks around
+        # the documented 10-day/100-day caps. Individual chunks are not cached, because a
+        # window is rarely requested twice with identical bounds and caching them would
+        # fill the store with near-duplicates.
         try:
             bodies = await self._client.fetch_range(
                 emaps_signal,
@@ -229,7 +253,16 @@ class LiveSource(GridSource):
                 granularity=Granularity(granularity),
             )
         except (errors.AccessDeniedError, errors.NotFoundError):
-            return None
+            # A plan without `past-range` still has `history`, which returns a trailing
+            # window the API chooses. That is far less than was asked for, but it is not
+            # nothing — on the free tier it is the only history there is, and refusing to
+            # use it would leave a working 24 hours on the table.
+            fallback = await self._trailing_history(
+                emaps_signal, zone=zone, granularity=granularity
+            )
+            if fallback is None:
+                return None
+            bodies = fallback
         except errors.ElectricityMapsError as exc:
             log.error("live.history_failed", zone=zone, signal=signal, error=str(exc))
             return None
@@ -237,8 +270,32 @@ class LiveSource(GridSource):
         series = normalize.series(
             bodies, zone=zone, normalizer=self._normalizer_for(signal), granularity=granularity
         )
-        self._cache.record(signal, list(series.points))
-        return series
+
+        # Trim to what was asked for. `history` returns whatever trailing window it likes,
+        # and silently returning more than the caller requested would make a chart's axis
+        # disagree with its own query.
+        clipped = tuple(p for p in series.points if start <= p.at <= end)
+        if not clipped:
+            return None
+
+        trimmed = series.model_copy(update={"points": clipped})
+        self._cache.record(signal, list(trimmed.points))
+        return trimmed
+
+    async def _trailing_history(
+        self, signal: Signal, *, zone: str, granularity: str
+    ) -> list[dict[str, Any]] | None:
+        """Fall back to the `history` temporality when `past-range` is not in the plan."""
+        result = await self._fetch(
+            signal,
+            Temporality.HISTORY,
+            zone=zone,
+            granularity=Granularity(granularity),
+        )
+        if result is None:
+            return None
+        log.info("live.history_fallback", zone=zone, signal=signal.value)
+        return [result[0]]
 
     @staticmethod
     def _normalizer_for(signal: str) -> Callable[..., ScalarObservation]:
