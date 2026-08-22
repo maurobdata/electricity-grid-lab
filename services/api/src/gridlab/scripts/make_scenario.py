@@ -10,6 +10,9 @@ The moment a token exists, ``make record`` produces ``recorded`` scenarios from 
 and these should be replaced for anything that will be shown to an audience.
 
     python -m gridlab.scripts.make_scenario --out scenarios/
+    python -m gridlab.scripts.make_scenario --from-live --zones DK-DK2,DE
+
+The second form records real data instead; see :mod:`gridlab.scripts.record_scenario`.
 """
 
 from __future__ import annotations
@@ -291,7 +294,26 @@ BUILDERS = {"dk2-wind-lull": dk2_wind_lull, "es-solar-surplus": es_solar_surplus
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path, default=Path("scenarios"))
-    args = parser.parse_args()
+    parser.add_argument(
+        "--from-live",
+        action="store_true",
+        help=(
+            "Record a real scenario from the live API instead of generating synthetic ones. "
+            "Accepts --zones, --granularity and --id; see "
+            "`python -m gridlab.scripts.record_scenario --help`."
+        ),
+    )
+    args, extra = parser.parse_known_args()
+
+    if args.from_live:
+        # Delegated rather than inlined: generating fiction and recording fact are different
+        # jobs with different failure modes, and only one of them touches the network.
+        from gridlab.scripts import record_scenario
+
+        return record_scenario.main(["--out", str(args.out), *extra])
+
+    if extra:
+        parser.error(f"unrecognized arguments: {' '.join(extra)}")
 
     args.out.mkdir(parents=True, exist_ok=True)
     for name, build in BUILDERS.items():

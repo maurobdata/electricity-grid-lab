@@ -54,5 +54,6 @@ See the deferred list in `README.md`.
     make test     # offline pytest
     make probe    # ask a real token what it can actually reach
     make record   # record raw API responses into fixtures/
+    make scenario-live # record a real, replayable scenario
     make demo     # play a scenario at speed
     make eval     # agent evaluations
