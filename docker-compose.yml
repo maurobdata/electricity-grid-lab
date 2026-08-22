@@ -4,8 +4,7 @@
 #   docker compose --profile web up        also starts the PWA
 #   docker compose --profile tracing up    adds Phoenix for OpenTelemetry traces
 #
-# services/api is run twice, as `api` and `agent`. services/web is optional until the
-# PWA scaffold exists.
+# services/api is run twice, as `api` and `agent`.
 # See docs/adr/0005-agent-sandbox-container.md for why the agent is a separate container.
 
 name: gridlab
@@ -66,6 +65,8 @@ services:
     restart: unless-stopped
 
   # ---- PWA ------------------------------------------------------------------
+  # Behind a profile so `docker compose up` stays the lean API + agent pair. Start it with
+  # `make web`, or `docker compose --profile web up`.
   web:
     profiles: [web]
     build:
