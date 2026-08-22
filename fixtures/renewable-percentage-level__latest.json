@@ -1,5 +1,5 @@
 {
-  "_recorded_at": "2026-08-22T17:34:27.087652+00:00",
+  "_recorded_at": "2026-08-22T20:03:20.957891+00:00",
   "_zone": "DK-DK2",
   "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
   "body": {
@@ -7,7 +7,7 @@
     "data": [
       {
         "level": "moderate",
-        "datetime": "2026-08-22T17:00:00.000Z"
+        "datetime": "2026-08-22T20:00:00.000Z"
       }
     ]
   }

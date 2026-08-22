@@ -30,6 +30,7 @@ from gridlab.emaps.client import EMapsClient
 from gridlab.emaps.signals import (
     FORECAST_NEEDS_WINDOW,
     SUPPORTED,
+    BreakdownType,
     Signal,
     SourceType,
     Temporality,
@@ -39,27 +40,32 @@ from gridlab.emaps.signals import (
 #: What to record. Chosen for coverage of the response *shapes* rather than of the whole
 #: API: one scalar signal, one percentage, one structured breakdown, one exchange map, one
 #: price (which has its own extra temporalities), one series and one forecast.
-PLAN: list[tuple[Signal, Temporality]] = [
-    (Signal.CARBON_INTENSITY, Temporality.LATEST),
-    (Signal.CARBON_INTENSITY, Temporality.HISTORY),
-    (Signal.CARBON_INTENSITY, Temporality.FORECAST),
-    (Signal.RENEWABLE_ENERGY, Temporality.LATEST),
-    (Signal.CARBON_FREE_ENERGY, Temporality.LATEST),
-    (Signal.ELECTRICITY_MIX, Temporality.LATEST),
-    (Signal.ELECTRICITY_MIX, Temporality.HISTORY),
-    (Signal.ELECTRICITY_MIX, Temporality.FORECAST),
-    (Signal.ELECTRICITY_FLOWS, Temporality.LATEST),
-    (Signal.ELECTRICITY_FLOWS, Temporality.HISTORY),
-    (Signal.ELECTRICITY_SOURCE, Temporality.LATEST),
-    (Signal.POWER_BREAKDOWN, Temporality.LATEST),
-    (Signal.PRICE_DAY_AHEAD, Temporality.LATEST),
-    (Signal.PRICE_DAY_AHEAD, Temporality.COMBINED),
-    (Signal.PRICE_DAY_AHEAD, Temporality.HISTORY),
-    (Signal.TOTAL_LOAD, Temporality.LATEST),
-    (Signal.NET_LOAD, Temporality.LATEST),
-    (Signal.NET_LOAD, Temporality.FORECAST),
-    (Signal.CARBON_INTENSITY_LEVEL, Temporality.LATEST),
-    (Signal.RENEWABLE_PERCENTAGE_LEVEL, Temporality.LATEST),
+PLAN: list[tuple[Signal, Temporality, BreakdownType | None]] = [
+    (Signal.CARBON_INTENSITY, Temporality.LATEST, None),
+    (Signal.CARBON_INTENSITY, Temporality.HISTORY, None),
+    (Signal.CARBON_INTENSITY, Temporality.FORECAST, None),
+    (Signal.RENEWABLE_ENERGY, Temporality.LATEST, None),
+    (Signal.CARBON_FREE_ENERGY, Temporality.LATEST, None),
+    # Both breakdowns: the recorder asks for each, so the fixtures must cover each.
+    # Without this the two are indistinguishable in tests and the flow-tracing toggle
+    # looks broken when it is not.
+    (Signal.ELECTRICITY_MIX, Temporality.LATEST, BreakdownType.NORMAL),
+    (Signal.ELECTRICITY_MIX, Temporality.LATEST, BreakdownType.FLOW_TRACED),
+    (Signal.ELECTRICITY_MIX, Temporality.HISTORY, BreakdownType.NORMAL),
+    (Signal.ELECTRICITY_MIX, Temporality.HISTORY, BreakdownType.FLOW_TRACED),
+    (Signal.ELECTRICITY_MIX, Temporality.FORECAST, None),
+    (Signal.ELECTRICITY_FLOWS, Temporality.LATEST, None),
+    (Signal.ELECTRICITY_FLOWS, Temporality.HISTORY, None),
+    (Signal.ELECTRICITY_SOURCE, Temporality.LATEST, None),
+    (Signal.POWER_BREAKDOWN, Temporality.LATEST, None),
+    (Signal.PRICE_DAY_AHEAD, Temporality.LATEST, None),
+    (Signal.PRICE_DAY_AHEAD, Temporality.COMBINED, None),
+    (Signal.PRICE_DAY_AHEAD, Temporality.HISTORY, None),
+    (Signal.TOTAL_LOAD, Temporality.LATEST, None),
+    (Signal.NET_LOAD, Temporality.LATEST, None),
+    (Signal.NET_LOAD, Temporality.FORECAST, None),
+    (Signal.CARBON_INTENSITY_LEVEL, Temporality.LATEST, None),
+    (Signal.RENEWABLE_PERCENTAGE_LEVEL, Temporality.LATEST, None),
 ]
 
 
@@ -92,13 +98,15 @@ async def run(zone: str, out: Path) -> int:
         except errors.ElectricityMapsError as exc:
             skipped.append(f"zones ({type(exc).__name__})")
 
-        for signal, temporality in PLAN:
+        for signal, temporality, breakdown in PLAN:
             if temporality not in SUPPORTED[signal]:
                 continue
 
             kwargs: dict[str, Any] = {"zone": zone}
             if signal is Signal.ELECTRICITY_SOURCE:
                 kwargs["source_type"] = SourceType.WIND
+            if signal is Signal.ELECTRICITY_MIX and breakdown is not None:
+                kwargs["breakdown_type"] = breakdown
             if temporality is Temporality.PAST_RANGE:
                 end = datetime.now(UTC)
                 kwargs |= {"start": end - timedelta(days=2), "end": end}
@@ -112,6 +120,8 @@ async def run(zone: str, out: Path) -> int:
                     kwargs["horizon_hours"] = 24
 
             name = f"{signal.value}__{temporality.value}"
+            if breakdown is not None:
+                name += f"__{breakdown.value}"
             try:
                 body = await client.fetch(signal, temporality, **kwargs)
             except errors.ElectricityMapsError as exc:

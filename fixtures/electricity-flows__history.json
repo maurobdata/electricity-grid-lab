@@ -1,5 +1,5 @@
 {
-  "_recorded_at": "2026-08-22T17:34:25.676341+00:00",
+  "_recorded_at": "2026-08-22T20:03:18.989120+00:00",
   "_zone": "DK-DK2",
   "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
   "body": {
@@ -8,42 +8,8 @@
     "unit": "MW",
     "history": [
       {
-        "datetime": "2026-08-21T18:00:00.000Z",
-        "updatedAt": "2026-08-22T14:04:43.351Z",
-        "import": {
-          "SE-SE4": 303
-        },
-        "export": {
-          "DE": 549,
-          "DK-DK1": 131
-        }
-      },
-      {
-        "datetime": "2026-08-21T19:00:00.000Z",
-        "updatedAt": "2026-08-22T06:19:36.825Z",
-        "import": {
-          "DK-DK1": 51,
-          "SE-SE4": 304
-        },
-        "export": {
-          "DE": 648,
-          "DK-DK1": 9
-        }
-      },
-      {
-        "datetime": "2026-08-21T20:00:00.000Z",
-        "updatedAt": "2026-08-22T14:04:48.386Z",
-        "import": {
-          "DK-DK1": 134,
-          "SE-SE4": 411
-        },
-        "export": {
-          "DE": 538
-        }
-      },
-      {
         "datetime": "2026-08-21T21:00:00.000Z",
-        "updatedAt": "2026-08-22T14:04:40.201Z",
+        "updatedAt": "2026-08-22T18:19:44.853Z",
         "import": {
           "DK-DK1": 74,
           "SE-SE4": 383
@@ -156,7 +122,7 @@
       },
       {
         "datetime": "2026-08-22T07:00:00.000Z",
-        "updatedAt": "2026-08-22T15:50:04.244Z",
+        "updatedAt": "2026-08-22T18:19:45.288Z",
         "import": {
           "DE": 0,
           "DK-DK1": 84,
@@ -170,7 +136,7 @@
       },
       {
         "datetime": "2026-08-22T08:00:00.000Z",
-        "updatedAt": "2026-08-22T15:19:48.693Z",
+        "updatedAt": "2026-08-22T18:19:53.204Z",
         "import": {
           "DK-DK1": 46
         },
@@ -182,7 +148,7 @@
       },
       {
         "datetime": "2026-08-22T09:00:00.000Z",
-        "updatedAt": "2026-08-22T15:19:47.028Z",
+        "updatedAt": "2026-08-22T18:19:55.645Z",
         "import": {},
         "export": {
           "DE": 506,
@@ -192,7 +158,7 @@
       },
       {
         "datetime": "2026-08-22T10:00:00.000Z",
-        "updatedAt": "2026-08-22T15:34:59.627Z",
+        "updatedAt": "2026-08-22T18:19:56.427Z",
         "import": {},
         "export": {
           "DE": 673,
@@ -202,7 +168,7 @@
       },
       {
         "datetime": "2026-08-22T11:00:00.000Z",
-        "updatedAt": "2026-08-22T15:35:00.957Z",
+        "updatedAt": "2026-08-22T18:19:53.814Z",
         "import": {},
         "export": {
           "DE": 851,
@@ -212,7 +178,7 @@
       },
       {
         "datetime": "2026-08-22T12:00:00.000Z",
-        "updatedAt": "2026-08-22T15:19:51.747Z",
+        "updatedAt": "2026-08-22T18:19:52.605Z",
         "import": {},
         "export": {
           "DE": 824,
@@ -222,7 +188,7 @@
       },
       {
         "datetime": "2026-08-22T13:00:00.000Z",
-        "updatedAt": "2026-08-22T16:04:41.530Z",
+        "updatedAt": "2026-08-22T18:19:56.427Z",
         "import": {},
         "export": {
           "DE": 781,
@@ -232,7 +198,7 @@
       },
       {
         "datetime": "2026-08-22T14:00:00.000Z",
-        "updatedAt": "2026-08-22T16:49:45.152Z",
+        "updatedAt": "2026-08-22T18:19:46.104Z",
         "import": {},
         "export": {
           "DE": 739,
@@ -242,35 +208,69 @@
       },
       {
         "datetime": "2026-08-22T15:00:00.000Z",
-        "updatedAt": "2026-08-22T17:24:08.708Z",
+        "updatedAt": "2026-08-22T18:04:38.079Z",
         "import": {},
         "export": {
           "DE": 379,
           "DK-DK1": 350,
-          "SE-SE4": 460
+          "SE-SE4": 459
         }
       },
       {
         "datetime": "2026-08-22T16:00:00.000Z",
-        "updatedAt": "2026-08-22T17:24:02.702Z",
+        "updatedAt": "2026-08-22T19:35:11.768Z",
         "import": {
-          "DE": 171
+          "DE": 174,
+          "SE-SE4": 117
         },
         "export": {
           "DE": 66,
-          "DK-DK1": 415,
-          "SE-SE4": 460
+          "DK-DK1": 404,
+          "SE-SE4": 120
         }
       },
       {
         "datetime": "2026-08-22T17:00:00.000Z",
-        "updatedAt": "2026-08-22T17:24:08.708Z",
+        "updatedAt": "2026-08-22T19:35:36.177Z",
         "import": {
-          "DE": 36
+          "DE": 447,
+          "SE-SE4": 418
         },
         "export": {
-          "DK-DK1": 450,
-          "SE-SE4": 453
+          "DK-DK1": 262
+        }
+      },
+      {
+        "datetime": "2026-08-22T18:00:00.000Z",
+        "updatedAt": "2026-08-22T19:49:16.329Z",
+        "import": {
+          "DE": 586,
+          "SE-SE4": 418
+        },
+        "export": {
+          "DK-DK1": 430
+        }
+      },
+      {
+        "datetime": "2026-08-22T19:00:00.000Z",
+        "updatedAt": "2026-08-22T19:49:25.410Z",
+        "import": {
+          "DE": 665,
+          "SE-SE4": 412
+        },
+        "export": {
+          "DK-DK1": 475
+        }
+      },
+      {
+        "datetime": "2026-08-22T20:00:00.000Z",
+        "updatedAt": "2026-08-22T19:49:23.126Z",
+        "import": {
+          "DE": 665,
+          "SE-SE4": 421
+        },
+        "export": {
+          "DK-DK1": 475
         }
       }
     ]

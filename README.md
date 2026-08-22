@@ -41,6 +41,7 @@ make lint     # ruff + mypy --strict
 make probe    # ask a real token what it can actually reach
 make record   # record raw API responses into fixtures/
 make scenario # regenerate the bundled (synthetic) scenarios
+make scenario-live  # record a REAL scenario from the live API
 make down
 ```
 
@@ -75,8 +76,24 @@ Measured on 22 August 2026, and **the opposite of what the research predicted**
 
 The constraint is **depth, not breadth**. Anything needing a real historical window —
 scoring a forecast against its outcome, replaying a named storm, backtesting — needs a
-trial or event key. So: **record scenarios from the rolling window now**, and re-record
-when a deeper key exists. What is reachable today is gone tomorrow.
+trial or event key.
+
+So the rolling window has to be captured before it rolls away:
+
+```bash
+make scenario-live                                  # DK-DK2 + DE, hourly
+make scenario-live ZONES=DK-DK2,DE,PL,FR,NO-NO2     # more zones
+make scenario-live GRAN=15_minutes                  # 96 points instead of 24
+```
+
+That writes `scenarios/<zone>-<date>.json` with `provenance: recorded` — roughly 24 hours
+of actuals plus the forecast **as issued at the moment of recording**, which reaches 72
+hours past the end of the window.
+
+One recording cannot show forecast-versus-outcome, because the hours a forecast covers have
+not happened yet. **Record daily** and today's forecast lands on top of tomorrow's actuals —
+which is the only way to get that comparison out of a key with no `past-range`. Files are
+date-stamped, so a daily run never overwrites yesterday.
 
 ---
 
@@ -128,8 +145,9 @@ variant, so asking for one fails locally instead of returning a 400 in Copenhage
 
 **2. Never let generated data look measured.** Every value carries `provenance`
 (`live` | `recorded` | `synthetic`) and `is_estimated`, and both reach the UI as a badge.
-A series takes the weakest provenance of its points. The scenarios bundled in this repo are
-**synthetic** — plausibly shaped, entirely made up — and say so in every response.
+A series takes the weakest provenance of its points. `scenarios/dk-dk2-*.json` is
+**recorded** — real API responses; the two named scenarios are **synthetic** — plausibly
+shaped, entirely made up — and a test fails if a synthetic one stops saying so.
 
 **3. It must run offline.** Replay is the default path, not a fallback, so it is always
 exercised and always works. The whole test suite is offline and deterministic.
@@ -144,11 +162,12 @@ exercised and always works. The whole test suite is offline and deterministic.
 | 1 · Electricity Maps adapter + domain model | done |
 | 2 · Clock, sources, DuckDB cache, HTTP API | done |
 | 2b · Live mode verified against the real API; schema corrected | done |
+| 2c · `make scenario-live` — real, replayable, provenance-preserving recordings | done |
 | 3 · PWA — zone picker, now panel, mix, forecast, flows, compare | next |
 | 4 · Agent sandbox — seven tools, tracing | not started |
 | 5 · Evals, observability, demo scenarios | not started |
 
-202 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
+220 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
 
 21 real API responses are committed in [`fixtures/`](fixtures/) and every one of them is
 parsed by the test suite, so the adapter is pinned to what the API actually sends rather

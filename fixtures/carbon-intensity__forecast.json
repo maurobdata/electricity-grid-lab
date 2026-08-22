@@ -1,22 +1,10 @@
 {
-  "_recorded_at": "2026-08-22T17:34:24.390910+00:00",
+  "_recorded_at": "2026-08-22T20:03:17.309365+00:00",
   "_zone": "DK-DK2",
   "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
   "body": {
     "zone": "DK-DK2",
     "forecast": [
-      {
-        "carbonIntensity": 77,
-        "datetime": "2026-08-22T17:00:00.000Z"
-      },
-      {
-        "carbonIntensity": 76,
-        "datetime": "2026-08-22T18:00:00.000Z"
-      },
-      {
-        "carbonIntensity": 73,
-        "datetime": "2026-08-22T19:00:00.000Z"
-      },
       {
         "carbonIntensity": 72,
         "datetime": "2026-08-22T20:00:00.000Z"
@@ -94,7 +82,7 @@
         "datetime": "2026-08-23T14:00:00.000Z"
       },
       {
-        "carbonIntensity": 109,
+        "carbonIntensity": 111,
         "datetime": "2026-08-23T15:00:00.000Z"
       },
       {
@@ -104,9 +92,21 @@
       {
         "carbonIntensity": 135,
         "datetime": "2026-08-23T17:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 119,
+        "datetime": "2026-08-23T18:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 100,
+        "datetime": "2026-08-23T19:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 94,
+        "datetime": "2026-08-23T20:00:00.000Z"
       }
     ],
-    "updatedAt": "2026-08-22T17:34:24.392Z",
+    "updatedAt": "2026-08-22T20:03:17.334Z",
     "temporalGranularity": "hourly"
   }
 }

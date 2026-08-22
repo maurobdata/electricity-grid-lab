@@ -67,7 +67,13 @@ def _fixture_handler(request: httpx.Request) -> httpx.Response:
         )
 
     signal, temporality = parts[0], parts[-1]
-    body = _body(f"{signal}__{temporality}")
+
+    # electricity-mix is recorded once per breakdownType, because the two are genuinely
+    # different answers and a single fixture would make the toggle look broken.
+    name = f"{signal}__{temporality}"
+    breakdown = request.url.params.get("breakdownType")
+    body = _body(f"{name}__{breakdown}") if breakdown else None
+    body = body if body is not None else _body(name)
     if body is None:
         # Nothing recorded for this combination: mimic a plan that does not include it,
         # which is exactly the case LiveSource must survive without raising. `past-range`

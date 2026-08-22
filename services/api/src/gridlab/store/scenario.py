@@ -30,6 +30,7 @@ from gridlab.domain.models import (
     Percentage,
     Price,
     Provenance,
+    ScalarObservation,
 )
 
 
@@ -246,4 +247,48 @@ def to_flows(point: FlowPoint, *, zone: str, provenance: Provenance) -> Flows:
             FlowEdge(counterpart_zone=counterpart, net_flow_mw=value)
             for counterpart, value in sorted(point.edges.items())
         ),
+    )
+
+
+# --- domain observations back into scenario points --------------------------
+#
+# The inverse of the converters above, used when recording a scenario from live data.
+# Keeping both directions in one module means a field added to a scenario point has one
+# obvious place to be handled on the way in and on the way out.
+
+
+def from_observation(observation: ScalarObservation) -> Point:
+    """A scalar observation as a scenario point.
+
+    ``is_estimated`` is carried deliberately. Electricity Maps models a great deal of what
+    it reports, and a recorded scenario that forgot which values were measured would be a
+    worse artefact than no recording at all.
+    """
+    return Point(
+        at=observation.at,
+        value=observation.value,
+        is_estimated=observation.is_estimated,
+    )
+
+
+def from_mix(breakdown: MixBreakdown) -> MixPoint:
+    """A mix breakdown as a scenario point.
+
+    Only ``power_mw`` is stored; percentages are recomputed on load. Storing both would
+    let them disagree, and the megawatts are the measurement.
+    """
+    return MixPoint(
+        at=breakdown.at,
+        entries={e.source: e.power_mw for e in breakdown.entries if e.power_mw is not None},
+        flow_traced=breakdown.flow_traced,
+        is_estimated=breakdown.is_estimated,
+    )
+
+
+def from_flows(flows: Flows) -> FlowPoint:
+    """Cross-border exchange as a scenario point, keeping the signed convention."""
+    return FlowPoint(
+        at=flows.at,
+        edges={e.counterpart_zone: e.net_flow_mw for e in flows.edges},
+        is_estimated=flows.is_estimated,
     )

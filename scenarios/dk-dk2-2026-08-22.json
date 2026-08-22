@@ -1,0 +1,5664 @@
+{
+  "id": "dk-dk2-2026-08-22",
+  "title": "DK-DK2, DE - recorded 22 Aug 2026 19:57 UTC",
+  "description": "23 hours of real grid data for DK-DK2, DE, with the forecast issued at the moment of recording.",
+  "provenance": "recorded",
+  "currency": "EUR",
+  "start": "2026-08-21T20:00:00Z",
+  "end": "2026-08-22T19:00:00Z",
+  "granularity": "hourly",
+  "zones": {
+    "DK-DK2": {
+      "carbon_intensity": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 236.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 205.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 175.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 172.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 192.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 177.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 149.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 107.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 51.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 54.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 49.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 84.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 85.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 70.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 80.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 83.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 81.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 80.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 78.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 67.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 54.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 42.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 42.0,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 45.0,
+          "is_estimated": true
+        }
+      ],
+      "renewable_percentage": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 72.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 76.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 76.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 72.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 71.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 71.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 75.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 79.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 85.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 86.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 89.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 93.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 94.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 95.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 93.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 92.0,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 91.0,
+          "is_estimated": true
+        }
+      ],
+      "carbon_free_percentage": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 83.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 87.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 89.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 86.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 84.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 86.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 89.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 93.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 99.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 99.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 99.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 95.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 97.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 96.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 97.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 98.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 99.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 99.0,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 98.0,
+          "is_estimated": true
+        }
+      ],
+      "price": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 187.47,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 173.5,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 168.05,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 161.5,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 158.71,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 154.29,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 147.84,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 143.34,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 154.09,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 143.21,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 128.13,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 90.31,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 50.35,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 20.19,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 3.14,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 2.77,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 2.6,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 2.51,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 5.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 31.62,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 104.79,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 141.73,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 143.78,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 140.94,
+          "is_estimated": false
+        }
+      ],
+      "load": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 1444.99,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 1358.24,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 1284.19,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 1247.7,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 1222.4,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 1204.18,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 1178.66,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 1154.75,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 1132.73,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 1311.44,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 1446.88,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 1594.96,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 1850.66,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 2086.32,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 2285.7,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 2338.25,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 2309.83,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 2212.91,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 2165.85,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 1932.65,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 1810.39,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 1661.29,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 1477.64,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 1367.83,
+          "is_estimated": true
+        }
+      ],
+      "mix": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "entries": {
+            "biomass": 470.84,
+            "gas": 14.84,
+            "oil": 1.66,
+            "solar": 0.0,
+            "wind": 142.89
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.01,
+            "biomass": 494.56,
+            "coal": 135.97,
+            "gas": 97.16,
+            "geothermal": 0.22,
+            "hydro": 211.57,
+            "hydro storage discharge": 30.05,
+            "nuclear": 157.92,
+            "oil": 5.61,
+            "solar": 0.21,
+            "unknown": 19.56,
+            "wind": 292.15
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "entries": {
+            "biomass": 479.05,
+            "gas": 15.19,
+            "oil": 1.75,
+            "solar": 0.0,
+            "wind": 192.06
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.04,
+            "biomass": 501.3,
+            "coal": 95.24,
+            "gas": 74.8,
+            "geothermal": 0.17,
+            "hydro": 184.28,
+            "hydro storage discharge": 6.95,
+            "nuclear": 148.82,
+            "oil": 4.71,
+            "solar": 0.15,
+            "unknown": 18.95,
+            "wind": 322.84
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "entries": {
+            "biomass": 383.63,
+            "gas": 12.35,
+            "oil": 1.64,
+            "solar": 0.0,
+            "wind": 256.31
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.09,
+            "biomass": 406.89,
+            "coal": 71.35,
+            "gas": 61.67,
+            "geothermal": 0.13,
+            "hydro": 178.09,
+            "hydro storage discharge": 10.77,
+            "nuclear": 160.01,
+            "oil": 4.01,
+            "solar": 0.11,
+            "unknown": 19.64,
+            "wind": 371.44
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "entries": {
+            "biomass": 150.15,
+            "gas": 7.29,
+            "oil": 1.6,
+            "solar": 0.0,
+            "wind": 336.44
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.03,
+            "biomass": 192.95,
+            "coal": 101.01,
+            "gas": 66.52,
+            "geothermal": 0.19,
+            "hydro": 192.65,
+            "hydro storage discharge": 13.51,
+            "nuclear": 168.19,
+            "oil": 4.92,
+            "solar": 0.16,
+            "unknown": 21.29,
+            "wind": 486.29
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "entries": {
+            "biomass": 119.42,
+            "gas": 6.97,
+            "oil": 1.55,
+            "solar": 0.0,
+            "wind": 287.32
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.05,
+            "biomass": 175.59,
+            "coal": 126.88,
+            "gas": 57.3,
+            "geothermal": 0.22,
+            "hydro": 189.33,
+            "hydro storage discharge": 7.62,
+            "nuclear": 164.01,
+            "oil": 5.55,
+            "solar": 0.12,
+            "unknown": 22.09,
+            "wind": 473.64
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "entries": {
+            "biomass": 117.38,
+            "gas": 8.91,
+            "oil": 1.7,
+            "solar": 0.0,
+            "wind": 272.86
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.06,
+            "biomass": 168.49,
+            "coal": 114.81,
+            "gas": 47.19,
+            "geothermal": 0.19,
+            "hydro": 207.94,
+            "hydro storage discharge": 4.33,
+            "nuclear": 179.85,
+            "oil": 5.22,
+            "solar": 0.13,
+            "unknown": 24.24,
+            "wind": 451.71
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "entries": {
+            "biomass": 109.0,
+            "gas": 5.13,
+            "oil": 1.52,
+            "solar": 0.0,
+            "wind": 330.17
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.05,
+            "biomass": 157.14,
+            "coal": 90.1,
+            "gas": 33.53,
+            "geothermal": 0.15,
+            "hydro": 195.04,
+            "hydro storage discharge": 4.75,
+            "nuclear": 164.78,
+            "oil": 4.32,
+            "solar": 0.16,
+            "unknown": 22.51,
+            "wind": 506.12
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "entries": {
+            "biomass": 108.38,
+            "gas": 5.15,
+            "oil": 1.52,
+            "solar": 0.0,
+            "wind": 401.22
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.02,
+            "biomass": 144.74,
+            "coal": 53.17,
+            "gas": 22.0,
+            "geothermal": 0.09,
+            "hydro": 196.7,
+            "hydro storage discharge": 0.2,
+            "nuclear": 162.36,
+            "oil": 3.23,
+            "solar": 0.37,
+            "unknown": 21.95,
+            "wind": 549.94
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "entries": {
+            "biomass": 111.5,
+            "gas": 5.53,
+            "oil": 1.63,
+            "solar": 15.07,
+            "wind": 455.15
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.01,
+            "biomass": 141.8,
+            "coal": 0.67,
+            "gas": 10.04,
+            "geothermal": 0.0,
+            "hydro": 208.78,
+            "hydro storage discharge": 0.17,
+            "nuclear": 158.92,
+            "oil": 1.71,
+            "solar": 17.91,
+            "unknown": 21.3,
+            "wind": 571.41
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "entries": {
+            "biomass": 140.7,
+            "gas": 7.52,
+            "oil": 2.22,
+            "solar": 128.82,
+            "wind": 504.84
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.05,
+            "biomass": 161.49,
+            "coal": 2.52,
+            "gas": 11.35,
+            "geothermal": 0.0,
+            "hydro": 196.56,
+            "hydro storage discharge": 0.04,
+            "nuclear": 167.84,
+            "oil": 2.31,
+            "solar": 143.28,
+            "unknown": 24.02,
+            "wind": 601.97
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "entries": {
+            "biomass": 143.86,
+            "gas": 7.66,
+            "oil": 2.26,
+            "solar": 210.85,
+            "wind": 642.37
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.52,
+            "biomass": 154.02,
+            "coal": 0.53,
+            "gas": 10.35,
+            "geothermal": 0.0,
+            "hydro": 143.38,
+            "nuclear": 140.27,
+            "oil": 2.2,
+            "solar": 249.37,
+            "unknown": 24.17,
+            "wind": 722.06
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "entries": {
+            "biomass": 175.13,
+            "gas": 12.04,
+            "oil": 4.58,
+            "solar": 303.17,
+            "wind": 706.02
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.41,
+            "biomass": 193.05,
+            "coal": 34.76,
+            "gas": 25.84,
+            "geothermal": 0.15,
+            "hydro": 43.94,
+            "nuclear": 40.69,
+            "oil": 6.63,
+            "solar": 450.67,
+            "unknown": 8.31,
+            "wind": 790.51
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "entries": {
+            "biomass": 198.04,
+            "gas": 15.79,
+            "oil": 8.6,
+            "solar": 453.6,
+            "wind": 717.26
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.04,
+            "biomass": 213.28,
+            "coal": 36.99,
+            "gas": 34.6,
+            "geothermal": 0.23,
+            "hydro": 29.25,
+            "nuclear": 17.47,
+            "oil": 10.98,
+            "solar": 711.66,
+            "unknown": 3.2,
+            "wind": 792.96
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "entries": {
+            "biomass": 207.96,
+            "gas": 17.3,
+            "oil": 3.95,
+            "solar": 517.19,
+            "wind": 858.91
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.04,
+            "biomass": 234.86,
+            "coal": 23.46,
+            "gas": 34.46,
+            "geothermal": 0.15,
+            "hydro": 17.49,
+            "nuclear": 8.09,
+            "oil": 5.87,
+            "solar": 782.59,
+            "unknown": 2.36,
+            "wind": 976.95
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "entries": {
+            "biomass": 236.96,
+            "gas": 19.39,
+            "oil": 4.51,
+            "solar": 640.9,
+            "wind": 621.63
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "entries": {
+            "biomass": 282.05,
+            "coal": 33.75,
+            "gas": 43.21,
+            "geothermal": 0.22,
+            "hydro": 26.83,
+            "nuclear": 9.75,
+            "oil": 7.72,
+            "solar": 1043.43,
+            "unknown": 3.15,
+            "wind": 835.58
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "entries": {
+            "biomass": 251.84,
+            "gas": 20.4,
+            "oil": 4.94,
+            "solar": 705.72,
+            "wind": 585.31
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "entries": {
+            "biomass": 293.37,
+            "coal": 37.94,
+            "gas": 45.75,
+            "geothermal": 0.25,
+            "hydro": 29.88,
+            "nuclear": 11.24,
+            "oil": 8.61,
+            "solar": 1128.77,
+            "unknown": 3.49,
+            "wind": 778.96
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "entries": {
+            "biomass": 257.75,
+            "gas": 20.78,
+            "oil": 4.96,
+            "solar": 825.79,
+            "wind": 582.13
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "entries": {
+            "biomass": 285.58,
+            "coal": 35.38,
+            "gas": 42.28,
+            "geothermal": 0.23,
+            "hydro": 27.07,
+            "nuclear": 5.39,
+            "oil": 8.35,
+            "solar": 1151.73,
+            "unknown": 3.05,
+            "wind": 750.77
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "entries": {
+            "biomass": 233.27,
+            "gas": 18.81,
+            "oil": 4.43,
+            "solar": 763.33,
+            "wind": 597.81
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "entries": {
+            "biomass": 263.76,
+            "coal": 34.58,
+            "gas": 41.39,
+            "geothermal": 0.22,
+            "hydro": 24.32,
+            "nuclear": 7.11,
+            "oil": 7.78,
+            "solar": 1061.85,
+            "unknown": 2.94,
+            "wind": 768.95
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "entries": {
+            "biomass": 226.61,
+            "gas": 18.07,
+            "oil": 4.25,
+            "solar": 668.71,
+            "wind": 774.98
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "entries": {
+            "biomass": 250.58,
+            "coal": 34.44,
+            "gas": 39.73,
+            "geothermal": 0.21,
+            "hydro": 20.15,
+            "nuclear": 7.0,
+            "oil": 7.37,
+            "solar": 896.91,
+            "unknown": 2.56,
+            "wind": 906.9
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "entries": {
+            "biomass": 188.44,
+            "gas": 14.57,
+            "oil": 3.38,
+            "solar": 391.87,
+            "wind": 1064.14
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "entries": {
+            "biomass": 205.52,
+            "coal": 24.18,
+            "gas": 32.21,
+            "geothermal": 0.12,
+            "hydro": 10.92,
+            "nuclear": 5.91,
+            "oil": 4.87,
+            "solar": 498.55,
+            "unknown": 1.52,
+            "wind": 1148.85
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "entries": {
+            "biomass": 170.65,
+            "gas": 10.04,
+            "oil": 2.92,
+            "solar": 210.58,
+            "wind": 1122.21
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.4,
+            "biomass": 188.28,
+            "coal": 10.01,
+            "gas": 20.02,
+            "geothermal": 0.04,
+            "hydro": 30.95,
+            "nuclear": 34.79,
+            "oil": 3.31,
+            "solar": 251.22,
+            "unknown": 7.7,
+            "wind": 1263.67
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "entries": {
+            "biomass": 124.49,
+            "gas": 8.33,
+            "oil": 1.94,
+            "solar": 61.79,
+            "wind": 1231.78
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.94,
+            "biomass": 127.86,
+            "coal": 4.16,
+            "gas": 13.85,
+            "geothermal": 0.01,
+            "hydro": 78.73,
+            "hydro storage discharge": 1.44,
+            "nuclear": 90.48,
+            "oil": 1.71,
+            "solar": 63.86,
+            "unknown": 20.34,
+            "wind": 1257.91
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "entries": {
+            "biomass": 111.49,
+            "gas": 4.96,
+            "oil": 1.6,
+            "solar": 11.72,
+            "wind": 1085.32
+          },
+          "flow_traced": false,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "entries": {
+            "battery storage discharge": 1.02,
+            "biomass": 126.05,
+            "coal": 3.19,
+            "gas": 12.26,
+            "geothermal": 0.01,
+            "hydro": 86.87,
+            "hydro storage discharge": 1.63,
+            "nuclear": 100.25,
+            "oil": 1.34,
+            "solar": 10.79,
+            "unknown": 18.46,
+            "wind": 1115.78
+          },
+          "flow_traced": true,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "entries": {
+            "biomass": 108.68,
+            "gas": 4.91,
+            "oil": 1.52,
+            "solar": 0.0,
+            "wind": 1031.25
+          },
+          "flow_traced": false,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.53,
+            "biomass": 122.61,
+            "coal": 4.61,
+            "gas": 12.6,
+            "geothermal": 0.01,
+            "hydro": 74.75,
+            "hydro storage discharge": 2.42,
+            "nuclear": 95.67,
+            "oil": 1.28,
+            "solar": 0.14,
+            "unknown": 15.99,
+            "wind": 1037.22
+          },
+          "flow_traced": true,
+          "is_estimated": true
+        }
+      ],
+      "flows": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "edges": {
+            "DE": 538.0,
+            "DK-DK1": -134.0,
+            "SE-SE4": -411.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "edges": {
+            "DE": 361.0,
+            "DK-DK1": -74.0,
+            "SE-SE4": -383.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "edges": {
+            "DE": 274.0,
+            "DK-DK1": -41.0,
+            "SE-SE4": -397.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "edges": {
+            "DE": 390.0,
+            "DK-DK1": -58.0,
+            "SE-SE4": -421.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "edges": {
+            "DE": 446.0,
+            "DK-DK1": -24.0,
+            "SE-SE4": -385.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "edges": {
+            "DE": 390.0,
+            "DK-DK1": -9.0,
+            "SE-SE4": -421.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "edges": {
+            "DE": 307.0,
+            "DK-DK1": 53.0,
+            "SE-SE4": -373.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "edges": {
+            "DE": 189.0,
+            "DK-DK1": 75.0,
+            "SE-SE4": -374.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "edges": {
+            "DE": -79.0,
+            "DK-DK1": 241.0,
+            "SE-SE4": -383.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "edges": {
+            "DE": -49.0,
+            "DK-DK1": 146.0,
+            "SE-SE4": -430.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "edges": {
+            "DE": -79.0,
+            "DK-DK1": 117.0,
+            "SE-SE4": -402.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "edges": {
+            "DE": 502.0,
+            "DK-DK1": -80.0,
+            "SE-SE4": 28.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "edges": {
+            "DE": 933.0,
+            "DK-DK1": -5.0,
+            "SE-SE4": 471.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "edges": {
+            "DE": 506.0,
+            "DK-DK1": 468.0,
+            "SE-SE4": 492.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "edges": {
+            "DE": 673.0,
+            "DK-DK1": 557.0,
+            "SE-SE4": 468.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "edges": {
+            "DE": 851.0,
+            "DK-DK1": 386.0,
+            "SE-SE4": 467.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "edges": {
+            "DE": 824.0,
+            "DK-DK1": 249.0,
+            "SE-SE4": 454.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "edges": {
+            "DE": 781.0,
+            "DK-DK1": 248.0,
+            "SE-SE4": 434.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "edges": {
+            "DE": 739.0,
+            "DK-DK1": 186.0,
+            "SE-SE4": 453.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "edges": {
+            "DE": 379.0,
+            "DK-DK1": 350.0,
+            "SE-SE4": 459.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "edges": {
+            "DE": -108.0,
+            "DK-DK1": 404.0,
+            "SE-SE4": 3.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "edges": {
+            "DE": -447.0,
+            "DK-DK1": 262.0,
+            "SE-SE4": -418.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "edges": {
+            "DE": -586.0,
+            "DK-DK1": 430.0,
+            "SE-SE4": -418.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "edges": {
+            "DE": -665.0,
+            "DK-DK1": 475.0,
+            "SE-SE4": -412.0
+          },
+          "is_estimated": false
+        }
+      ],
+      "forecasts": {
+        "carbon_intensity": {
+          "issued_at": "2026-08-22T19:57:47.997000Z",
+          "horizon_hours": 72,
+          "points": [
+            {
+              "at": "2026-08-22T19:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T20:00:00Z",
+              "value": 72.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T21:00:00Z",
+              "value": 72.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T22:00:00Z",
+              "value": 72.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T23:00:00Z",
+              "value": 71.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T00:00:00Z",
+              "value": 71.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T01:00:00Z",
+              "value": 71.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T02:00:00Z",
+              "value": 69.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T03:00:00Z",
+              "value": 70.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T04:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T05:00:00Z",
+              "value": 78.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T06:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T07:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T08:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T09:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T10:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T11:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T12:00:00Z",
+              "value": 98.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T13:00:00Z",
+              "value": 101.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T14:00:00Z",
+              "value": 106.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T15:00:00Z",
+              "value": 111.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T16:00:00Z",
+              "value": 117.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T17:00:00Z",
+              "value": 135.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T18:00:00Z",
+              "value": 119.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T19:00:00Z",
+              "value": 100.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T20:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T21:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T22:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T23:00:00Z",
+              "value": 84.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T00:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T01:00:00Z",
+              "value": 100.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T02:00:00Z",
+              "value": 106.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T03:00:00Z",
+              "value": 110.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T04:00:00Z",
+              "value": 118.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T05:00:00Z",
+              "value": 150.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T06:00:00Z",
+              "value": 146.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T07:00:00Z",
+              "value": 162.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T08:00:00Z",
+              "value": 148.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T09:00:00Z",
+              "value": 142.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T10:00:00Z",
+              "value": 136.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T11:00:00Z",
+              "value": 134.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T12:00:00Z",
+              "value": 134.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T13:00:00Z",
+              "value": 139.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T14:00:00Z",
+              "value": 143.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T15:00:00Z",
+              "value": 169.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T16:00:00Z",
+              "value": 202.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T17:00:00Z",
+              "value": 228.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T18:00:00Z",
+              "value": 231.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T19:00:00Z",
+              "value": 221.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T20:00:00Z",
+              "value": 192.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T21:00:00Z",
+              "value": 175.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T22:00:00Z",
+              "value": 162.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T23:00:00Z",
+              "value": 157.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T00:00:00Z",
+              "value": 162.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T01:00:00Z",
+              "value": 160.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T02:00:00Z",
+              "value": 157.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T03:00:00Z",
+              "value": 152.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T04:00:00Z",
+              "value": 166.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T05:00:00Z",
+              "value": 175.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T06:00:00Z",
+              "value": 169.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T07:00:00Z",
+              "value": 164.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T08:00:00Z",
+              "value": 147.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T09:00:00Z",
+              "value": 134.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T10:00:00Z",
+              "value": 127.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T11:00:00Z",
+              "value": 125.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T12:00:00Z",
+              "value": 120.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T13:00:00Z",
+              "value": 121.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T14:00:00Z",
+              "value": 123.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T15:00:00Z",
+              "value": 134.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T16:00:00Z",
+              "value": 151.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T17:00:00Z",
+              "value": 153.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T18:00:00Z",
+              "value": 140.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T19:00:00Z",
+              "value": 135.0,
+              "is_estimated": false
+            }
+          ]
+        },
+        "renewable_percentage": {
+          "issued_at": "2026-08-22T19:57:48.160851Z",
+          "horizon_hours": 72,
+          "points": [
+            {
+              "at": "2026-08-22T19:00:00Z",
+              "value": 91.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T20:00:00Z",
+              "value": 90.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T21:00:00Z",
+              "value": 90.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T22:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T23:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T00:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T01:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T02:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T03:00:00Z",
+              "value": 87.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T04:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T05:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T06:00:00Z",
+              "value": 90.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T07:00:00Z",
+              "value": 95.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T08:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T09:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T10:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T11:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T12:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T13:00:00Z",
+              "value": 95.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T14:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T15:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T16:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T17:00:00Z",
+              "value": 87.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T18:00:00Z",
+              "value": 87.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T19:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T20:00:00Z",
+              "value": 87.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T21:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T22:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T23:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T00:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T01:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T02:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T03:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T04:00:00Z",
+              "value": 84.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T05:00:00Z",
+              "value": 82.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T06:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T07:00:00Z",
+              "value": 87.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T08:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T09:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T10:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T11:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T12:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T13:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T14:00:00Z",
+              "value": 90.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T15:00:00Z",
+              "value": 87.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T16:00:00Z",
+              "value": 82.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T17:00:00Z",
+              "value": 78.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T18:00:00Z",
+              "value": 76.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T19:00:00Z",
+              "value": 77.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T20:00:00Z",
+              "value": 78.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T21:00:00Z",
+              "value": 79.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T22:00:00Z",
+              "value": 79.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T23:00:00Z",
+              "value": 80.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T00:00:00Z",
+              "value": 79.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T01:00:00Z",
+              "value": 80.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T02:00:00Z",
+              "value": 80.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T03:00:00Z",
+              "value": 81.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T04:00:00Z",
+              "value": 82.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T05:00:00Z",
+              "value": 82.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T06:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T07:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T08:00:00Z",
+              "value": 90.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T09:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T10:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T11:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T12:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T13:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T14:00:00Z",
+              "value": 91.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T15:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T16:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T17:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T18:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T19:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            }
+          ]
+        },
+        "carbon_free_percentage": {
+          "issued_at": "2026-08-22T19:57:48.384015Z",
+          "horizon_hours": 72,
+          "points": [
+            {
+              "at": "2026-08-22T19:00:00Z",
+              "value": 98.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T20:00:00Z",
+              "value": 98.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T21:00:00Z",
+              "value": 98.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T22:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T23:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T00:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T01:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T02:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T03:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T04:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T05:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T06:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T07:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T08:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T09:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T10:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T11:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T12:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T13:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T14:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T15:00:00Z",
+              "value": 95.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T16:00:00Z",
+              "value": 95.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T17:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T18:00:00Z",
+              "value": 95.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T19:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T20:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T21:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T22:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T23:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T00:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T01:00:00Z",
+              "value": 97.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T02:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T03:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T04:00:00Z",
+              "value": 96.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T05:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T06:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T07:00:00Z",
+              "value": 91.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T08:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T09:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T10:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T11:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T12:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T13:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T14:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T15:00:00Z",
+              "value": 90.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T16:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T17:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T18:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T19:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T20:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T21:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T22:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T23:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T00:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T01:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T02:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T03:00:00Z",
+              "value": 95.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T04:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T05:00:00Z",
+              "value": 91.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T06:00:00Z",
+              "value": 91.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T07:00:00Z",
+              "value": 91.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T08:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T09:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T10:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T11:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T12:00:00Z",
+              "value": 95.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T13:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T14:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T15:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T16:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T17:00:00Z",
+              "value": 93.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T18:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T19:00:00Z",
+              "value": 94.0,
+              "is_estimated": false
+            }
+          ]
+        }
+      }
+    },
+    "DE": {
+      "carbon_intensity": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 452.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 451.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 448.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 438.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 434.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 432.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 423.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 401.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 362.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 329.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 276.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 168.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 118.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 110.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 109.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 110.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 111.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 113.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 120.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 131.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 173.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 259.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 281.0,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 290.0,
+          "is_estimated": true
+        }
+      ],
+      "renewable_percentage": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 48.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 49.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 50.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 53.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 56.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 56.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 58.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 60.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 64.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 68.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 74.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 84.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 89.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 90.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 91.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 91.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 91.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 91.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 90.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 88.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 83.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 74.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 70.0,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 69.0,
+          "is_estimated": true
+        }
+      ],
+      "carbon_free_percentage": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 52.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 53.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 52.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 54.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 58.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 59.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 60.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 62.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 66.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 70.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 76.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 86.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 91.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 92.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 92.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 92.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 92.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 91.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 91.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 89.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 84.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 74.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 71.0,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 71.0,
+          "is_estimated": true
+        }
+      ],
+      "price": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 187.36,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 173.5,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 168.01,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 161.54,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 158.71,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 154.39,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 148.5,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 145.51,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 153.89,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 144.01,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 128.13,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 90.27,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 50.3,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 19.81,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 1.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 0.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": -0.01,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": -0.1,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 0.0,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 28.39,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 105.07,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 149.15,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 164.16,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 168.2,
+          "is_estimated": false
+        }
+      ],
+      "load": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "value": 39664.37,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "value": 37730.81,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "value": 36042.82,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "value": 34890.38,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "value": 34896.79,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "value": 35393.1,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "value": 36114.5,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "value": 37555.57,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "value": 38380.47,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "value": 41072.92,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "value": 44115.68,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "value": 47115.79,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "value": 49567.78,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "value": 50331.17,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "value": 47873.3,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "value": 46943.98,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "value": 46113.11,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "value": 45391.71,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "value": 43839.35,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "value": 45067.77,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "value": 45486.76,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "value": 44862.49,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "value": 42802.11,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "value": 41209.12,
+          "is_estimated": true
+        }
+      ],
+      "mix": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "entries": {
+            "biomass": 4799.12,
+            "coal": 11593.36,
+            "gas": 6657.64,
+            "geothermal": 19.25,
+            "hydro": 1621.51,
+            "hydro storage discharge": 2471.85,
+            "oil": 349.31,
+            "solar": 0.0,
+            "unknown": 209.38,
+            "wind": 7471.66
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.01,
+            "biomass": 5023.3,
+            "coal": 10969.64,
+            "gas": 6690.16,
+            "geothermal": 18.0,
+            "hydro": 4059.83,
+            "hydro storage discharge": 2403.4,
+            "nuclear": 1573.06,
+            "oil": 329.68,
+            "solar": 5.67,
+            "unknown": 249.31,
+            "wind": 8342.32
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "entries": {
+            "biomass": 4651.84,
+            "coal": 10983.42,
+            "gas": 6768.54,
+            "geothermal": 19.25,
+            "hydro": 1613.15,
+            "hydro storage discharge": 724.45,
+            "oil": 349.5,
+            "solar": 0.0,
+            "unknown": 209.38,
+            "wind": 8011.63
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.12,
+            "biomass": 4948.92,
+            "coal": 10492.14,
+            "gas": 6608.28,
+            "geothermal": 18.33,
+            "hydro": 3923.94,
+            "hydro storage discharge": 748.37,
+            "nuclear": 1215.82,
+            "oil": 335.69,
+            "solar": 4.72,
+            "unknown": 244.84,
+            "wind": 9189.63
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "entries": {
+            "biomass": 4523.58,
+            "coal": 10272.23,
+            "gas": 6973.51,
+            "geothermal": 19.25,
+            "hydro": 1617.19,
+            "hydro storage discharge": 1522.24,
+            "oil": 346.86,
+            "solar": 0.0,
+            "unknown": 209.38,
+            "wind": 8546.86
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "entries": {
+            "battery storage discharge": 1.11,
+            "biomass": 4609.0,
+            "coal": 9648.19,
+            "gas": 6698.65,
+            "geothermal": 17.99,
+            "hydro": 3138.64,
+            "hydro storage discharge": 1453.04,
+            "nuclear": 792.95,
+            "oil": 326.18,
+            "solar": 3.96,
+            "unknown": 220.54,
+            "wind": 9132.58
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "entries": {
+            "biomass": 4481.19,
+            "coal": 10325.78,
+            "gas": 6057.31,
+            "geothermal": 19.25,
+            "hydro": 1659.81,
+            "hydro storage discharge": 1389.8,
+            "oil": 346.89,
+            "solar": 0.0,
+            "unknown": 209.38,
+            "wind": 10395.94
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.45,
+            "biomass": 4395.23,
+            "coal": 9439.99,
+            "gas": 5571.74,
+            "geothermal": 17.54,
+            "hydro": 2691.64,
+            "hydro storage discharge": 1273.91,
+            "nuclear": 491.66,
+            "oil": 317.78,
+            "solar": 8.17,
+            "unknown": 199.04,
+            "wind": 10483.23
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "entries": {
+            "biomass": 4461.02,
+            "coal": 10869.15,
+            "gas": 4268.26,
+            "geothermal": 19.25,
+            "hydro": 1605.4,
+            "hydro storage discharge": 633.77,
+            "oil": 346.89,
+            "solar": 0.0,
+            "unknown": 209.38,
+            "wind": 11653.7
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.05,
+            "biomass": 4462.98,
+            "coal": 10140.66,
+            "gas": 3984.2,
+            "geothermal": 17.74,
+            "hydro": 2694.28,
+            "hydro storage discharge": 594.55,
+            "nuclear": 556.66,
+            "oil": 321.9,
+            "solar": 3.6,
+            "unknown": 202.7,
+            "wind": 11917.49
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "entries": {
+            "biomass": 4473.22,
+            "coal": 11226.94,
+            "gas": 3673.22,
+            "geothermal": 19.25,
+            "hydro": 1629.12,
+            "hydro storage discharge": 421.53,
+            "oil": 346.89,
+            "solar": 0.0,
+            "unknown": 209.38,
+            "wind": 12083.87
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.08,
+            "biomass": 4534.46,
+            "coal": 10546.62,
+            "gas": 3473.89,
+            "geothermal": 17.88,
+            "hydro": 2669.31,
+            "hydro storage discharge": 398.72,
+            "nuclear": 758.51,
+            "oil": 324.79,
+            "solar": 3.18,
+            "unknown": 205.29,
+            "wind": 12460.37
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "entries": {
+            "biomass": 4483.09,
+            "coal": 11266.03,
+            "gas": 3383.69,
+            "geothermal": 19.25,
+            "hydro": 1618.83,
+            "hydro storage discharge": 587.71,
+            "oil": 346.85,
+            "solar": 0.0,
+            "unknown": 209.38,
+            "wind": 13017.8
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.04,
+            "biomass": 4543.54,
+            "coal": 10605.25,
+            "gas": 3199.51,
+            "geothermal": 17.91,
+            "hydro": 2495.93,
+            "hydro storage discharge": 553.42,
+            "nuclear": 831.04,
+            "oil": 325.46,
+            "solar": 2.63,
+            "unknown": 205.33,
+            "wind": 13334.44
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "entries": {
+            "biomass": 4553.43,
+            "coal": 11166.69,
+            "gas": 3154.03,
+            "geothermal": 19.25,
+            "hydro": 1625.37,
+            "oil": 346.79,
+            "solar": 0.04,
+            "unknown": 209.38,
+            "wind": 14689.63
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.34,
+            "biomass": 4699.82,
+            "coal": 10541.15,
+            "gas": 3013.61,
+            "geothermal": 18.02,
+            "hydro": 2693.58,
+            "hydro storage discharge": 9.78,
+            "nuclear": 853.04,
+            "oil": 327.51,
+            "solar": 5.62,
+            "unknown": 209.48,
+            "wind": 15183.63
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "entries": {
+            "biomass": 4754.37,
+            "coal": 10198.19,
+            "gas": 3041.73,
+            "geothermal": 19.25,
+            "hydro": 1630.41,
+            "hydro storage discharge": 132.52,
+            "oil": 347.02,
+            "solar": 448.05,
+            "unknown": 209.38,
+            "wind": 16336.28
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "entries": {
+            "battery storage discharge": 2.23,
+            "biomass": 4870.64,
+            "coal": 9475.95,
+            "gas": 2890.26,
+            "geothermal": 17.87,
+            "hydro": 2595.75,
+            "hydro storage discharge": 126.21,
+            "nuclear": 866.42,
+            "oil": 324.88,
+            "solar": 434.7,
+            "unknown": 207.8,
+            "wind": 16567.76
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "entries": {
+            "biomass": 4864.11,
+            "coal": 9703.63,
+            "gas": 3012.69,
+            "geothermal": 19.25,
+            "hydro": 1646.04,
+            "oil": 346.89,
+            "solar": 4232.51,
+            "unknown": 209.38,
+            "wind": 16947.61
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "entries": {
+            "battery storage discharge": 2.02,
+            "biomass": 4878.39,
+            "coal": 9062.47,
+            "gas": 2841.39,
+            "geothermal": 17.78,
+            "hydro": 2093.14,
+            "hydro storage discharge": 48.37,
+            "nuclear": 760.12,
+            "oil": 322.97,
+            "solar": 4020.21,
+            "unknown": 204.9,
+            "wind": 16821.17
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "entries": {
+            "biomass": 4826.02,
+            "coal": 8441.15,
+            "gas": 2346.6,
+            "geothermal": 19.25,
+            "hydro": 1675.97,
+            "oil": 346.89,
+            "solar": 11523.2,
+            "unknown": 209.38,
+            "wind": 16424.11
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.23,
+            "biomass": 4546.66,
+            "coal": 8072.6,
+            "gas": 2192.43,
+            "geothermal": 17.42,
+            "hydro": 1701.52,
+            "hydro storage discharge": 1.11,
+            "nuclear": 794.95,
+            "oil": 318.36,
+            "solar": 10699.86,
+            "unknown": 209.7,
+            "wind": 15560.83
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "entries": {
+            "biomass": 4669.97,
+            "coal": 4497.43,
+            "gas": 1904.13,
+            "geothermal": 19.25,
+            "hydro": 1696.13,
+            "oil": 346.95,
+            "solar": 20305.26,
+            "unknown": 209.38,
+            "wind": 17457.15
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.37,
+            "biomass": 4109.28,
+            "coal": 4341.19,
+            "gas": 1723.15,
+            "geothermal": 16.64,
+            "hydro": 1819.27,
+            "nuclear": 1152.09,
+            "oil": 306.0,
+            "solar": 18051.66,
+            "unknown": 221.47,
+            "wind": 15374.68
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "entries": {
+            "biomass": 4528.05,
+            "coal": 3034.88,
+            "gas": 1748.68,
+            "geothermal": 19.25,
+            "hydro": 1777.43,
+            "oil": 347.59,
+            "solar": 27790.51,
+            "unknown": 209.38,
+            "wind": 18042.17
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "entries": {
+            "battery storage discharge": 2.79,
+            "biomass": 3729.0,
+            "coal": 2481.89,
+            "gas": 1460.29,
+            "geothermal": 15.64,
+            "hydro": 1975.44,
+            "hydro storage discharge": 0.01,
+            "nuclear": 1173.11,
+            "oil": 283.63,
+            "solar": 23476.09,
+            "unknown": 214.24,
+            "wind": 14755.66
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "entries": {
+            "biomass": 4437.01,
+            "coal": 2832.09,
+            "gas": 1733.09,
+            "geothermal": 19.25,
+            "hydro": 1762.13,
+            "oil": 347.31,
+            "solar": 32166.33,
+            "unknown": 209.38,
+            "wind": 17672.56
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "entries": {
+            "battery storage discharge": 4.02,
+            "biomass": 3517.37,
+            "coal": 2226.34,
+            "gas": 1400.46,
+            "geothermal": 15.32,
+            "hydro": 1810.43,
+            "nuclear": 758.86,
+            "oil": 272.54,
+            "solar": 26172.87,
+            "unknown": 213.25,
+            "wind": 13939.71
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "entries": {
+            "biomass": 4360.01,
+            "coal": 2806.8,
+            "gas": 1690.21,
+            "geothermal": 19.25,
+            "hydro": 1804.75,
+            "oil": 347.79,
+            "solar": 34663.88,
+            "unknown": 209.38,
+            "wind": 16283.01
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.01,
+            "biomass": 3249.52,
+            "coal": 2086.38,
+            "gas": 1276.43,
+            "geothermal": 14.62,
+            "hydro": 1755.17,
+            "nuclear": 581.26,
+            "oil": 257.79,
+            "solar": 26370.87,
+            "unknown": 186.23,
+            "wind": 12095.01
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "entries": {
+            "biomass": 4341.3,
+            "coal": 2795.79,
+            "gas": 1723.65,
+            "geothermal": 19.25,
+            "hydro": 1762.48,
+            "oil": 347.83,
+            "solar": 34973.86,
+            "unknown": 209.38,
+            "wind": 15437.33
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "entries": {
+            "biomass": 3187.3,
+            "coal": 2059.53,
+            "gas": 1303.37,
+            "geothermal": 13.91,
+            "hydro": 1685.01,
+            "nuclear": 599.77,
+            "oil": 252.12,
+            "solar": 26352.47,
+            "unknown": 183.93,
+            "wind": 11306.58
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "entries": {
+            "biomass": 4344.08,
+            "coal": 2850.71,
+            "gas": 1744.13,
+            "geothermal": 19.25,
+            "hydro": 1787.37,
+            "oil": 347.22,
+            "solar": 34214.87,
+            "unknown": 209.38,
+            "wind": 16720.26
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "entries": {
+            "biomass": 3149.2,
+            "coal": 2065.13,
+            "gas": 1271.32,
+            "geothermal": 13.9,
+            "hydro": 1625.54,
+            "nuclear": 300.1,
+            "oil": 251.05,
+            "solar": 25156.79,
+            "unknown": 173.53,
+            "wind": 12106.54
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "entries": {
+            "biomass": 4376.56,
+            "coal": 2851.67,
+            "gas": 1846.49,
+            "geothermal": 19.25,
+            "hydro": 1648.12,
+            "oil": 347.83,
+            "solar": 31908.93,
+            "unknown": 208.63,
+            "wind": 17395.98
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "entries": {
+            "biomass": 3198.95,
+            "coal": 2085.45,
+            "gas": 1362.82,
+            "geothermal": 13.95,
+            "hydro": 1513.3,
+            "nuclear": 417.62,
+            "oil": 252.51,
+            "solar": 23682.71,
+            "unknown": 172.26,
+            "wind": 12692.12
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "entries": {
+            "biomass": 4483.55,
+            "coal": 3025.66,
+            "gas": 1952.87,
+            "geothermal": 19.25,
+            "hydro": 1629.26,
+            "oil": 346.99,
+            "solar": 27825.28,
+            "unknown": 208.63,
+            "wind": 19167.8
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.02,
+            "biomass": 3296.24,
+            "coal": 2220.18,
+            "gas": 1443.44,
+            "geothermal": 14.05,
+            "hydro": 1331.18,
+            "nuclear": 446.21,
+            "oil": 253.7,
+            "solar": 20618.08,
+            "unknown": 160.81,
+            "wind": 14055.44
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "entries": {
+            "biomass": 4612.73,
+            "coal": 3671.08,
+            "gas": 2285.22,
+            "geothermal": 19.25,
+            "hydro": 1601.58,
+            "oil": 346.92,
+            "solar": 21191.28,
+            "unknown": 208.63,
+            "wind": 24838.05
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "entries": {
+            "biomass": 3466.91,
+            "coal": 2744.05,
+            "gas": 1717.66,
+            "geothermal": 14.38,
+            "hydro": 1338.53,
+            "nuclear": 660.54,
+            "oil": 259.9,
+            "solar": 16097.19,
+            "unknown": 161.19,
+            "wind": 18607.42
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "entries": {
+            "biomass": 4836.4,
+            "coal": 5195.68,
+            "gas": 3435.18,
+            "geothermal": 19.25,
+            "hydro": 1618.76,
+            "oil": 346.89,
+            "solar": 12195.9,
+            "unknown": 208.63,
+            "wind": 29054.13
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.53,
+            "biomass": 3827.99,
+            "coal": 4104.88,
+            "gas": 2719.66,
+            "geothermal": 15.13,
+            "hydro": 1331.06,
+            "nuclear": 443.71,
+            "oil": 273.22,
+            "solar": 9642.15,
+            "unknown": 165.83,
+            "wind": 22962.61
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "entries": {
+            "biomass": 4986.77,
+            "coal": 7746.89,
+            "gas": 4740.27,
+            "geothermal": 19.25,
+            "hydro": 1539.03,
+            "hydro storage discharge": 3024.81,
+            "oil": 346.86,
+            "solar": 3532.26,
+            "unknown": 208.63,
+            "wind": 26804.4
+          },
+          "flow_traced": false,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "entries": {
+            "battery storage discharge": 0.44,
+            "biomass": 4190.75,
+            "coal": 6461.2,
+            "gas": 3957.72,
+            "geothermal": 16.04,
+            "hydro": 1523.33,
+            "hydro storage discharge": 2539.73,
+            "nuclear": 80.0,
+            "oil": 289.52,
+            "solar": 2935.96,
+            "unknown": 179.03,
+            "wind": 22688.77
+          },
+          "flow_traced": true,
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "entries": {
+            "biomass": 5022.62,
+            "coal": 8011.35,
+            "gas": 4764.22,
+            "geothermal": 19.25,
+            "hydro": 1547.08,
+            "hydro storage discharge": 3985.16,
+            "oil": 346.78,
+            "solar": 190.31,
+            "unknown": 208.64,
+            "wind": 25484.0
+          },
+          "flow_traced": false,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "entries": {
+            "battery storage discharge": 2.93,
+            "biomass": 4267.37,
+            "coal": 6725.19,
+            "gas": 4012.52,
+            "geothermal": 16.16,
+            "hydro": 1590.82,
+            "hydro storage discharge": 3364.13,
+            "nuclear": 327.73,
+            "oil": 291.78,
+            "solar": 170.26,
+            "unknown": 181.89,
+            "wind": 21851.33
+          },
+          "flow_traced": true,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "entries": {
+            "biomass": 4991.16,
+            "coal": 8075.54,
+            "gas": 4807.52,
+            "geothermal": 19.25,
+            "hydro": 1513.61,
+            "hydro storage discharge": 3874.38,
+            "oil": 346.81,
+            "solar": 0.0,
+            "unknown": 206.13,
+            "wind": 24278.22
+          },
+          "flow_traced": false,
+          "is_estimated": true
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "entries": {
+            "battery storage discharge": 1.79,
+            "biomass": 4205.36,
+            "coal": 6710.35,
+            "gas": 4006.17,
+            "geothermal": 15.99,
+            "hydro": 1550.33,
+            "hydro storage discharge": 3234.75,
+            "nuclear": 341.13,
+            "oil": 288.75,
+            "solar": 0.06,
+            "unknown": 178.22,
+            "wind": 20676.21
+          },
+          "flow_traced": true,
+          "is_estimated": true
+        }
+      ],
+      "flows": [
+        {
+          "at": "2026-08-21T20:00:00Z",
+          "edges": {
+            "AT": -24.0,
+            "BE": -671.0,
+            "CH": 1041.0,
+            "CZ": -158.0,
+            "DK-DK1": -2851.0,
+            "DK-DK2": 538.0,
+            "FR": -1616.0,
+            "LU": 263.0,
+            "NL": -243.0,
+            "NO-NO2": -1385.0,
+            "PL": 1010.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T21:00:00Z",
+          "edges": {
+            "AT": 110.0,
+            "BE": -303.0,
+            "CH": 886.0,
+            "CZ": 14.0,
+            "DK-DK1": -2981.0,
+            "DK-DK2": 361.0,
+            "FR": -1020.0,
+            "LU": 281.0,
+            "NL": 161.0,
+            "NO-NO2": -1269.0,
+            "PL": 775.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T22:00:00Z",
+          "edges": {
+            "AT": -203.0,
+            "BE": -878.0,
+            "CH": 368.0,
+            "CZ": -4.0,
+            "DK-DK1": -2195.0,
+            "DK-DK2": 274.0,
+            "FR": -727.0,
+            "LU": 303.0,
+            "NL": -187.0,
+            "NO-NO2": -1020.0,
+            "PL": 824.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-21T23:00:00Z",
+          "edges": {
+            "AT": -430.0,
+            "BE": -936.0,
+            "CH": -15.0,
+            "CZ": 72.0,
+            "DK-DK1": -2034.0,
+            "DK-DK2": 390.0,
+            "FR": -449.0,
+            "LU": 330.0,
+            "NL": 619.0,
+            "NO-NO2": -843.0,
+            "PL": 673.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T00:00:00Z",
+          "edges": {
+            "AT": -322.0,
+            "BE": -742.0,
+            "CH": -126.0,
+            "CZ": 279.0,
+            "DK-DK1": -2287.0,
+            "DK-DK2": 446.0,
+            "FR": -427.0,
+            "LU": 276.0,
+            "NL": 787.0,
+            "NO-NO2": -816.0,
+            "PL": 281.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T01:00:00Z",
+          "edges": {
+            "AT": -308.0,
+            "BE": -676.0,
+            "CH": -72.0,
+            "CZ": 260.0,
+            "DK-DK1": -2442.0,
+            "DK-DK2": 390.0,
+            "FR": -659.0,
+            "LU": 220.0,
+            "NL": 840.0,
+            "NO-NO2": -651.0,
+            "PL": 196.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T02:00:00Z",
+          "edges": {
+            "AT": -385.0,
+            "BE": -262.0,
+            "CH": -160.0,
+            "CZ": 257.0,
+            "DK-DK1": -2417.0,
+            "DK-DK2": 307.0,
+            "FR": -754.0,
+            "LU": 267.0,
+            "NL": 1271.0,
+            "NO-NO2": -446.0,
+            "PL": 40.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T03:00:00Z",
+          "edges": {
+            "AT": -377.0,
+            "BE": 35.0,
+            "CH": -260.0,
+            "CZ": 180.0,
+            "DK-DK1": -2820.0,
+            "DK-DK2": 189.0,
+            "FR": -765.0,
+            "LU": 257.0,
+            "NL": 1203.0,
+            "NO-NO2": -533.0,
+            "PL": 75.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T04:00:00Z",
+          "edges": {
+            "AT": -792.0,
+            "BE": 4.0,
+            "CH": -300.0,
+            "CZ": -304.0,
+            "DK-DK1": -2795.0,
+            "DK-DK2": -79.0,
+            "FR": -856.0,
+            "LU": 248.0,
+            "NL": 1018.0,
+            "NO-NO2": -446.0,
+            "PL": 255.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T05:00:00Z",
+          "edges": {
+            "AT": -959.0,
+            "BE": -27.0,
+            "CH": -367.0,
+            "CZ": 142.0,
+            "DK-DK1": -2239.0,
+            "DK-DK2": -49.0,
+            "FR": -705.0,
+            "LU": 232.0,
+            "NL": 1520.0,
+            "NO-NO2": -234.0,
+            "PL": 51.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T06:00:00Z",
+          "edges": {
+            "AT": -678.0,
+            "BE": -423.0,
+            "CH": -102.0,
+            "CZ": 751.0,
+            "DK-DK1": -1017.0,
+            "DK-DK2": -79.0,
+            "FR": -642.0,
+            "LU": 209.0,
+            "NL": 1848.0,
+            "NO-NO2": 173.0,
+            "PL": -341.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T07:00:00Z",
+          "edges": {
+            "AT": -254.0,
+            "BE": -57.0,
+            "CH": 777.0,
+            "CZ": 755.0,
+            "DK-DK1": -195.0,
+            "DK-DK2": 502.0,
+            "FR": -1086.0,
+            "LU": 133.0,
+            "NL": 1790.0,
+            "NO-NO2": 1208.0,
+            "PL": -644.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T08:00:00Z",
+          "edges": {
+            "AT": -617.0,
+            "BE": 498.0,
+            "CH": 1494.0,
+            "CZ": -358.0,
+            "DK-DK1": 310.0,
+            "DK-DK2": 933.0,
+            "FR": -1510.0,
+            "LU": 29.0,
+            "NL": 1671.0,
+            "NO-NO2": 1339.0,
+            "PL": 741.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T09:00:00Z",
+          "edges": {
+            "AT": -1219.0,
+            "BE": 905.0,
+            "CH": 1325.0,
+            "CZ": -1464.0,
+            "DK-DK1": 1489.0,
+            "DK-DK2": 506.0,
+            "FR": -945.0,
+            "LU": 130.0,
+            "NL": 536.0,
+            "NO-NO2": 1443.0,
+            "PL": 1567.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T10:00:00Z",
+          "edges": {
+            "AT": -1684.0,
+            "BE": -30.0,
+            "CH": 1457.0,
+            "CZ": -2227.0,
+            "DK-DK1": 2954.0,
+            "DK-DK2": 673.0,
+            "FR": -789.0,
+            "LU": 52.0,
+            "NL": -231.0,
+            "NO-NO2": 1443.0,
+            "PL": 1676.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T11:00:00Z",
+          "edges": {
+            "AT": -1775.0,
+            "BE": -430.0,
+            "CH": 1444.0,
+            "CZ": -2409.0,
+            "DK-DK1": 3035.0,
+            "DK-DK2": 851.0,
+            "FR": -844.0,
+            "LU": 37.0,
+            "NL": -1039.0,
+            "NO-NO2": 1443.0,
+            "PL": 1745.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T12:00:00Z",
+          "edges": {
+            "AT": -1774.0,
+            "BE": -590.0,
+            "CH": 1170.0,
+            "CZ": -2238.0,
+            "DK-DK1": 2987.0,
+            "DK-DK2": 824.0,
+            "FR": -275.0,
+            "LU": 27.0,
+            "NL": -105.0,
+            "NO-NO2": 1443.0,
+            "PL": 1542.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T13:00:00Z",
+          "edges": {
+            "AT": -1731.0,
+            "BE": -334.0,
+            "CH": 1071.0,
+            "CZ": -2319.0,
+            "DK-DK1": 2759.0,
+            "DK-DK2": 781.0,
+            "FR": -504.0,
+            "LU": 7.0,
+            "NL": -421.0,
+            "NO-NO2": 1401.0,
+            "PL": 1620.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T14:00:00Z",
+          "edges": {
+            "AT": -2049.0,
+            "BE": -6.0,
+            "CH": 383.0,
+            "CZ": -2585.0,
+            "DK-DK1": 2261.0,
+            "DK-DK2": 739.0,
+            "FR": -781.0,
+            "LU": -15.0,
+            "NL": 16.0,
+            "NO-NO2": 1299.0,
+            "PL": 1801.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T15:00:00Z",
+          "edges": {
+            "AT": -1748.0,
+            "BE": -454.0,
+            "CH": 283.0,
+            "CZ": -2467.0,
+            "DK-DK1": 1572.0,
+            "DK-DK2": 379.0,
+            "FR": -1255.0,
+            "LU": 82.0,
+            "NL": 1544.0,
+            "NO-NO2": 1225.0,
+            "PL": 1790.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T16:00:00Z",
+          "edges": {
+            "AT": -1323.0,
+            "BE": -741.0,
+            "CH": -208.0,
+            "CZ": -1924.0,
+            "DK-DK1": 1402.0,
+            "DK-DK2": -108.0,
+            "FR": -817.0,
+            "LU": 216.0,
+            "NL": 2327.0,
+            "NO-NO2": 824.0,
+            "PL": 1580.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T17:00:00Z",
+          "edges": {
+            "AT": -1086.0,
+            "BE": -637.0,
+            "CH": -964.0,
+            "CZ": -1371.0,
+            "DK-DK1": 516.0,
+            "DK-DK2": -447.0,
+            "FR": -77.0,
+            "LU": 315.0,
+            "NL": 2714.0,
+            "NO-NO2": -365.0,
+            "PL": 1372.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T18:00:00Z",
+          "edges": {
+            "AT": -1167.0,
+            "BE": -637.0,
+            "CH": -379.0,
+            "CZ": -1371.0,
+            "DK-DK1": 305.0,
+            "DK-DK2": -586.0,
+            "FR": -472.0,
+            "LU": 254.0,
+            "NL": 2714.0,
+            "NO-NO2": -365.0,
+            "PL": 1372.0
+          },
+          "is_estimated": false
+        },
+        {
+          "at": "2026-08-22T19:00:00Z",
+          "edges": {
+            "AT": -1159.0,
+            "BE": -1013.0,
+            "CH": -363.0,
+            "CZ": -833.0,
+            "DK-DK1": 377.0,
+            "DK-DK2": -665.0,
+            "FR": -472.0,
+            "LU": 248.0,
+            "NL": 3499.0,
+            "NO-NO2": -365.0,
+            "PL": 914.0
+          },
+          "is_estimated": false
+        }
+      ],
+      "forecasts": {
+        "carbon_intensity": {
+          "issued_at": "2026-08-22T19:57:50.058000Z",
+          "horizon_hours": 72,
+          "points": [
+            {
+              "at": "2026-08-22T19:00:00Z",
+              "value": 278.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T20:00:00Z",
+              "value": 281.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T21:00:00Z",
+              "value": 285.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T22:00:00Z",
+              "value": 278.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T23:00:00Z",
+              "value": 277.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T00:00:00Z",
+              "value": 280.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T01:00:00Z",
+              "value": 285.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T02:00:00Z",
+              "value": 284.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T03:00:00Z",
+              "value": 281.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T04:00:00Z",
+              "value": 275.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T05:00:00Z",
+              "value": 252.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T06:00:00Z",
+              "value": 210.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T07:00:00Z",
+              "value": 165.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T08:00:00Z",
+              "value": 125.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T09:00:00Z",
+              "value": 112.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T10:00:00Z",
+              "value": 108.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T11:00:00Z",
+              "value": 109.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T12:00:00Z",
+              "value": 110.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T13:00:00Z",
+              "value": 119.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T14:00:00Z",
+              "value": 135.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T15:00:00Z",
+              "value": 185.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T16:00:00Z",
+              "value": 258.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T17:00:00Z",
+              "value": 334.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T18:00:00Z",
+              "value": 354.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T19:00:00Z",
+              "value": 356.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T20:00:00Z",
+              "value": 363.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T21:00:00Z",
+              "value": 381.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T22:00:00Z",
+              "value": 417.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T23:00:00Z",
+              "value": 430.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T00:00:00Z",
+              "value": 472.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T01:00:00Z",
+              "value": 479.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T02:00:00Z",
+              "value": 478.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T03:00:00Z",
+              "value": 475.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T04:00:00Z",
+              "value": 459.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T05:00:00Z",
+              "value": 423.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T06:00:00Z",
+              "value": 362.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T07:00:00Z",
+              "value": 308.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T08:00:00Z",
+              "value": 260.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T09:00:00Z",
+              "value": 229.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T10:00:00Z",
+              "value": 210.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T11:00:00Z",
+              "value": 208.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T12:00:00Z",
+              "value": 214.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T13:00:00Z",
+              "value": 233.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T14:00:00Z",
+              "value": 274.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T15:00:00Z",
+              "value": 328.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T16:00:00Z",
+              "value": 403.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T17:00:00Z",
+              "value": 432.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T18:00:00Z",
+              "value": 429.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T19:00:00Z",
+              "value": 419.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T20:00:00Z",
+              "value": 410.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T21:00:00Z",
+              "value": 407.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T22:00:00Z",
+              "value": 403.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T23:00:00Z",
+              "value": 401.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T00:00:00Z",
+              "value": 400.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T01:00:00Z",
+              "value": 403.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T02:00:00Z",
+              "value": 404.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T03:00:00Z",
+              "value": 403.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T04:00:00Z",
+              "value": 384.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T05:00:00Z",
+              "value": 342.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T06:00:00Z",
+              "value": 294.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T07:00:00Z",
+              "value": 256.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T08:00:00Z",
+              "value": 223.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T09:00:00Z",
+              "value": 187.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T10:00:00Z",
+              "value": 159.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T11:00:00Z",
+              "value": 156.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T12:00:00Z",
+              "value": 158.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T13:00:00Z",
+              "value": 174.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T14:00:00Z",
+              "value": 229.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T15:00:00Z",
+              "value": 291.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T16:00:00Z",
+              "value": 331.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T17:00:00Z",
+              "value": 342.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T18:00:00Z",
+              "value": 350.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T19:00:00Z",
+              "value": 346.0,
+              "is_estimated": false
+            }
+          ]
+        },
+        "renewable_percentage": {
+          "issued_at": "2026-08-22T19:57:50.339509Z",
+          "horizon_hours": 72,
+          "points": [
+            {
+              "at": "2026-08-22T19:00:00Z",
+              "value": 68.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T20:00:00Z",
+              "value": 68.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T21:00:00Z",
+              "value": 68.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T22:00:00Z",
+              "value": 69.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T23:00:00Z",
+              "value": 70.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T00:00:00Z",
+              "value": 70.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T01:00:00Z",
+              "value": 69.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T02:00:00Z",
+              "value": 69.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T03:00:00Z",
+              "value": 69.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T04:00:00Z",
+              "value": 70.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T05:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T06:00:00Z",
+              "value": 78.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T07:00:00Z",
+              "value": 84.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T08:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T09:00:00Z",
+              "value": 91.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T10:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T11:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T12:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T13:00:00Z",
+              "value": 90.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T14:00:00Z",
+              "value": 88.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T15:00:00Z",
+              "value": 81.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T16:00:00Z",
+              "value": 72.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T17:00:00Z",
+              "value": 61.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T18:00:00Z",
+              "value": 58.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T19:00:00Z",
+              "value": 58.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T20:00:00Z",
+              "value": 57.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T21:00:00Z",
+              "value": 55.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T22:00:00Z",
+              "value": 52.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T23:00:00Z",
+              "value": 50.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T00:00:00Z",
+              "value": 45.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T01:00:00Z",
+              "value": 44.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T02:00:00Z",
+              "value": 43.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T03:00:00Z",
+              "value": 43.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T04:00:00Z",
+              "value": 44.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T05:00:00Z",
+              "value": 49.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T06:00:00Z",
+              "value": 58.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T07:00:00Z",
+              "value": 66.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T08:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T09:00:00Z",
+              "value": 77.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T10:00:00Z",
+              "value": 80.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T11:00:00Z",
+              "value": 80.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T12:00:00Z",
+              "value": 80.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T13:00:00Z",
+              "value": 77.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T14:00:00Z",
+              "value": 71.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T15:00:00Z",
+              "value": 64.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T16:00:00Z",
+              "value": 53.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T17:00:00Z",
+              "value": 48.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T18:00:00Z",
+              "value": 49.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T19:00:00Z",
+              "value": 50.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T20:00:00Z",
+              "value": 52.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T21:00:00Z",
+              "value": 54.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T22:00:00Z",
+              "value": 55.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T23:00:00Z",
+              "value": 55.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T00:00:00Z",
+              "value": 56.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T01:00:00Z",
+              "value": 55.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T02:00:00Z",
+              "value": 55.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T03:00:00Z",
+              "value": 55.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T04:00:00Z",
+              "value": 56.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T05:00:00Z",
+              "value": 61.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T06:00:00Z",
+              "value": 68.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T07:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T08:00:00Z",
+              "value": 77.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T09:00:00Z",
+              "value": 82.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T10:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T11:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T12:00:00Z",
+              "value": 85.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T13:00:00Z",
+              "value": 83.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T14:00:00Z",
+              "value": 77.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T15:00:00Z",
+              "value": 69.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T16:00:00Z",
+              "value": 63.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T17:00:00Z",
+              "value": 60.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T18:00:00Z",
+              "value": 59.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T19:00:00Z",
+              "value": 61.0,
+              "is_estimated": false
+            }
+          ]
+        },
+        "carbon_free_percentage": {
+          "issued_at": "2026-08-22T19:57:50.506902Z",
+          "horizon_hours": 72,
+          "points": [
+            {
+              "at": "2026-08-22T19:00:00Z",
+              "value": 72.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T20:00:00Z",
+              "value": 71.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T21:00:00Z",
+              "value": 71.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T22:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-22T23:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T00:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T01:00:00Z",
+              "value": 72.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T02:00:00Z",
+              "value": 72.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T03:00:00Z",
+              "value": 72.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T04:00:00Z",
+              "value": 73.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T05:00:00Z",
+              "value": 76.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T06:00:00Z",
+              "value": 81.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T07:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T08:00:00Z",
+              "value": 90.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T09:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T10:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T11:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T12:00:00Z",
+              "value": 92.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T13:00:00Z",
+              "value": 91.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T14:00:00Z",
+              "value": 89.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T15:00:00Z",
+              "value": 83.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T16:00:00Z",
+              "value": 75.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T17:00:00Z",
+              "value": 66.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T18:00:00Z",
+              "value": 63.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T19:00:00Z",
+              "value": 63.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T20:00:00Z",
+              "value": 62.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T21:00:00Z",
+              "value": 61.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T22:00:00Z",
+              "value": 57.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-23T23:00:00Z",
+              "value": 56.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T00:00:00Z",
+              "value": 51.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T01:00:00Z",
+              "value": 50.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T02:00:00Z",
+              "value": 50.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T03:00:00Z",
+              "value": 50.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T04:00:00Z",
+              "value": 51.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T05:00:00Z",
+              "value": 56.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T06:00:00Z",
+              "value": 63.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T07:00:00Z",
+              "value": 70.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T08:00:00Z",
+              "value": 75.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T09:00:00Z",
+              "value": 79.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T10:00:00Z",
+              "value": 81.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T11:00:00Z",
+              "value": 82.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T12:00:00Z",
+              "value": 81.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T13:00:00Z",
+              "value": 79.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T14:00:00Z",
+              "value": 74.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T15:00:00Z",
+              "value": 67.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T16:00:00Z",
+              "value": 58.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T17:00:00Z",
+              "value": 54.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T18:00:00Z",
+              "value": 54.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T19:00:00Z",
+              "value": 55.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T20:00:00Z",
+              "value": 57.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T21:00:00Z",
+              "value": 57.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T22:00:00Z",
+              "value": 58.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-24T23:00:00Z",
+              "value": 59.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T00:00:00Z",
+              "value": 59.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T01:00:00Z",
+              "value": 59.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T02:00:00Z",
+              "value": 59.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T03:00:00Z",
+              "value": 59.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T04:00:00Z",
+              "value": 61.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T05:00:00Z",
+              "value": 65.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T06:00:00Z",
+              "value": 71.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T07:00:00Z",
+              "value": 75.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T08:00:00Z",
+              "value": 80.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T09:00:00Z",
+              "value": 84.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T10:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T11:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T12:00:00Z",
+              "value": 86.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T13:00:00Z",
+              "value": 84.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T14:00:00Z",
+              "value": 78.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T15:00:00Z",
+              "value": 71.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T16:00:00Z",
+              "value": 66.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T17:00:00Z",
+              "value": 64.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T18:00:00Z",
+              "value": 63.0,
+              "is_estimated": false
+            },
+            {
+              "at": "2026-08-25T19:00:00Z",
+              "value": 64.0,
+              "is_estimated": false
+            }
+          ]
+        }
+      }
+    }
+  },
+  "notes": "RECORDED from the Electricity Maps API at 2026-08-22T19:57:51.008481+00:00. Real measured and modelled values, not generated. Individual points keep their own is_estimated flag, because Electricity Maps models a great deal of what it reports. Actuals span 2026-08-21T20:00:00+00:00 to 2026-08-22T19:00:00+00:00 at hourly granularity. Forecasts are stored as issued at recording time and extend beyond the end of the window, so they describe hours that had not happened yet. One recording therefore cannot show forecast-versus-outcome; record daily and today's forecast will overlap tomorrow's actuals."
+}

@@ -16,7 +16,7 @@ NOCONV := MSYS_NO_PATHCONV=1
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs restart build test lint fmt probe record scenario demo eval shell clean
+.PHONY: help up down logs restart build test lint fmt probe record scenario scenario-live demo eval shell clean
 
 help:  ## Show this help
 > @grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -64,6 +64,16 @@ scenario:  ## Regenerate the bundled (synthetic) replay scenarios
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
 >   --volume "$(CURDIR)/scenarios":/out api \
 >   python -m gridlab.scripts.make_scenario --out /out
+
+# ZONES and GRAN are overridable: `make scenario-live ZONES=DK-DK2,DE,PL GRAN=15_minutes`
+ZONES ?= DK-DK2,DE
+GRAN  ?= hourly
+
+scenario-live: .env  ## Record a REAL scenario from the live API into scenarios/
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
+>   --volume "$(CURDIR)/scenarios":/out api \
+>   python -m gridlab.scripts.make_scenario --from-live --out /out \
+>     --zones "$(ZONES)" --granularity "$(GRAN)"
 
 demo:  ## Play the current scenario fast and print what the lab sees
 > $(COMPOSE) exec api python -m gridlab.scripts.demo

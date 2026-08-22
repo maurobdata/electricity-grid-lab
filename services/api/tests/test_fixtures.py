@@ -25,6 +25,19 @@ from gridlab.emaps.capabilities import parse_zones
 FIXTURES = Path("/app/fixtures")
 ZONE = "DK-DK2"
 
+#: electricity-mix is recorded once per breakdownType, and the two differ in more than
+#: their numbers:
+#:
+#: * the **production** breakdown carries a nested `flows` summary and leaves sources the
+#:   zone does not run as null - so it is where the parsing traps actually live;
+#: * the **flow-traced** breakdown has neither, because tracing has already resolved every
+#:   import into a real source.
+#:
+#: Tests therefore pick the fixture that exercises the case they are about, rather than
+#: assuming one mix response stands for both.
+MIX_FIXTURE = "electricity-mix__latest__flow-traced"
+MIX_PRODUCTION_FIXTURE = "electricity-mix__latest__normal"
+
 pytestmark = pytest.mark.skipif(
     not FIXTURES.is_dir() or not list(FIXTURES.glob("*.json")),
     reason="no recorded fixtures mounted; run `make record` with a token",
@@ -53,7 +66,7 @@ def first_row(name: str) -> dict[str, Any]:
         "carbon-intensity__latest",
         "carbon-intensity__history",
         "carbon-intensity__forecast",
-        "electricity-mix__latest",
+        MIX_FIXTURE,
         "electricity-flows__latest",
         "price-day-ahead__combined",
         "net-load__latest",
@@ -138,24 +151,35 @@ def test_price_records_whether_it_was_settled_or_modelled() -> None:
 
 
 def test_mix_parses_and_reports_its_breakdown_type() -> None:
-    breakdown = normalize.mix(first_row("electricity-mix__latest"), zone=ZONE)
+    breakdown = normalize.mix(first_row(MIX_FIXTURE), zone=ZONE)
     assert breakdown.entries
     assert breakdown.flow_traced in {True, False}
     assert breakdown.total_mw and breakdown.total_mw > 0
+
+
+def test_the_two_breakdowns_are_genuinely_different_answers() -> None:
+    """Flow-tracing is the reason to prefer this API over any other, so it is worth
+    asserting that the toggle actually changes the numbers rather than the label."""
+    production = normalize.mix(first_row(MIX_PRODUCTION_FIXTURE), zone=ZONE)
+    consumption = normalize.mix(first_row(MIX_FIXTURE), zone=ZONE)
+
+    assert production.flow_traced is False
+    assert consumption.flow_traced is True
+    assert production.share("wind") != consumption.share("wind")
 
 
 def test_mix_excludes_the_nested_flows_object() -> None:
     """`flows` sits inside `mix` but is an import/export summary, not a source. Left in, it
     appears as several hundred MW of generation called "flows" and every percentage in the
     breakdown is wrong."""
-    raw = first_row("electricity-mix__latest")
+    raw = first_row(MIX_PRODUCTION_FIXTURE)
     assert "flows" in raw["mix"], "fixture no longer exercises this case"
     breakdown = normalize.mix(raw, zone=ZONE)
     assert "flows" not in {e.source for e in breakdown.entries}
 
 
 def test_mix_drops_null_sources_rather_than_plotting_zeroes() -> None:
-    raw = first_row("electricity-mix__latest")
+    raw = first_row(MIX_PRODUCTION_FIXTURE)
     nulls = {k for k, v in raw["mix"].items() if v is None}
     if not nulls:
         pytest.skip("this fixture has no null sources")
@@ -164,7 +188,7 @@ def test_mix_drops_null_sources_rather_than_plotting_zeroes() -> None:
 
 
 def test_mix_percentages_sum_to_one_hundred() -> None:
-    breakdown = normalize.mix(first_row("electricity-mix__latest"), zone=ZONE)
+    breakdown = normalize.mix(first_row(MIX_FIXTURE), zone=ZONE)
     total = sum(e.percent or 0.0 for e in breakdown.entries)
     assert total == pytest.approx(100.0, abs=0.01)
 
@@ -172,7 +196,7 @@ def test_mix_percentages_sum_to_one_hundred() -> None:
 def test_storage_contributes_discharge_only() -> None:
     """`hydro storage` and `battery storage` arrive as {charge, discharge}. Charge is
     demand; counting it as generation would double-count it."""
-    breakdown = normalize.mix(first_row("electricity-mix__latest"), zone=ZONE)
+    breakdown = normalize.mix(first_row(MIX_FIXTURE), zone=ZONE)
     assert not any(e.source.endswith("storage") for e in breakdown.entries)
     assert all((e.power_mw or 0) >= 0 for e in breakdown.entries)
 

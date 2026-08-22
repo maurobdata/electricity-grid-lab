@@ -1,0 +1,37 @@
+{
+  "_recorded_at": "2026-08-22T20:03:18.089147+00:00",
+  "_zone": "DK-DK2",
+  "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
+  "body": {
+    "zone": "DK-DK2",
+    "temporalGranularity": "hourly",
+    "unit": "MW",
+    "data": [
+      {
+        "datetime": "2026-08-22T20:00:00.000Z",
+        "updatedAt": "2026-08-22T19:49:23.126Z",
+        "isEstimated": true,
+        "estimationMethod": "ESTIMATED_FORECASTS_HIERARCHY",
+        "breakdownType": "flow-traced",
+        "mix": {
+          "nuclear": 97.23,
+          "geothermal": 0.01,
+          "biomass": 132.89,
+          "coal": 5,
+          "wind": 1062.52,
+          "solar": 0.1,
+          "hydro": 64.09,
+          "gas": 13.45,
+          "oil": 1.28,
+          "unknown": 15.31,
+          "hydro storage": {
+            "discharge": 1.69
+          },
+          "battery storage": {
+            "discharge": 0.06
+          }
+        }
+      }
+    ]
+  }
+}
