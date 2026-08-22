@@ -40,7 +40,7 @@ restart: down up  ## Restart
 build:  ## Rebuild images
 > $(COMPOSE) build
 
-web: .env  ## Start the optional PWA
+web: .env  ## Start the PWA as well (API + agent must be up)
 > $(COMPOSE) --profile web up --build -d web
 > @echo ""
 > @echo "  PWA    http://localhost:5173"
@@ -52,8 +52,9 @@ pwa: web  ## Alias for web
 test:  ## Run the offline test suite (no network, no key)
 > $(API) pytest -q
 
-lint:  ## Ruff check + mypy --strict
+lint:  ## Ruff check + mypy --strict, and the web typecheck
 > $(API) sh -c "ruff check src tests && ruff format --check src tests && mypy src"
+> $(COMPOSE) --profile web run --rm --no-deps -T web npx tsc -b
 
 fmt:  ## Format and auto-fix
 > $(API) sh -c "ruff check --fix src tests; ruff format src tests"
