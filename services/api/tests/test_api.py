@@ -21,12 +21,17 @@ from gridlab.web.state import LabState
 
 @pytest.fixture
 def client(scenarios_dir: Path, tmp_path: Path) -> Iterator[TestClient]:
+    # Tokens are pinned to None explicitly. pydantic-settings reads `.env` for anything not
+    # passed here, so once a developer adds a real token these tests would start asserting
+    # against their machine rather than against the code.
     settings = Settings(
         gridlab_mode=Mode.REPLAY,
         gridlab_scenario="test-scenario",
         gridlab_scenarios_dir=scenarios_dir,
         gridlab_db_path=tmp_path / "test.duckdb",
         gridlab_replay_speed=1.0,
+        electricity_maps_api_token=None,
+        anthropic_api_key=None,
     )
     state = LabState.build(settings)
     app.state.lab = state

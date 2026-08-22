@@ -1,0 +1,55 @@
+{
+  "_recorded_at": "2026-08-22T17:34:25.943057+00:00",
+  "_zone": "DK-DK2",
+  "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
+  "body": {
+    "zone": "DK-DK2",
+    "datetime": "2026-08-22T17:00:00.000Z",
+    "updatedAt": "2026-08-22T17:24:08.708Z",
+    "createdAt": "2026-08-21T22:35:11.365Z",
+    "powerConsumptionBreakdown": {
+      "nuclear": 2,
+      "geothermal": 0,
+      "biomass": 222,
+      "coal": 12,
+      "wind": 944,
+      "solar": 74,
+      "hydro": 4,
+      "gas": 24,
+      "oil": 4,
+      "unknown": 0,
+      "hydro discharge": 3,
+      "battery discharge": 0
+    },
+    "powerProductionBreakdown": {
+      "nuclear": null,
+      "geothermal": null,
+      "biomass": 229,
+      "coal": null,
+      "wind": 1008,
+      "solar": 71,
+      "hydro": null,
+      "gas": 15,
+      "oil": 4,
+      "unknown": null,
+      "hydro discharge": null,
+      "battery discharge": null
+    },
+    "powerImportBreakdown": {
+      "DE": 36
+    },
+    "powerExportBreakdown": {
+      "DK-DK1": 450,
+      "SE-SE4": 453
+    },
+    "fossilFreePercentage": 97,
+    "renewablePercentage": 97,
+    "powerConsumptionTotal": 1288,
+    "powerProductionTotal": 1327,
+    "powerImportTotal": 450,
+    "powerExportTotal": 489,
+    "isEstimated": true,
+    "estimationMethod": "FORECASTS_HIERARCHY",
+    "temporalGranularity": "hourly"
+  }
+}

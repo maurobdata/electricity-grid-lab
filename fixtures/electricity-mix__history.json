@@ -1,0 +1,734 @@
+{
+  "_recorded_at": "2026-08-22T17:34:25.236230+00:00",
+  "_zone": "DK-DK2",
+  "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
+  "body": {
+    "zone": "DK-DK2",
+    "temporalGranularity": "hourly",
+    "unit": "MW",
+    "history": [
+      {
+        "datetime": "2026-08-21T18:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:43.351Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 470.46,
+          "coal": null,
+          "wind": 73.53,
+          "solar": 16.55,
+          "hydro": null,
+          "gas": 14.91,
+          "oil": 1.75,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 0,
+            "imports": 984
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-21T19:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:36.825Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 477.21,
+          "coal": null,
+          "wind": 112.23,
+          "solar": 1.23,
+          "hydro": null,
+          "gas": 14.84,
+          "oil": 1.64,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 51,
+            "imports": 961
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-21T20:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:48.386Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 470.84,
+          "coal": null,
+          "wind": 142.89,
+          "solar": 0,
+          "hydro": null,
+          "gas": 14.84,
+          "oil": 1.66,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 134,
+            "imports": 949
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-21T21:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:40.201Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 479.05,
+          "coal": null,
+          "wind": 192.06,
+          "solar": 0,
+          "hydro": null,
+          "gas": 15.19,
+          "oil": 1.75,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 74,
+            "imports": 744
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-21T22:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:35.729Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 383.63,
+          "coal": null,
+          "wind": 256.31,
+          "solar": 0,
+          "hydro": null,
+          "gas": 12.35,
+          "oil": 1.64,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 41,
+            "imports": 671
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-21T23:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:36.175Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 150.15,
+          "coal": null,
+          "wind": 336.44,
+          "solar": 0,
+          "hydro": null,
+          "gas": 7.29,
+          "oil": 1.6,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 58,
+            "imports": 810
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T00:00:00.000Z",
+        "updatedAt": "2026-08-22T03:19:34.538Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 119.42,
+          "coal": null,
+          "wind": 287.32,
+          "solar": 0,
+          "hydro": null,
+          "gas": 6.97,
+          "oil": 1.55,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 24,
+            "imports": 831
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T01:00:00.000Z",
+        "updatedAt": "2026-08-22T13:49:59.637Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 117.38,
+          "coal": null,
+          "wind": 272.86,
+          "solar": 0,
+          "hydro": null,
+          "gas": 8.91,
+          "oil": 1.7,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 16,
+            "imports": 819
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T02:00:00.000Z",
+        "updatedAt": "2026-08-22T13:50:11.975Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 109,
+          "coal": null,
+          "wind": 330.17,
+          "solar": 0,
+          "hydro": null,
+          "gas": 5.13,
+          "oil": 1.52,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 0,
+            "imports": 733
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T03:00:00.000Z",
+        "updatedAt": "2026-08-22T07:35:00.563Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 108.38,
+          "coal": null,
+          "wind": 401.22,
+          "solar": 0,
+          "hydro": null,
+          "gas": 5.15,
+          "oil": 1.52,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 0,
+            "imports": 638
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T04:00:00.000Z",
+        "updatedAt": "2026-08-22T07:34:49.148Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 111.5,
+          "coal": null,
+          "wind": 455.15,
+          "solar": 15.07,
+          "hydro": null,
+          "gas": 5.53,
+          "oil": 1.63,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 82,
+            "imports": 626
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T05:00:00.000Z",
+        "updatedAt": "2026-08-22T08:34:50.682Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 140.7,
+          "coal": null,
+          "wind": 504.84,
+          "solar": 128.82,
+          "hydro": null,
+          "gas": 7.52,
+          "oil": 2.22,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 58,
+            "imports": 585
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T06:00:00.000Z",
+        "updatedAt": "2026-08-22T15:49:56.949Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 143.86,
+          "coal": null,
+          "wind": 642.37,
+          "solar": 210.85,
+          "hydro": null,
+          "gas": 7.66,
+          "oil": 2.26,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 79,
+            "imports": 519
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T07:00:00.000Z",
+        "updatedAt": "2026-08-22T15:50:04.244Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 175.13,
+          "coal": null,
+          "wind": 706.02,
+          "solar": 303.17,
+          "hydro": null,
+          "gas": 12.04,
+          "oil": 4.58,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 204,
+            "imports": 598
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T08:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:48.693Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 198.04,
+          "coal": null,
+          "wind": 717.26,
+          "solar": 453.6,
+          "hydro": null,
+          "gas": 15.79,
+          "oil": 8.6,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 517,
+            "imports": 974
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T09:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:47.028Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 207.96,
+          "coal": null,
+          "wind": 858.91,
+          "solar": 517.19,
+          "hydro": null,
+          "gas": 17.3,
+          "oil": 3.95,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 492,
+            "imports": 973
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T10:00:00.000Z",
+        "updatedAt": "2026-08-22T15:34:59.627Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 236.96,
+          "coal": null,
+          "wind": 621.63,
+          "solar": 640.9,
+          "hydro": null,
+          "gas": 19.39,
+          "oil": 4.51,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 468,
+            "imports": 1230
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T11:00:00.000Z",
+        "updatedAt": "2026-08-22T15:35:00.957Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 251.84,
+          "coal": null,
+          "wind": 585.31,
+          "solar": 705.72,
+          "hydro": null,
+          "gas": 20.4,
+          "oil": 4.94,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 467,
+            "imports": 1237
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T12:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:51.747Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 257.75,
+          "coal": null,
+          "wind": 582.13,
+          "solar": 825.79,
+          "hydro": null,
+          "gas": 20.78,
+          "oil": 4.96,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 454,
+            "imports": 1072
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T13:00:00.000Z",
+        "updatedAt": "2026-08-22T16:04:41.530Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 233.27,
+          "coal": null,
+          "wind": 597.81,
+          "solar": 763.33,
+          "hydro": null,
+          "gas": 18.81,
+          "oil": 4.43,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 434,
+            "imports": 1029
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T14:00:00.000Z",
+        "updatedAt": "2026-08-22T16:49:45.152Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 226.61,
+          "coal": null,
+          "wind": 774.98,
+          "solar": 668.71,
+          "hydro": null,
+          "gas": 18.07,
+          "oil": 4.25,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 453,
+            "imports": 926
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T15:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:08.708Z",
+        "estimationMethod": "MEASURED",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 239.11,
+          "coal": null,
+          "wind": 1051.81,
+          "solar": 378.75,
+          "hydro": null,
+          "gas": 18.42,
+          "oil": 4.37,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 460,
+            "imports": 729
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T16:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:02.702Z",
+        "isEstimated": true,
+        "estimationMethod": "ESTIMATED_FORECASTS_HIERARCHY",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 237.22,
+          "coal": null,
+          "wind": 1054.25,
+          "solar": 172.44,
+          "hydro": null,
+          "gas": 18.26,
+          "oil": 4.13,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 632,
+            "imports": 481
+          }
+        }
+      },
+      {
+        "datetime": "2026-08-22T17:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:08.708Z",
+        "isEstimated": true,
+        "estimationMethod": "ESTIMATED_FORECASTS_HIERARCHY",
+        "breakdownType": "normal",
+        "mix": {
+          "nuclear": null,
+          "geothermal": null,
+          "biomass": 229.05,
+          "coal": null,
+          "wind": 1008.25,
+          "solar": 71.06,
+          "hydro": null,
+          "gas": 14.76,
+          "oil": 4.32,
+          "unknown": null,
+          "hydro storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "battery storage": {
+            "charge": 0,
+            "discharge": null
+          },
+          "flows": {
+            "exports": 489,
+            "imports": 450
+          }
+        }
+      }
+    ]
+  }
+}

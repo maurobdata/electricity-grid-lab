@@ -1,0 +1,17 @@
+{
+  "_recorded_at": "2026-08-22T17:34:24.120642+00:00",
+  "_zone": "DK-DK2",
+  "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
+  "body": {
+    "zone": "DK-DK2",
+    "carbonIntensity": 75,
+    "datetime": "2026-08-22T17:00:00.000Z",
+    "updatedAt": "2026-08-22T17:24:08.708Z",
+    "createdAt": "2026-08-21T22:35:11.365Z",
+    "emissionFactorType": "lifecycle",
+    "flowTraced": true,
+    "isEstimated": true,
+    "estimationMethod": "FORECASTS_HIERARCHY",
+    "temporalGranularity": "hourly"
+  }
+}

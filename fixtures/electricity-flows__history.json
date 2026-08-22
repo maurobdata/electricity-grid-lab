@@ -1,0 +1,278 @@
+{
+  "_recorded_at": "2026-08-22T17:34:25.676341+00:00",
+  "_zone": "DK-DK2",
+  "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
+  "body": {
+    "zone": "DK-DK2",
+    "temporalGranularity": "hourly",
+    "unit": "MW",
+    "history": [
+      {
+        "datetime": "2026-08-21T18:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:43.351Z",
+        "import": {
+          "SE-SE4": 303
+        },
+        "export": {
+          "DE": 549,
+          "DK-DK1": 131
+        }
+      },
+      {
+        "datetime": "2026-08-21T19:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:36.825Z",
+        "import": {
+          "DK-DK1": 51,
+          "SE-SE4": 304
+        },
+        "export": {
+          "DE": 648,
+          "DK-DK1": 9
+        }
+      },
+      {
+        "datetime": "2026-08-21T20:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:48.386Z",
+        "import": {
+          "DK-DK1": 134,
+          "SE-SE4": 411
+        },
+        "export": {
+          "DE": 538
+        }
+      },
+      {
+        "datetime": "2026-08-21T21:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:40.201Z",
+        "import": {
+          "DK-DK1": 74,
+          "SE-SE4": 383
+        },
+        "export": {
+          "DE": 361
+        }
+      },
+      {
+        "datetime": "2026-08-21T22:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:35.729Z",
+        "import": {
+          "DK-DK1": 41,
+          "SE-SE4": 397
+        },
+        "export": {
+          "DE": 274
+        }
+      },
+      {
+        "datetime": "2026-08-21T23:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:36.175Z",
+        "import": {
+          "DK-DK1": 58,
+          "SE-SE4": 421
+        },
+        "export": {
+          "DE": 390
+        }
+      },
+      {
+        "datetime": "2026-08-22T00:00:00.000Z",
+        "updatedAt": "2026-08-22T03:19:34.538Z",
+        "import": {
+          "DK-DK1": 24,
+          "SE-SE4": 385
+        },
+        "export": {
+          "DE": 446
+        }
+      },
+      {
+        "datetime": "2026-08-22T01:00:00.000Z",
+        "updatedAt": "2026-08-22T13:49:59.637Z",
+        "import": {
+          "DK-DK1": 16,
+          "SE-SE4": 421
+        },
+        "export": {
+          "DE": 390,
+          "DK-DK1": 7
+        }
+      },
+      {
+        "datetime": "2026-08-22T02:00:00.000Z",
+        "updatedAt": "2026-08-22T13:50:11.975Z",
+        "import": {
+          "SE-SE4": 373
+        },
+        "export": {
+          "DE": 307,
+          "DK-DK1": 53
+        }
+      },
+      {
+        "datetime": "2026-08-22T03:00:00.000Z",
+        "updatedAt": "2026-08-22T07:35:00.563Z",
+        "import": {
+          "SE-SE4": 374
+        },
+        "export": {
+          "DE": 189,
+          "DK-DK1": 75
+        }
+      },
+      {
+        "datetime": "2026-08-22T04:00:00.000Z",
+        "updatedAt": "2026-08-22T07:34:49.148Z",
+        "import": {
+          "DE": 82,
+          "SE-SE4": 383
+        },
+        "export": {
+          "DE": 3,
+          "DK-DK1": 241
+        }
+      },
+      {
+        "datetime": "2026-08-22T05:00:00.000Z",
+        "updatedAt": "2026-08-22T08:34:50.682Z",
+        "import": {
+          "DE": 58,
+          "SE-SE4": 430
+        },
+        "export": {
+          "DE": 9,
+          "DK-DK1": 146
+        }
+      },
+      {
+        "datetime": "2026-08-22T06:00:00.000Z",
+        "updatedAt": "2026-08-22T15:49:56.949Z",
+        "import": {
+          "DE": 79,
+          "SE-SE4": 402
+        },
+        "export": {
+          "DK-DK1": 117
+        }
+      },
+      {
+        "datetime": "2026-08-22T07:00:00.000Z",
+        "updatedAt": "2026-08-22T15:50:04.244Z",
+        "import": {
+          "DE": 0,
+          "DK-DK1": 84,
+          "SE-SE4": 91
+        },
+        "export": {
+          "DE": 502,
+          "DK-DK1": 4,
+          "SE-SE4": 119
+        }
+      },
+      {
+        "datetime": "2026-08-22T08:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:48.693Z",
+        "import": {
+          "DK-DK1": 46
+        },
+        "export": {
+          "DE": 933,
+          "DK-DK1": 41,
+          "SE-SE4": 471
+        }
+      },
+      {
+        "datetime": "2026-08-22T09:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:47.028Z",
+        "import": {},
+        "export": {
+          "DE": 506,
+          "DK-DK1": 468,
+          "SE-SE4": 492
+        }
+      },
+      {
+        "datetime": "2026-08-22T10:00:00.000Z",
+        "updatedAt": "2026-08-22T15:34:59.627Z",
+        "import": {},
+        "export": {
+          "DE": 673,
+          "DK-DK1": 557,
+          "SE-SE4": 468
+        }
+      },
+      {
+        "datetime": "2026-08-22T11:00:00.000Z",
+        "updatedAt": "2026-08-22T15:35:00.957Z",
+        "import": {},
+        "export": {
+          "DE": 851,
+          "DK-DK1": 386,
+          "SE-SE4": 467
+        }
+      },
+      {
+        "datetime": "2026-08-22T12:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:51.747Z",
+        "import": {},
+        "export": {
+          "DE": 824,
+          "DK-DK1": 249,
+          "SE-SE4": 454
+        }
+      },
+      {
+        "datetime": "2026-08-22T13:00:00.000Z",
+        "updatedAt": "2026-08-22T16:04:41.530Z",
+        "import": {},
+        "export": {
+          "DE": 781,
+          "DK-DK1": 248,
+          "SE-SE4": 434
+        }
+      },
+      {
+        "datetime": "2026-08-22T14:00:00.000Z",
+        "updatedAt": "2026-08-22T16:49:45.152Z",
+        "import": {},
+        "export": {
+          "DE": 739,
+          "DK-DK1": 186,
+          "SE-SE4": 453
+        }
+      },
+      {
+        "datetime": "2026-08-22T15:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:08.708Z",
+        "import": {},
+        "export": {
+          "DE": 379,
+          "DK-DK1": 350,
+          "SE-SE4": 460
+        }
+      },
+      {
+        "datetime": "2026-08-22T16:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:02.702Z",
+        "import": {
+          "DE": 171
+        },
+        "export": {
+          "DE": 66,
+          "DK-DK1": 415,
+          "SE-SE4": 460
+        }
+      },
+      {
+        "datetime": "2026-08-22T17:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:08.708Z",
+        "import": {
+          "DE": 36
+        },
+        "export": {
+          "DK-DK1": 450,
+          "SE-SE4": 453
+        }
+      }
+    ]
+  }
+}

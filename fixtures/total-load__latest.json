@@ -1,0 +1,17 @@
+{
+  "_recorded_at": "2026-08-22T17:34:26.518569+00:00",
+  "_zone": "DK-DK2",
+  "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
+  "body": {
+    "zone": "DK-DK2",
+    "datetime": "2026-08-22T17:00:00.000Z",
+    "createdAt": "2026-08-21T22:35:11.365Z",
+    "updatedAt": "2026-08-22T17:24:08.708Z",
+    "value": 1288.22,
+    "unit": "MW",
+    "source": "ESTIMATED_FORECASTS_HIERARCHY",
+    "isEstimated": true,
+    "estimationMethod": "FORECASTS_HIERARCHY",
+    "temporalGranularity": "hourly"
+  }
+}

@@ -1,13 +1,13 @@
 """Normalization: raw JSON in, domain models out.
 
-These tests encode what we currently believe the Electricity Maps v4 responses look like.
-Only the carbon-intensity shape is publicly evidenced; the rest is inferred (see
-``docs/electricity-maps-api.md``). When ``make record`` produces real fixtures, replace the
-inline payloads here with them and narrow the candidate key lists in ``normalize``.
+Hand-written payloads, shaped after the real responses recorded in ``fixtures/`` and
+documented in ``docs/electricity-maps-api.md``. They exist alongside ``test_fixtures.py``,
+which parses the genuine article, because a single captured moment does not contain every
+edge case: nulls, storage in both directions, a neighbour that is simultaneously importing
+and exporting. Those are constructed here deliberately.
 
-The point of these tests is therefore less "we parse the API correctly" — we cannot yet
-know that — and more "when the API differs from our guess, we find out loudly, with the
-real keys in the error message, instead of silently plotting zeroes".
+Where a test looks oddly specific, it is usually pinning something that was wrong in the
+first version of the normalizer.
 """
 
 from __future__ import annotations
@@ -20,7 +20,7 @@ from gridlab.domain.models import Provenance
 from gridlab.emaps import normalize
 from gridlab.emaps.normalize import RawShapeError
 
-# The one response shape with public evidence behind it.
+# The shape of `carbon-intensity/latest`, which is a bare object rather than a row list.
 CARBON_LATEST = {
     "zone": "DE",
     "carbonIntensity": 302,
@@ -106,36 +106,76 @@ def test_unrecognisable_body_raises_with_its_keys() -> None:
 # --- mix --------------------------------------------------------------------
 
 
+# Shaped after a real `electricity-mix/latest` response, exaggerated so the edge cases are
+# unmissable. `tests/test_fixtures.py` covers the genuine article; these cover the corners
+# a single captured moment may not happen to contain.
 MIX_LATEST = {
     "zone": "DK-DK1",
     "datetime": "2026-02-04T18:00:00Z",
-    "powerConsumptionBreakdown": {"wind": 1200, "coal": 300, "gas": 500},
-    "powerProductionBreakdown": {"wind": 2000, "gas": 100},
-    "powerConsumptionTotal": 2000,
+    "breakdownType": "flow-traced",
+    "mix": {
+        "wind": 1200,
+        "coal": 300,
+        "gas": 500,
+        "nuclear": None,
+        "hydro": None,
+        "hydro storage": {"charge": 40, "discharge": None},
+        "battery storage": {"charge": 0, "discharge": 100},
+        "flows": {"exports": 489, "imports": 450},
+    },
 }
 
 
-def test_flow_traced_and_production_are_different_answers() -> None:
-    """This is the distinction the whole project cares about: what a zone *generated*
-    versus what is actually in the socket once imports are traced to their origin."""
-    consumption = normalize.mix(MIX_LATEST, zone="DK-DK1", flow_traced=True)
-    production = normalize.mix(MIX_LATEST, zone="DK-DK1", flow_traced=False)
-
-    assert consumption.flow_traced is True
-    assert production.flow_traced is False
-    assert {e.source for e in consumption.entries} == {"wind", "coal", "gas"}
-    assert {e.source for e in production.entries} == {"wind", "gas"}
+def test_mix_reports_the_breakdown_the_response_declares() -> None:
+    """The row says which breakdown it is, so a chart cannot mislabel itself even if the
+    caller forgot what it asked for."""
+    assert normalize.mix(MIX_LATEST, zone="DK-DK1").flow_traced is True
+    assert (
+        normalize.mix(MIX_LATEST | {"breakdownType": "normal"}, zone="DK-DK1").flow_traced is False
+    )
 
 
-def test_mix_percentages_are_derived_when_absent() -> None:
-    mix = normalize.mix(MIX_LATEST, zone="DK-DK1", flow_traced=True)
-    assert mix.share("wind") == pytest.approx(60.0)
-    assert sum(e.percent or 0 for e in mix.entries) == pytest.approx(100.0)
+def test_the_flows_key_is_not_a_generation_source() -> None:
+    """`flows` is nested inside `mix`. Left in, it becomes several hundred MW of generation
+    called "flows" and every percentage in the breakdown is wrong."""
+    breakdown = normalize.mix(MIX_LATEST, zone="DK-DK1")
+    assert "flows" not in {e.source for e in breakdown.entries}
+
+
+def test_null_sources_are_dropped_not_zeroed() -> None:
+    """A zero is a claim that the plant ran and produced nothing. Null means unknown."""
+    breakdown = normalize.mix(MIX_LATEST, zone="DK-DK1")
+    assert {"nuclear", "hydro"}.isdisjoint({e.source for e in breakdown.entries})
+
+
+def test_storage_counts_discharge_and_ignores_charge() -> None:
+    """Charging is demand. Counting it as generation would double-count it, and a battery
+    absorbing a wind surplus would appear to be producing power."""
+    breakdown = normalize.mix(MIX_LATEST, zone="DK-DK1")
+    sources = {e.source: e for e in breakdown.entries}
+
+    assert "battery storage discharge" in sources
+    assert sources["battery storage discharge"].power_mw == 100
+    assert "hydro storage discharge" not in sources  # discharge was null
+    assert not any(e.source == "charge" for e in breakdown.entries)
+
+
+def test_mix_percentages_are_derived_and_sum_to_one_hundred() -> None:
+    breakdown = normalize.mix(MIX_LATEST, zone="DK-DK1")
+    assert breakdown.total_mw == 2100  # 1200 + 300 + 500 + 100 discharge
+    assert breakdown.share("wind") == pytest.approx(1200 / 2100 * 100)
+    assert sum(e.percent or 0 for e in breakdown.entries) == pytest.approx(100.0)
 
 
 def test_mix_without_a_recognisable_breakdown_raises() -> None:
-    with pytest.raises(RawShapeError, match="No mix breakdown"):
-        normalize.mix({"datetime": "2026-01-01T00:00:00Z"}, zone="DE", flow_traced=True)
+    with pytest.raises(RawShapeError, match="None of"):
+        normalize.mix({"datetime": "2026-01-01T00:00:00Z"}, zone="DE")
+
+
+def test_a_mix_of_only_nulls_raises_rather_than_charting_nothing() -> None:
+    body = {"datetime": "2026-01-01T00:00:00Z", "mix": {"wind": None, "gas": None}}
+    with pytest.raises(RawShapeError, match="No usable generation sources"):
+        normalize.mix(body, zone="DE")
 
 
 # --- flows ------------------------------------------------------------------
@@ -145,8 +185,8 @@ def test_imports_are_negative_and_exports_positive() -> None:
     body = {
         "zone": "DK-DK2",
         "datetime": "2026-02-04T18:00:00Z",
-        "powerExportBreakdown": {"SE-SE4": 300},
-        "powerImportBreakdown": {"DE": 900},
+        "export": {"SE-SE4": 300},
+        "import": {"DE": 900},
     }
     flows = normalize.flows(body, zone="DK-DK2")
 
@@ -162,8 +202,8 @@ def test_a_zone_both_importing_and_exporting_to_one_neighbour_nets_out() -> None
     body = {
         "zone": "DK-DK1",
         "datetime": "2026-02-04T18:00:00Z",
-        "powerExportBreakdown": {"DE": 400},
-        "powerImportBreakdown": {"DE": 100},
+        "export": {"DE": 400},
+        "import": {"DE": 100},
     }
     flows = normalize.flows(body, zone="DK-DK1")
     assert len(flows.edges) == 1
@@ -176,14 +216,14 @@ def test_a_zone_both_importing_and_exporting_to_one_neighbour_nets_out() -> None
 def test_fractional_shares_are_scaled_to_percent() -> None:
     """Some responses express shares as 0-1. Plotting 0.82 on a 0-100 axis looks like a
     dead grid rather than a very good day."""
-    body = {"zone": "DK-DK1", "datetime": "2026-02-04T18:00:00Z", "renewablePercentage": 0.82}
-    pct = normalize.percentage(body, zone="DK-DK1", keys=["renewablePercentage"])
+    body = {"zone": "DK-DK1", "datetime": "2026-02-04T18:00:00Z", "value": 0.82}
+    pct = normalize.percentage(body, zone="DK-DK1")
     assert pct.value == pytest.approx(82.0)
 
 
 def test_percent_values_pass_through_unchanged() -> None:
-    body = {"zone": "DK-DK1", "datetime": "2026-02-04T18:00:00Z", "renewablePercentage": 82}
-    pct = normalize.percentage(body, zone="DK-DK1", keys=["renewablePercentage"])
+    body = {"zone": "DK-DK1", "datetime": "2026-02-04T18:00:00Z", "value": 82}
+    pct = normalize.percentage(body, zone="DK-DK1")
     assert pct.value == pytest.approx(82.0)
 
 

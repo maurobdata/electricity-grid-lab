@@ -1,0 +1,112 @@
+{
+  "_recorded_at": "2026-08-22T17:34:24.390910+00:00",
+  "_zone": "DK-DK2",
+  "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
+  "body": {
+    "zone": "DK-DK2",
+    "forecast": [
+      {
+        "carbonIntensity": 77,
+        "datetime": "2026-08-22T17:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 76,
+        "datetime": "2026-08-22T18:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 73,
+        "datetime": "2026-08-22T19:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 72,
+        "datetime": "2026-08-22T20:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 72,
+        "datetime": "2026-08-22T21:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 72,
+        "datetime": "2026-08-22T22:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 71,
+        "datetime": "2026-08-22T23:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 71,
+        "datetime": "2026-08-23T00:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 71,
+        "datetime": "2026-08-23T01:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 69,
+        "datetime": "2026-08-23T02:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 70,
+        "datetime": "2026-08-23T03:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 73,
+        "datetime": "2026-08-23T04:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 78,
+        "datetime": "2026-08-23T05:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 85,
+        "datetime": "2026-08-23T06:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 96,
+        "datetime": "2026-08-23T07:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 94,
+        "datetime": "2026-08-23T08:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 92,
+        "datetime": "2026-08-23T09:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 92,
+        "datetime": "2026-08-23T10:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 94,
+        "datetime": "2026-08-23T11:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 98,
+        "datetime": "2026-08-23T12:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 101,
+        "datetime": "2026-08-23T13:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 106,
+        "datetime": "2026-08-23T14:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 109,
+        "datetime": "2026-08-23T15:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 117,
+        "datetime": "2026-08-23T16:00:00.000Z"
+      },
+      {
+        "carbonIntensity": 135,
+        "datetime": "2026-08-23T17:00:00.000Z"
+      }
+    ],
+    "updatedAt": "2026-08-22T17:34:24.392Z",
+    "temporalGranularity": "hourly"
+  }
+}

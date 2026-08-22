@@ -1,0 +1,275 @@
+{
+  "_recorded_at": "2026-08-22T17:34:24.265408+00:00",
+  "_zone": "DK-DK2",
+  "_note": "Verbatim Electricity Maps v4 response. No token or header is stored here. This is the ground truth for gridlab.emaps.normalize.",
+  "body": {
+    "zone": "DK-DK2",
+    "history": [
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 246,
+        "datetime": "2026-08-21T18:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:43.351Z",
+        "createdAt": "2026-08-20T22:34:38.311Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 272,
+        "datetime": "2026-08-21T19:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:36.825Z",
+        "createdAt": "2026-08-20T22:34:38.813Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 236,
+        "datetime": "2026-08-21T20:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:48.386Z",
+        "createdAt": "2026-08-20T22:34:45.144Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 205,
+        "datetime": "2026-08-21T21:00:00.000Z",
+        "updatedAt": "2026-08-22T14:04:40.201Z",
+        "createdAt": "2026-08-20T22:34:40.796Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 175,
+        "datetime": "2026-08-21T22:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:35.729Z",
+        "createdAt": "2026-08-20T22:34:38.311Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 172,
+        "datetime": "2026-08-21T23:00:00.000Z",
+        "updatedAt": "2026-08-22T06:19:36.175Z",
+        "createdAt": "2026-08-21T02:19:47.420Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 192,
+        "datetime": "2026-08-22T00:00:00.000Z",
+        "updatedAt": "2026-08-22T03:19:34.538Z",
+        "createdAt": "2026-08-21T02:19:46.963Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 177,
+        "datetime": "2026-08-22T01:00:00.000Z",
+        "updatedAt": "2026-08-22T13:49:59.637Z",
+        "createdAt": "2026-08-21T02:20:11.893Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 149,
+        "datetime": "2026-08-22T02:00:00.000Z",
+        "updatedAt": "2026-08-22T13:50:11.975Z",
+        "createdAt": "2026-08-21T02:19:43.624Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 107,
+        "datetime": "2026-08-22T03:00:00.000Z",
+        "updatedAt": "2026-08-22T07:35:00.563Z",
+        "createdAt": "2026-08-21T02:19:47.420Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 51,
+        "datetime": "2026-08-22T04:00:00.000Z",
+        "updatedAt": "2026-08-22T07:34:49.148Z",
+        "createdAt": "2026-08-21T18:19:35.554Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 54,
+        "datetime": "2026-08-22T05:00:00.000Z",
+        "updatedAt": "2026-08-22T08:34:50.682Z",
+        "createdAt": "2026-08-21T21:19:29.597Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 49,
+        "datetime": "2026-08-22T06:00:00.000Z",
+        "updatedAt": "2026-08-22T15:49:56.949Z",
+        "createdAt": "2026-08-21T22:19:22.616Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 84,
+        "datetime": "2026-08-22T07:00:00.000Z",
+        "updatedAt": "2026-08-22T15:50:04.244Z",
+        "createdAt": "2026-08-21T22:35:08.417Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 85,
+        "datetime": "2026-08-22T08:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:48.693Z",
+        "createdAt": "2026-08-21T22:35:05.200Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 70,
+        "datetime": "2026-08-22T09:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:47.028Z",
+        "createdAt": "2026-08-21T22:35:16.905Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 80,
+        "datetime": "2026-08-22T10:00:00.000Z",
+        "updatedAt": "2026-08-22T15:34:59.627Z",
+        "createdAt": "2026-08-21T22:35:17.678Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 83,
+        "datetime": "2026-08-22T11:00:00.000Z",
+        "updatedAt": "2026-08-22T15:35:00.957Z",
+        "createdAt": "2026-08-21T22:35:09.008Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 81,
+        "datetime": "2026-08-22T12:00:00.000Z",
+        "updatedAt": "2026-08-22T15:19:51.747Z",
+        "createdAt": "2026-08-21T22:35:18.095Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 80,
+        "datetime": "2026-08-22T13:00:00.000Z",
+        "updatedAt": "2026-08-22T16:04:41.530Z",
+        "createdAt": "2026-08-21T22:35:17.678Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 78,
+        "datetime": "2026-08-22T14:00:00.000Z",
+        "updatedAt": "2026-08-22T16:49:45.152Z",
+        "createdAt": "2026-08-21T22:35:09.844Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 72,
+        "datetime": "2026-08-22T15:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:08.708Z",
+        "createdAt": "2026-08-21T22:35:11.365Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": false,
+        "estimationMethod": null
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 70,
+        "datetime": "2026-08-22T16:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:02.702Z",
+        "createdAt": "2026-08-21T22:35:09.844Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": true,
+        "estimationMethod": "FORECASTS_HIERARCHY"
+      },
+      {
+        "zone": "DK-DK2",
+        "carbonIntensity": 75,
+        "datetime": "2026-08-22T17:00:00.000Z",
+        "updatedAt": "2026-08-22T17:24:08.708Z",
+        "createdAt": "2026-08-21T22:35:11.365Z",
+        "emissionFactorType": "lifecycle",
+        "flowTraced": true,
+        "isEstimated": true,
+        "estimationMethod": "FORECASTS_HIERARCHY"
+      }
+    ],
+    "temporalGranularity": "hourly"
+  }
+}

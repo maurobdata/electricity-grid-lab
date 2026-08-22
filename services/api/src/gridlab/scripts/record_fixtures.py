@@ -27,7 +27,14 @@ from typing import Any
 from gridlab.config import get_settings
 from gridlab.emaps import errors
 from gridlab.emaps.client import EMapsClient
-from gridlab.emaps.signals import SUPPORTED, Signal, SourceType, Temporality
+from gridlab.emaps.signals import (
+    FORECAST_NEEDS_WINDOW,
+    SUPPORTED,
+    Signal,
+    SourceType,
+    Temporality,
+    supported_horizons,
+)
 
 #: What to record. Chosen for coverage of the response *shapes* rather than of the whole
 #: API: one scalar signal, one percentage, one structured breakdown, one exchange map, one
@@ -36,18 +43,23 @@ PLAN: list[tuple[Signal, Temporality]] = [
     (Signal.CARBON_INTENSITY, Temporality.LATEST),
     (Signal.CARBON_INTENSITY, Temporality.HISTORY),
     (Signal.CARBON_INTENSITY, Temporality.FORECAST),
-    (Signal.CARBON_INTENSITY, Temporality.PAST_RANGE),
     (Signal.RENEWABLE_ENERGY, Temporality.LATEST),
     (Signal.CARBON_FREE_ENERGY, Temporality.LATEST),
     (Signal.ELECTRICITY_MIX, Temporality.LATEST),
+    (Signal.ELECTRICITY_MIX, Temporality.HISTORY),
     (Signal.ELECTRICITY_MIX, Temporality.FORECAST),
     (Signal.ELECTRICITY_FLOWS, Temporality.LATEST),
+    (Signal.ELECTRICITY_FLOWS, Temporality.HISTORY),
     (Signal.ELECTRICITY_SOURCE, Temporality.LATEST),
+    (Signal.POWER_BREAKDOWN, Temporality.LATEST),
     (Signal.PRICE_DAY_AHEAD, Temporality.LATEST),
     (Signal.PRICE_DAY_AHEAD, Temporality.COMBINED),
+    (Signal.PRICE_DAY_AHEAD, Temporality.HISTORY),
     (Signal.TOTAL_LOAD, Temporality.LATEST),
+    (Signal.NET_LOAD, Temporality.LATEST),
     (Signal.NET_LOAD, Temporality.FORECAST),
     (Signal.CARBON_INTENSITY_LEVEL, Temporality.LATEST),
+    (Signal.RENEWABLE_PERCENTAGE_LEVEL, Temporality.LATEST),
 ]
 
 
@@ -91,7 +103,13 @@ async def run(zone: str, out: Path) -> int:
                 end = datetime.now(UTC)
                 kwargs |= {"start": end - timedelta(days=2), "end": end}
             if temporality is Temporality.FORECAST:
-                kwargs["horizon_hours"] = 24
+                # 24 is the only horizon every forecasting signal accepts. The intensity
+                # and percentage signals also take 6/48/72; mix, flows and load do not.
+                if signal in FORECAST_NEEDS_WINDOW:
+                    now = datetime.now(UTC)
+                    kwargs |= {"start": now, "end": now + timedelta(hours=24)}
+                elif supported_horizons(signal):
+                    kwargs["horizon_hours"] = 24
 
             name = f"{signal.value}__{temporality.value}"
             try:
