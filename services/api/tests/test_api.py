@@ -7,6 +7,7 @@ mode — no network, no key.
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -21,9 +22,10 @@ from gridlab.web.state import LabState
 
 @pytest.fixture
 def client(scenarios_dir: Path, tmp_path: Path) -> Iterator[TestClient]:
-    # Tokens are pinned to None explicitly. pydantic-settings reads `.env` for anything not
-    # passed here, so once a developer adds a real token these tests would start asserting
-    # against their machine rather than against the code.
+    # Every environment-dependent setting is pinned explicitly. pydantic-settings reads
+    # `.env` and the process environment for anything not passed here, so a developer with
+    # a real token — or a `data/capabilities.json` from `make probe` — would otherwise find
+    # these tests asserting against their machine rather than against the code.
     settings = Settings(
         gridlab_mode=Mode.REPLAY,
         gridlab_scenario="test-scenario",
@@ -32,6 +34,7 @@ def client(scenarios_dir: Path, tmp_path: Path) -> Iterator[TestClient]:
         gridlab_replay_speed=1.0,
         electricity_maps_api_token=None,
         anthropic_api_key=None,
+        gridlab_capabilities_path=tmp_path / "no-probe-here.json",
     )
     state = LabState.build(settings)
     app.state.lab = state
@@ -71,6 +74,44 @@ def test_capabilities_is_honest_about_not_having_probed(client: TestClient) -> N
     body = client.get("/api/v1/capabilities").json()
     assert body["source"] == "unprobed"
     assert "make probe" in body["message"]
+
+
+def test_unprobed_capabilities_guesses_at_nothing(client: TestClient) -> None:
+    """It used to assert the free tier covers "roughly one zone", repeating a claim from
+    the pre-project research. A live probe measured 350. An endpoint whose entire job is to
+    say what is verified must not ship an unverified number as a fallback."""
+    body = client.get("/api/v1/capabilities").json()
+    blob = json.dumps(body).lower()
+
+    assert "one zone" not in blob
+    assert "free tier" not in blob
+    assert "zone_count" not in body, "an unprobed response must not imply a count"
+
+
+def test_capabilities_serves_the_probe_when_one_exists(client: TestClient, tmp_path: Path) -> None:
+    """The regression. `capabilities.json` was written to the repository root, which the
+    api container does not mount, so this endpoint reported "no probe has been run" however
+    many times you ran one."""
+    probe_result = {"zone_count": 350, "has_token": True, "signals": []}
+    path = tmp_path / "capabilities.json"
+    path.write_text(json.dumps(probe_result), encoding="utf-8")
+
+    app.state.lab.settings = app.state.lab.settings.model_copy(
+        update={"gridlab_capabilities_path": path}
+    )
+
+    body = client.get("/api/v1/capabilities").json()
+    assert body["source"] == "probe"
+    assert body["zone_count"] == 350
+
+
+def test_capabilities_path_is_inside_a_mounted_directory() -> None:
+    """A bind mount of a path that does not exist becomes a directory, and this file does
+    not exist until a probe has been run. Mounting `data/` sidesteps that, so the default
+    must stay inside a directory rather than sitting at a bare root path."""
+    default = Settings.model_fields["gridlab_capabilities_path"].default
+    assert default.parent.name == "data"
+    assert default.name == "capabilities.json"
 
 
 def test_zones_lists_only_what_the_scenario_has(client: TestClient) -> None:

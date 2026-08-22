@@ -16,7 +16,7 @@ NOCONV := MSYS_NO_PATHCONV=1
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs restart build test lint fmt probe record scenario scenario-live demo eval shell clean
+.PHONY: help up down logs restart build web pwa test lint fmt probe record scenario scenario-live demo eval shell clean
 
 help:  ## Show this help
 > @grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -25,7 +25,6 @@ help:  ## Show this help
 up: .env  ## Start everything (replay mode -- no API key or network needed)
 > $(COMPOSE) up --build -d
 > @echo ""
-> @echo "  PWA    http://localhost:5173"
 > @echo "  API    http://localhost:8000/docs"
 > @echo "  Agent  http://localhost:8001/docs"
 > @echo ""
@@ -41,6 +40,15 @@ restart: down up  ## Restart
 build:  ## Rebuild images
 > $(COMPOSE) build
 
+web: .env  ## Start the optional PWA
+> $(COMPOSE) --profile web up --build -d web
+> @echo ""
+> @echo "  PWA    http://localhost:5173"
+> @echo "  API    http://localhost:8000/docs"
+> @echo ""
+
+pwa: web  ## Alias for web
+
 test:  ## Run the offline test suite (no network, no key)
 > $(API) pytest -q
 
@@ -50,9 +58,12 @@ lint:  ## Ruff check + mypy --strict
 fmt:  ## Format and auto-fix
 > $(API) sh -c "ruff check --fix src tests; ruff format src tests"
 
-probe: .env  ## Ask a real token what it can actually reach -> capabilities.json
+# Writes into data/, which the api container mounts, so /api/v1/capabilities can serve the
+# result. Writing it to the repository root left the endpoint permanently reporting that no
+# probe had been run.
+probe: .env  ## Ask a real token what it can actually reach -> data/capabilities.json
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
->   --volume "$(CURDIR)":/out api \
+>   --volume "$(CURDIR)/data":/out api \
 >   python -m gridlab.scripts.probe_capabilities --out /out/capabilities.json
 
 record: .env  ## Record raw Electricity Maps responses into fixtures/
