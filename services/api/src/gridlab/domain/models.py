@@ -69,21 +69,31 @@ class Observation(Base):
     updated_at: datetime | None = None
 
 
-class CarbonIntensity(Observation):
-    """gCO2eq/kWh."""
+class ScalarObservation(Observation):
+    """An observation whose payload is a single number.
+
+    Named because it is the thing a time series is made of. Charts, forecasts, history and
+    comparison all operate on scalars; mix and flows are structured and never appear in a
+    series.
+    """
 
     value: float
+
+
+class CarbonIntensity(ScalarObservation):
+    """gCO2eq/kWh."""
+
     emission_factor_type: str | None = None
     flow_traced: bool | None = None
 
 
-class Percentage(Observation):
+class Percentage(ScalarObservation):
     """A share of the mix, 0-100. Used for renewable and carbon-free percentages."""
 
     value: float = Field(ge=0, le=100)
 
 
-class Price(Observation):
+class Price(ScalarObservation):
     """Day-ahead price.
 
     ``currency`` matters: Electricity Maps returns local currency, so summing across zones
@@ -91,7 +101,6 @@ class Price(Observation):
     Electricity Maps' own modelled one -- the ``combined`` endpoint returns both.
     """
 
-    value: float
     currency: str = "EUR"
     unit: str = "MWh"
     source: str | None = None
@@ -149,10 +158,9 @@ class Flows(Observation):
         return -sum(e.net_flow_mw for e in self.edges)
 
 
-class Load(Observation):
+class Load(ScalarObservation):
     """Demand in MW. ``kind`` is one of total, reported, or net (total minus wind+solar)."""
 
-    value: float
     kind: str = "total"
 
 
@@ -175,7 +183,7 @@ class Level(Observation):
     """Which signal this bucket describes: carbon-intensity, renewable, carbon-free."""
 
 
-class Series[ObservationT: Observation](Base):
+class Series[ObservationT: ScalarObservation](Base):
     """An ordered run of observations of one kind.
 
     Used for history and for forecasts. ``horizon_hours`` is set only for forecasts;

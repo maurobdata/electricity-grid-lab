@@ -31,10 +31,10 @@ from gridlab.domain.models import (
     Load,
     MixBreakdown,
     MixEntry,
-    Observation,
     Percentage,
     Price,
     Provenance,
+    ScalarObservation,
     Series,
 )
 from gridlab.emaps.errors import ElectricityMapsError
@@ -284,11 +284,11 @@ def series(
     bodies: Sequence[Mapping[str, Any]],
     *,
     zone: str,
-    normalizer: Callable[..., Observation],
+    normalizer: Callable[..., ScalarObservation],
     granularity: str = "hourly",
     horizon_hours: int | None = None,
     provenance: Provenance = Provenance.LIVE,
-) -> Series[Observation]:
+) -> Series[ScalarObservation]:
     """Normalize one or more response bodies into a single ordered, deduplicated series.
 
     ``fetch_range`` returns one body per chunk, so merging happens here. Points are sorted
@@ -296,7 +296,7 @@ def series(
     and upstream revisions can both produce the same instant twice, and a chart with two
     points at 14:00 draws a vertical line through itself.
     """
-    seen: dict[datetime, Observation] = {}
+    seen: dict[datetime, ScalarObservation] = {}
     issued_at: datetime | None = None
 
     for body in bodies:
@@ -308,7 +308,7 @@ def series(
             point = normalizer(row, zone=zone, provenance=provenance)
             seen[point.at] = point
 
-    return Series[Observation](
+    return Series[ScalarObservation](
         zone=zone,
         points=tuple(seen[k] for k in sorted(seen)),
         granularity=granularity,
