@@ -1,0 +1,10 @@
+# Everything in this repo is consumed inside Linux containers. CRLF in a shell script or
+# a Dockerfile produces errors that look nothing like a line-ending problem, so normalise
+# to LF in the working tree regardless of platform.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.woff2 binary
+*.duckdb binary
