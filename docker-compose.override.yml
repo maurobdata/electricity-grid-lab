@@ -1,0 +1,26 @@
+# Development overrides. Applied automatically by `docker compose up`.
+#
+# Bind-mounts source for hot reload, and tests so `make test` / `make fmt` see edits
+# without a rebuild. Read-write, because `ruff format` and `ruff --fix` must write back.
+#
+# The `agent` service deliberately gets NO bind mount and stays read-only, even in
+# development -- see docs/adr/0005-agent-sandbox-container.md.
+
+services:
+  api:
+    command: >
+      uvicorn gridlab.web.app:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./services/api/src:/app/src
+      - ./services/api/tests:/app/tests
+      - ./docs/electricity-maps-api.md:/app/docs/electricity-maps-api.md:ro
+      - ./fixtures:/app/fixtures:ro
+      - ./scenarios:/app/scenarios:ro
+      - gridlab-data:/data
+
+  web:
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+    volumes:
+      - ./services/web/src:/app/src
+      - ./services/web/public:/app/public
+      - ./services/web/index.html:/app/index.html

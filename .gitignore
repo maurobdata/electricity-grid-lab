@@ -1,0 +1,36 @@
+# secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+capabilities.json
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+dist/
+build/
+
+# node
+node_modules/
+services/web/dist/
+services/web/dev-dist/
+.vite/
+
+# local data
+*.duckdb
+*.duckdb.wal
+data/
+.phoenix/
+
+# os / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

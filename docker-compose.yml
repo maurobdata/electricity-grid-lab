@@ -1,0 +1,93 @@
+# Grid Lab — local development stack.
+#
+#   docker compose up                      three containers, replay mode, no key needed
+#   docker compose --profile tracing up    adds Phoenix for OpenTelemetry traces
+#
+# Two images: services/api (run twice, as `api` and `agent`) and services/web.
+# See docs/adr/0005-agent-sandbox-container.md for why the agent is a separate container.
+
+name: gridlab
+
+x-api-image: &api-image
+  build:
+    context: .
+    dockerfile: services/api/Dockerfile
+  image: gridlab/api:dev
+  env_file: [.env]
+
+services:
+
+  # ---- Domain + Electricity Maps adapter + HTTP API -------------------------
+  api:
+    <<: *api-image
+    container_name: gridlab-api
+    command: >
+      uvicorn gridlab.web.app:app --host 0.0.0.0 --port 8000
+    environment:
+      GRIDLAB_DB_PATH: /data/gridlab.duckdb
+    ports: ["8000:8000"]
+    volumes:
+      - ./fixtures:/app/fixtures:ro
+      - ./scenarios:/app/scenarios:ro
+      - gridlab-data:/data
+    networks: [frontnet, datanet]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://localhost:8000/api/v1/healthz')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+
+  # ---- Agent sandbox --------------------------------------------------------
+  # Same image, different command. Deliberately constrained: read-only root, no
+  # volumes, no capabilities, not on frontnet. Reaches the domain only via api:8000.
+  agent:
+    <<: *api-image
+    container_name: gridlab-agent
+    command: >
+      uvicorn gridlab.agent.app:app --host 0.0.0.0 --port 8001
+    environment:
+      GRIDLAB_API_URL: http://api:8000
+    ports: ["8001:8001"]
+    depends_on:
+      api: {condition: service_healthy}
+    networks: [datanet]
+    read_only: true
+    tmpfs: ["/tmp:size=16m"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+
+  # ---- PWA ------------------------------------------------------------------
+  web:
+    build:
+      context: ./services/web
+      dockerfile: Dockerfile
+    image: gridlab/web:dev
+    container_name: gridlab-web
+    environment:
+      VITE_API_URL: http://localhost:8000
+      VITE_AGENT_URL: http://localhost:8001
+    ports: ["5173:5173"]
+    depends_on: [api]
+    networks: [frontnet]
+    restart: unless-stopped
+
+  # ---- Optional: OpenTelemetry traces ---------------------------------------
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    container_name: gridlab-phoenix
+    profiles: [tracing]
+    ports:
+      - "6006:6006"   # UI
+      - "4317:4317"   # OTLP gRPC
+    networks: [datanet]
+    restart: unless-stopped
+
+networks:
+  frontnet: {}
+  datanet: {}
+
+volumes:
+  gridlab-data: {}

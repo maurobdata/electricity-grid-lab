@@ -1,0 +1,24 @@
+# The api image builds from the repository root (it needs docs/electricity-maps-api.md).
+# Keep everything else out of the build context.
+.git
+.github
+.venv
+**/__pycache__
+**/*.py[cod]
+**/node_modules
+**/.pytest_cache
+**/.ruff_cache
+**/.mypy_cache
+services/web/dist
+services/web/dev-dist
+docs/research
+docs/adr
+docs/PROJECT_CONTEXT.md
+*.duckdb
+*.duckdb.wal
+.env
+.env.*
+!.env.example
+capabilities.json
+data
+evals
