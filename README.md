@@ -57,7 +57,8 @@ Requirements: Docker with Compose. Nothing else — Python and Node both live in
    documents the shape and holds no values.
 3. **Run `make probe` first.** `/v4/zones` publishes an `access` list of exactly the
    `signal/temporality` pairs your plan permits, so this costs one request and is
-   authoritative. It writes `capabilities.json`, which the UI then reads.
+   authoritative. It writes `data/capabilities.json`, which the api container mounts and
+   `GET /api/v1/capabilities` serves.
 4. Set `GRIDLAB_MODE=live` and `make restart`.
 
 If the token is missing, live mode falls back to replay with a warning rather than failing.

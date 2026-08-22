@@ -3,15 +3,17 @@
     make probe
 
 Every research pass into this hackathon named the same unknown as the highest-leverage
-one: **what access tier do participants get?** The free tier is reported to cover roughly
-one zone. If that is what the token gives, every multi-zone idea in the backlog — league
-tables, comparisons, flow stories between neighbours — is dead, and it is much better to
-learn that from a script in August than from a 403 on stage in September.
+one: **what access tier do participants get?** Better to learn that from a script in August
+than from a 403 on stage in September.
 
-This writes ``capabilities.json``, which ``/api/v1/capabilities`` then serves to the UI.
-It is deliberately a script rather than a request handler: probing costs one API call per
-signal against an undocumented rate limit, and that should be a decision, not a side effect
-of someone loading a page.
+``/v4/zones`` publishes the answer: with a token, each zone carries an ``access`` array of
+exact ``signal/temporality`` pairs. Reading it costs one request and is authoritative,
+where probing endpoint by endpoint costs one request each and only samples.
+
+The result is written to ``data/capabilities.json``, which the api container mounts and
+``/api/v1/capabilities`` serves. It stays a script rather than a request handler so that
+spending requests against an API with no published rate limit is a deliberate act, not a
+side effect of someone loading a page.
 """
 
 from __future__ import annotations

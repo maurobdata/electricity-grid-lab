@@ -227,7 +227,7 @@ signed figure per neighbour (positive = export).
 ## Free-tier reality, 22 August 2026
 
 Measured, not assumed. **This is the section to re-check the moment a trial or event key is
-issued** — `make probe` rewrites `capabilities.json` in one request.
+issued** — `make probe` rewrites `data/capabilities.json` in one request.
 
 | | |
 |---|---|

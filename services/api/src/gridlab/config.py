@@ -50,6 +50,14 @@ class Settings(BaseSettings):
     gridlab_scenarios_dir: Path = Path("/app/scenarios")
     gridlab_fixtures_dir: Path = Path("/app/fixtures")
 
+    gridlab_capabilities_path: Path = Path("/app/data/capabilities.json")
+    """Where `make probe` writes, and where /api/v1/capabilities reads.
+
+    Inside a mounted directory rather than at the repository root, because Docker turns a
+    bind mount of a missing file into a directory - and this file does not exist until a
+    probe has been run. Mounting the directory sidesteps that entirely.
+    """
+
     # --- HTTP behaviour -----------------------------------------------------
     gridlab_http_timeout: float = 20.0
     gridlab_http_retries: int = 3

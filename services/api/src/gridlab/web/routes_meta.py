@@ -8,7 +8,6 @@ through a 403 during a demo, is the whole point.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
@@ -20,8 +19,6 @@ from gridlab.web.state import LabState, lab
 router = APIRouter(tags=["meta"])
 
 Lab = Annotated[LabState, Depends(lab)]
-
-CAPABILITIES_FILE = Path("/app/capabilities.json")
 
 
 @router.get("/healthz", summary="Liveness")
@@ -83,12 +80,17 @@ async def status(state: Lab) -> dict[str, Any]:
 async def capabilities(state: Lab) -> dict[str, Any]:
     """The result of the last `make probe`, if one has been run.
 
-    Deliberately reads a file rather than probing on request: probing costs one API call
-    per signal against an undocumented rate limit, and it should be a decision, not a
-    side effect of loading a page.
+    Deliberately reads a file rather than probing on request: the probe is a deliberate
+    act against an API with no published rate limit, not a side effect of loading a page.
+
+    What a plan grants is a *separate axis* from what the API offers. `/v4/zones` publishes
+    an `access` list of exact `signal/temporality` pairs, so this is the authoritative
+    answer to "what can we build?" — where `/zones` above only says which zones the current
+    mode can answer for.
     """
-    if CAPABILITIES_FILE.is_file():
-        probed: dict[str, Any] = json.loads(CAPABILITIES_FILE.read_text(encoding="utf-8"))
+    path = state.settings.gridlab_capabilities_path
+    if path.is_file():
+        probed: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
         probed["source"] = "probe"
         return probed
 
@@ -96,9 +98,18 @@ async def capabilities(state: Lab) -> dict[str, Any]:
         "source": "unprobed",
         "has_token": state.settings.has_api_token,
         "message": (
-            "No capability probe has been run. With a token in .env, run `make probe` to "
-            "find out which zones and signals this plan can reach. Until then, assume "
-            "nothing: the free tier is reported to cover roughly one zone."
+            f"No capability probe has been run, or its output is not readable at {path}. "
+            f"With a token in .env, run `make probe`: it reads the `access` list published "
+            f"by /v4/zones in a single request and writes the result here."
         ),
+        # Deliberately no guess at what a token can reach. An earlier version of this
+        # message asserted that the free tier covers "roughly one zone" — repeating a claim
+        # from the pre-project research. A live probe measured 350 accessible zones, with
+        # the real limit being history depth rather than breadth (ADR 0008). Rather than
+        # replace one unverified claim with another, this now says only what it knows.
         "configured_zones": list(state.settings.zones),
+        "note": (
+            "`configured_zones` is GRIDLAB_ZONES, which is what this lab was asked to cover "
+            "— not a statement that the token can reach any of them."
+        ),
     }

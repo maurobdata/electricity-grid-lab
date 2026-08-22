@@ -148,11 +148,30 @@ async def history(
     signal: Annotated[str, Query(description=f"One of: {', '.join(SERIES_SIGNALS)}")] = (
         "carbon_intensity"
     ),
-    start: Annotated[datetime | None, Query()] = None,
-    end: Annotated[datetime | None, Query()] = None,
+    start: Annotated[
+        datetime | None,
+        Query(description="Defaults to seven days before `end`. See the note on coverage."),
+    ] = None,
+    end: Annotated[datetime | None, Query(description="Defaults to the current clock.")] = None,
     granularity: Annotated[str, Query()] = "hourly",
 ) -> dict[str, Any]:
-    """The backward view. Defaults to the last seven days ending at the current clock."""
+    """The backward view over an explicit window.
+
+    **The window you ask for is not necessarily the window you get.** This endpoint requests
+    what you asked for; the response is bounded by what the underlying source can actually
+    reach, and the returned points are the truth about that:
+
+    * **Live mode** depends on the plan. `past-range` takes an arbitrary window, but a token
+      without it falls back to `history`, which returns only a trailing window the API
+      chooses — roughly 24 hours on the free tier measured in August 2026. Asking for seven
+      days then yields about one. `GET /api/v1/capabilities` says which applies.
+    * **Replay mode** is bounded by the scenario, which is typically 24-48 hours.
+
+    The seven-day default is deliberately left alone rather than trimmed to match the
+    weakest plan: it is the right request for a trial or event key, and narrowing it would
+    silently under-fetch the moment a better token arrives. Nothing is padded or invented to
+    fill the gap.
+    """
     await _require_zone(state, zone)
     _validate_signal(signal)
 

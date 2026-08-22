@@ -3,7 +3,6 @@
 .env.*
 !.env.example
 *.pem
-capabilities.json
 
 # python
 __pycache__/
@@ -26,8 +25,16 @@ services/web/dev-dist/
 # local data
 *.duckdb
 *.duckdb.wal
-data/
 .phoenix/
+
+# Runtime artefacts. The directory is committed (see data/README.md) so the bind mount
+# has something to attach to; what lands in it is not.
+data/*
+!data/.gitkeep
+!data/README.md
+
+# A capability probe run ad hoc rather than through `make probe` lands here.
+capabilities.json
 
 # os / editors
 .DS_Store

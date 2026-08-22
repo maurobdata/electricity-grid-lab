@@ -1,9 +1,11 @@
 # Grid Lab — local development stack.
 #
-#   docker compose up                      three containers, replay mode, no key needed
+#   docker compose up                      API + agent, replay mode, no key needed
+#   docker compose --profile web up        also starts the PWA
 #   docker compose --profile tracing up    adds Phoenix for OpenTelemetry traces
 #
-# Two images: services/api (run twice, as `api` and `agent`) and services/web.
+# services/api is run twice, as `api` and `agent`. services/web is optional until the
+# PWA scaffold exists.
 # See docs/adr/0005-agent-sandbox-container.md for why the agent is a separate container.
 
 name: gridlab
@@ -29,6 +31,10 @@ services:
     volumes:
       - ./fixtures:/app/fixtures:ro
       - ./scenarios:/app/scenarios:ro
+      # The probe result. Mounted as a directory, not a file: `capabilities.json` does
+      # not exist until a probe has been run, and Docker turns a bind mount of a missing
+      # file into a directory.
+      - ./data:/app/data:ro
       - gridlab-data:/data
     networks: [frontnet, datanet]
     healthcheck:
@@ -61,6 +67,7 @@ services:
 
   # ---- PWA ------------------------------------------------------------------
   web:
+    profiles: [web]
     build:
       context: ./services/web
       dockerfile: Dockerfile
