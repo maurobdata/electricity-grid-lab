@@ -21,6 +21,7 @@ node_modules/
 services/web/dist/
 services/web/dev-dist/
 .vite/
+*.tsbuildinfo
 
 # local data
 *.duckdb
