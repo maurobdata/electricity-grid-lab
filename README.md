@@ -172,6 +172,7 @@ product that eventually grows out of this will not have this shape.
 | **Flows** | Net exchange per neighbour, diverging from a centre line. Deliberately not a map. |
 | **Forecast vs actual** | History solid, forecast dashed, a divider at the clock, and the mean absolute error across any overlap. |
 | **Compare** | One signal, one instant, several zones — with the caveat that raw rankings are frozen and a real league needs baseline-relative scoring. |
+| **Agent** | Ask about the grid in plain language. Tool calls and results render inline. |
 | **Capability** | What the token can actually reach, from the last `make probe`. |
 
 The front end is React + Vite + Tailwind with shadcn/ui conventions (`@/` alias, `cn()`,
@@ -191,14 +192,52 @@ simple, and the forecast overlay and the synthetic hatch want exact control.
 | 2b · Live mode verified against the real API; schema corrected | done |
 | 2c · `make scenario-live` — real, replayable, provenance-preserving recordings | done |
 | 3 · PWA — zone picker, now panel, mix, forecast, flows, compare | done |
-| 4 · Agent sandbox — seven tools, tracing | next |
-| 5 · Evals, observability, demo scenarios | not started |
+| 4 · Agent sandbox — seven read-only tools, visible tool trace | done |
+| 5 · Evals, OpenTelemetry tracing, demo scenarios | next |
 
-220 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
+269 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
 
 21 real API responses are committed in [`fixtures/`](fixtures/) and every one of them is
 parsed by the test suite, so the adapter is pinned to what the API actually sends rather
 than to what the documentation implies.
+
+---
+
+## The agent
+
+Seven read-only tools — `get_current_grid`, `get_forecast`, `get_mix`, `get_price`,
+`get_flows`, `query_history`, `compare_zones` — and nothing else. `GET :8001/api/v1/tools`
+publishes the whole surface, because the declared tool list **is** the security boundary.
+
+Its working is shown. Every tool call and result renders inline in the UI, so an answer can
+be checked rather than trusted: each number it quotes corresponds to a request you could
+make yourself against the API on port 8000.
+
+The sandbox, verified rather than asserted — from inside the running container:
+
+| | |
+|---|---|
+| Runs as | uid 10001, non-root, all capabilities dropped |
+| Can reach | `api:8000` |
+| Cannot reach | `web:5173` — not even DNS-resolvable, it is on another network |
+| Filesystem | read-only everywhere except a 16 MB tmpfs at `/tmp` |
+| Volume mounts | none |
+
+What this does **not** guarantee is network egress: the container must reach
+`api.anthropic.com`, and Docker cannot restrict egress by domain. The agent is
+tool-constrained and filesystem-isolated, not network-isolated — see
+[ADR 0005](docs/adr/0005-agent-sandbox-container.md), which says so plainly rather than
+overclaiming.
+
+Guardrails that are code rather than prompt: zones are allowlisted before any request,
+history windows are bounded, series are downsampled to a hard cap before reaching the model
+— preserving the minimum, maximum and both endpoints, because a dropped price spike is
+exactly what somebody was asking about. The prompt handles what code cannot check:
+disclosing provenance, refusing to rank on raw values, admitting when a tool came back
+empty. Phase 5 measures whether it actually does.
+
+Without an `ANTHROPIC_API_KEY` the service still runs and still publishes its tools; only
+the model call is unavailable.
 
 ---
 

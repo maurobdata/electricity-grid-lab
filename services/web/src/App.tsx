@@ -11,6 +11,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { AgentPanel } from "@/components/AgentPanel";
 import { CapabilityStrip } from "@/components/CapabilityStrip";
 import { ComparePanel } from "@/components/ComparePanel";
 import { FlowsPanel } from "@/components/FlowsPanel";
@@ -180,6 +181,8 @@ export default function App() {
           signal={compareSignal}
           onSignalChange={setCompareSignal}
         />
+
+        <AgentPanel zone={zone} />
 
         <CapabilityStrip capabilities={capabilities.data} />
 
