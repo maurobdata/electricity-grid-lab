@@ -1,0 +1,145 @@
+"""Record raw Electricity Maps responses to disk.
+
+    make record
+
+The exact v4 response schemas are not public — the reference sits behind an authenticated
+single-page app — so ``emaps/normalize.py`` currently accepts several candidate spellings
+per field and fails loudly when none match. That is a deliberate hedge, not a design.
+
+This script closes it. It saves verbatim responses into ``fixtures/``, which then become
+the normalizer's test inputs, so the parsing is shaped by what the API actually sends
+rather than by what we guessed. Run it on the first day a token exists.
+
+Tokens are never written: the request URL is stored with parameters, and the ``auth-token``
+header is not part of what gets saved.
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import json
+import sys
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any
+
+from gridlab.config import get_settings
+from gridlab.emaps import errors
+from gridlab.emaps.client import EMapsClient
+from gridlab.emaps.signals import SUPPORTED, Signal, SourceType, Temporality
+
+#: What to record. Chosen for coverage of the response *shapes* rather than of the whole
+#: API: one scalar signal, one percentage, one structured breakdown, one exchange map, one
+#: price (which has its own extra temporalities), one series and one forecast.
+PLAN: list[tuple[Signal, Temporality]] = [
+    (Signal.CARBON_INTENSITY, Temporality.LATEST),
+    (Signal.CARBON_INTENSITY, Temporality.HISTORY),
+    (Signal.CARBON_INTENSITY, Temporality.FORECAST),
+    (Signal.CARBON_INTENSITY, Temporality.PAST_RANGE),
+    (Signal.RENEWABLE_ENERGY, Temporality.LATEST),
+    (Signal.CARBON_FREE_ENERGY, Temporality.LATEST),
+    (Signal.ELECTRICITY_MIX, Temporality.LATEST),
+    (Signal.ELECTRICITY_MIX, Temporality.FORECAST),
+    (Signal.ELECTRICITY_FLOWS, Temporality.LATEST),
+    (Signal.ELECTRICITY_SOURCE, Temporality.LATEST),
+    (Signal.PRICE_DAY_AHEAD, Temporality.LATEST),
+    (Signal.PRICE_DAY_AHEAD, Temporality.COMBINED),
+    (Signal.TOTAL_LOAD, Temporality.LATEST),
+    (Signal.NET_LOAD, Temporality.FORECAST),
+    (Signal.CARBON_INTENSITY_LEVEL, Temporality.LATEST),
+]
+
+
+async def run(zone: str, out: Path) -> int:
+    settings = get_settings()
+    if not settings.has_api_token:
+        print(
+            "No ELECTRICITY_MAPS_API_TOKEN in .env. Nothing to record.",
+            file=sys.stderr,
+        )
+        return 2
+
+    out.mkdir(parents=True, exist_ok=True)
+    token = settings.electricity_maps_api_token
+
+    recorded = 0
+    skipped: list[str] = []
+
+    async with EMapsClient(
+        token=token.get_secret_value() if token else None,
+        base_url=settings.electricity_maps_base_url,
+        timeout=settings.gridlab_http_timeout,
+        retries=settings.gridlab_http_retries,
+    ) as client:
+        # /v4/zones first: it is the one endpoint everything else depends on reading.
+        try:
+            _save(out, "zones", await client.zones(), zone=None)
+            recorded += 1
+            print("  recorded zones")
+        except errors.ElectricityMapsError as exc:
+            skipped.append(f"zones ({type(exc).__name__})")
+
+        for signal, temporality in PLAN:
+            if temporality not in SUPPORTED[signal]:
+                continue
+
+            kwargs: dict[str, Any] = {"zone": zone}
+            if signal is Signal.ELECTRICITY_SOURCE:
+                kwargs["source_type"] = SourceType.WIND
+            if temporality is Temporality.PAST_RANGE:
+                end = datetime.now(UTC)
+                kwargs |= {"start": end - timedelta(days=2), "end": end}
+            if temporality is Temporality.FORECAST:
+                kwargs["horizon_hours"] = 24
+
+            name = f"{signal.value}__{temporality.value}"
+            try:
+                body = await client.fetch(signal, temporality, **kwargs)
+            except errors.ElectricityMapsError as exc:
+                skipped.append(f"{name} ({type(exc).__name__})")
+                print(f"  skipped  {name}: {type(exc).__name__}")
+                continue
+
+            _save(out, name, body, zone=zone)
+            recorded += 1
+            print(f"  recorded {name}")
+
+    print(f"\n{recorded} recorded, {len(skipped)} unavailable.")
+    if skipped:
+        print("Unavailable with this token:")
+        for item in skipped:
+            print(f"  - {item}")
+
+    print(
+        "\nNext: open the fixtures and compare the field names against the candidate lists\n"
+        "in gridlab/emaps/normalize.py. Narrow them to what the API actually sends, and\n"
+        "update docs/electricity-maps-api.md so the guesses become facts."
+    )
+    return 0
+
+
+def _save(out: Path, name: str, body: dict[str, Any], *, zone: str | None) -> None:
+    """Write one fixture, with enough context to know what it is a year from now."""
+    payload = {
+        "_recorded_at": datetime.now(UTC).isoformat(),
+        "_zone": zone,
+        "_note": (
+            "Verbatim Electricity Maps v4 response. No token or header is stored here. "
+            "This is the ground truth for gridlab.emaps.normalize."
+        ),
+        "body": body,
+    }
+    (out / f"{name}.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--zone", default="DK-DK2")
+    parser.add_argument("--out", type=Path, default=Path("fixtures"))
+    args = parser.parse_args()
+    return asyncio.run(run(args.zone, args.out))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
