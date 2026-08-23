@@ -53,8 +53,8 @@ def scenario_dict() -> dict[str, Any]:
                 ],
                 "carbon_free_percentage": [{"at": _hour(0), "value": 90.0}],
                 "price": [
-                    {"at": _hour(0), "value": -12.5},
-                    {"at": _hour(3), "value": 180.0},
+                    {"at": _hour(0), "value": -12.5, "source": "nordpool.com"},
+                    {"at": _hour(3), "value": 180.0, "source": "nordpool.com"},
                 ],
                 "load": [{"at": _hour(0), "value": 1500.0}],
                 "mix": [
@@ -91,6 +91,19 @@ def scenario_dict() -> dict[str, Any]:
                             {"at": _hour(3), "value": 240.0},
                         ],
                     }
+                },
+                # Cleared day-ahead prices, spanning the window. The last hour is modelled
+                # rather than auctioned — `source` is null — so a test can tell the two
+                # apart, which is the only thing that distinguishes a settled market result
+                # from Electricity Maps' own estimate once the envelope is gone.
+                "price_forward": {
+                    "issued_at": _hour(0),
+                    "points": [
+                        {"at": _hour(0), "value": -12.5, "source": "nordpool.com"},
+                        {"at": _hour(1), "value": 20.0, "source": "nordpool.com"},
+                        {"at": _hour(2), "value": 95.0, "source": "nordpool.com"},
+                        {"at": _hour(3), "value": 180.0},
+                    ],
                 },
             }
         },

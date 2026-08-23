@@ -166,6 +166,38 @@ def test_negative_prices_survive_the_api(client: TestClient) -> None:
     assert body["points"][0]["currency"] == "EUR"
 
 
+def test_forward_price_is_served_separately_from_the_forecast(client: TestClient) -> None:
+    """Day-ahead prices are an auction result, not a prediction, so they get their own path.
+
+    The clock sits at 03:00, the last cleared period in the fixture, so exactly that period
+    is still ahead.
+    """
+    body = client.get("/api/v1/grid/DK-DK2/price/forward").json()
+    assert [p["at"] for p in body["points"]] == ["2026-02-04T03:00:00Z"]
+    assert body["points"][0]["value"] == 180.0
+    assert body["signal"] == "price"
+    assert body["provenance"] == "synthetic"
+
+
+def test_forward_price_keeps_currency_and_source(client: TestClient) -> None:
+    """Both are subclass fields on `Price`, and both were dropped once already by a
+    declared response model. `source` is what separates a cleared price from a modelled
+    one; `currency` is what stops prices being summed across zones that do not share one.
+    """
+    body = client.get("/api/v1/grid/DK-DK2/price/forward").json()
+    point = body["points"][0]
+    assert point["currency"] == "EUR"
+    assert "source" in point, "the exchange that set the price was stripped from the payload"
+
+
+def test_forward_price_404s_with_a_reason_a_reader_can_act_on(client: TestClient) -> None:
+    """Three different things produce an empty forward view, and only one is a bug. The
+    message has to say which, because it will be read under time pressure."""
+    response = client.get("/api/v1/grid/PL/price/forward")
+    assert response.status_code == 404
+    assert "available" in response.json()["detail"]
+
+
 def test_series_points_actually_carry_values(client: TestClient) -> None:
     """Regression: declaring a response model of the base Observation type silently
     stripped `value` from every point, and the chart rendered as an empty axis."""

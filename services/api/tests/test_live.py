@@ -234,6 +234,74 @@ async def test_forecast_normalizes_and_keeps_its_issue_time(source: LiveSource) 
     assert all(p.value is not None for p in series.points)
 
 
+async def test_price_forward_reads_the_combined_endpoint(source: LiveSource) -> None:
+    """The recorded `combined` response reaches a day past when it was captured.
+
+    Captured 22 Aug at 20:03 UTC, it spans 20:00 that evening through 20:00 the next — so
+    with the clock at 17:00 every row is still ahead. This is the whole reason forward price
+    is reachable on a key with no `past-range`: tomorrow's prices are an auction result, not
+    history, and they are published before the delivery day begins.
+    """
+    series = await source.price_forward(ZONE)
+
+    assert series is not None, "price-day-ahead/combined did not produce a forward series"
+    assert len(series.points) > 1
+    assert all(p.at >= datetime(2026, 8, 22, 17, tzinfo=UTC) for p in series.points)
+
+
+async def test_price_forward_splits_at_the_clock(tmp_path: Path) -> None:
+    """Only the forward half. The elapsed half is `history`'s answer, and serving it under
+    both names lets one hour be drawn twice on a chart that overlays them."""
+    client = EMapsClient(
+        token="test-token", transport=httpx.MockTransport(_fixture_handler), retries=0
+    )
+    cache = Cache(tmp_path / "split.duckdb", ttl_seconds=300)
+    midway = datetime(2026, 8, 23, 6, tzinfo=UTC)
+    try:
+        series = await LiveSource(
+            client, cache, clock=FrozenClock(midway), zone_keys=(ZONE,)
+        ).price_forward(ZONE)
+    finally:
+        cache.close()
+
+    assert series is not None
+    assert series.points, "the fixture reaches past this clock; something clipped too hard"
+    assert all(p.at >= midway for p in series.points)
+
+
+async def test_price_forward_keeps_the_exchange_that_set_each_price(
+    source: LiveSource,
+) -> None:
+    """`combined` blends published auction prices with modelled ones and labels each row.
+
+    Dropping `source` would merge a cleared market result and an estimate into one
+    indistinguishable line.
+    """
+    series = await source.price_forward(ZONE)
+    assert series is not None
+    assert any(getattr(p, "source", None) for p in series.points), (
+        "no point carried a source; the price normalizer's `source` field was lost"
+    )
+
+
+async def test_price_forward_issue_time_is_the_auction_publication(
+    source: LiveSource,
+) -> None:
+    """Not the wall clock. Prices for an hour can be re-published, and the question
+    "when was this known?" is not the same as "when does it apply?"."""
+    series = await source.price_forward(ZONE)
+    assert series is not None
+    assert series.issued_at is not None
+    assert series.issued_at <= min(p.at for p in series.points)
+
+
+async def test_price_forward_is_absent_for_a_zone_the_plan_refuses(
+    source: LiveSource,
+) -> None:
+    """A zone with no day-ahead market must be missing, not an exception."""
+    assert await source.price_forward("DE") is None
+
+
 async def test_history_falls_back_when_past_range_is_not_in_the_plan(
     source: LiveSource,
 ) -> None:

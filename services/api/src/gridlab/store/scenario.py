@@ -44,6 +44,19 @@ class Point(BaseModel):
     is_estimated: bool = False
 
 
+class PricePoint(Point):
+    """A price sample, which additionally records *who set it*.
+
+    ``source`` is ``"nordpool.com"`` (or another exchange) for a settled auction price, and
+    something else — or nothing — for Electricity Maps' own modelled value. The
+    ``price-day-ahead/combined`` response returns both kinds in one series, so a scenario
+    that dropped this field would blend a cleared market result with a model and leave no
+    way to tell them apart afterwards.
+    """
+
+    source: str | None = None
+
+
 class MixPoint(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -75,18 +88,39 @@ class Forecast(BaseModel):
     points: tuple[Point, ...]
 
 
+class PriceForward(BaseModel):
+    """Day-ahead prices for delivery hours that have not happened yet.
+
+    Deliberately *not* a :class:`Forecast`. Day-ahead prices are an **auction result**
+    published ahead of delivery, not a prediction of one: once the market clears at 12:00
+    CET, tomorrow's prices are settled fact awaiting its delivery hour. Filing them under
+    ``forecasts`` would invite every consumer to treat them as a model output and to score
+    them against an outcome they already are.
+
+    ``issued_at`` is the clearing publication time, taken from the rows themselves.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    issued_at: datetime | None = None
+    points: tuple[PricePoint, ...] = ()
+
+
 class ZoneData(BaseModel):
     model_config = ConfigDict(frozen=True, extra="forbid")
 
     carbon_intensity: tuple[Point, ...] = ()
     renewable_percentage: tuple[Point, ...] = ()
     carbon_free_percentage: tuple[Point, ...] = ()
-    price: tuple[Point, ...] = ()
+    price: tuple[PricePoint, ...] = ()
     load: tuple[Point, ...] = ()
     mix: tuple[MixPoint, ...] = ()
     flows: tuple[FlowPoint, ...] = ()
     forecasts: dict[str, Forecast] = Field(default_factory=dict)
     """Signal name to the forecast issued for it."""
+
+    price_forward: PriceForward | None = None
+    """Day-ahead prices reaching past the end of the replay window. See :class:`PriceForward`."""
 
 
 class Scenario(BaseModel):
@@ -197,6 +231,12 @@ def to_percentage(point: Point, *, zone: str, provenance: Provenance) -> Percent
 
 
 def to_price(point: Point, *, zone: str, provenance: Provenance, currency: str) -> Price:
+    """A price point as a domain observation.
+
+    Accepts a plain :class:`Point` as well as a :class:`PricePoint` because scenarios
+    recorded before ``source`` existed have no such field, and a missing exchange name is
+    "we do not know", not "modelled".
+    """
     return Price(
         zone=zone,
         at=point.at,
@@ -204,6 +244,7 @@ def to_price(point: Point, *, zone: str, provenance: Provenance, currency: str) 
         is_estimated=point.is_estimated,
         value=point.value,
         currency=currency,
+        source=point.source if isinstance(point, PricePoint) else None,
     )
 
 
@@ -268,6 +309,20 @@ def from_observation(observation: ScalarObservation) -> Point:
         at=observation.at,
         value=observation.value,
         is_estimated=observation.is_estimated,
+    )
+
+
+def from_price(observation: Price) -> PricePoint:
+    """A price observation as a scenario point, keeping who set it.
+
+    ``source`` is the only thing separating a settled auction result from a modelled one
+    once the response envelope is gone, so it is recorded rather than recomputed.
+    """
+    return PricePoint(
+        at=observation.at,
+        value=observation.value,
+        is_estimated=observation.is_estimated,
+        source=observation.source,
     )
 
 

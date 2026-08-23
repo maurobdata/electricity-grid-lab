@@ -108,6 +108,37 @@ class ReplaySource(GridSource):
             point, zone=zone, provenance=self.provenance, currency=self.scenario.currency
         )
 
+    async def price_forward(self, zone: str) -> Series[ScalarObservation] | None:
+        """The recorded day-ahead prices that are still ahead of the replay clock.
+
+        Clipped at ``now`` for the same reason live mode clips: the elapsed half of the
+        recording is :meth:`history`'s answer, and serving it under two names lets a chart
+        draw one hour twice.
+
+        Unlike :meth:`forecast`, nothing here is kept for the sake of hindsight. A forecast
+        laid over what happened is the interesting comparison; a cleared auction price laid
+        over what happened is the same number twice.
+        """
+        data = self._zone(zone)
+        if data is None or data.price_forward is None:
+            return None
+
+        forward = tuple(p for p in data.price_forward.points if p.at >= self.now)
+        if not forward:
+            return None
+
+        return Series[ScalarObservation](
+            zone=zone,
+            points=tuple(
+                sc.to_price(
+                    point, zone=zone, provenance=self.provenance, currency=self.scenario.currency
+                )
+                for point in forward
+            ),
+            granularity=self.scenario.granularity,
+            issued_at=data.price_forward.issued_at,
+        )
+
     async def load(self, zone: str) -> Load | None:
         data = self._zone(zone)
         if data is None:

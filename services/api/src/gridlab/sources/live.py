@@ -172,6 +172,46 @@ class LiveSource(GridSource):
         row = self._row(body)
         return self._mark_stale(normalize.price(row, zone=zone), stale) if row else None
 
+    async def price_forward(self, zone: str) -> Series[ScalarObservation] | None:
+        """Tomorrow's cleared prices, from ``price-day-ahead/combined``.
+
+        ``combined`` is the right endpoint and ``forecast`` is not: the latter rejects
+        ``horizonHours`` and demands an explicit window, while ``combined`` needs only a
+        zone and returns published auction prices and modelled ones together, each row
+        labelled with its ``source``.
+
+        The response spans both directions in time — a recording made at 20:03 UTC held
+        rows from 20:00 that evening through 20:00 the next — so it is split at the clock
+        and only the forward half is returned. The backward half is already
+        :meth:`history`'s job, and returning it twice under two names would let a chart
+        draw the same hour as both.
+
+        ``issued_at`` is the newest ``updatedAt`` among the forward rows, which is when the
+        auction that set them was published. That is the field that makes the series
+        auditable: prices for the same hour can be re-published, and the answer to "when was
+        this known?" is not the same as "when do these apply?".
+        """
+        result = await self._fetch(Signal.PRICE_DAY_AHEAD, Temporality.COMBINED, zone=zone)
+        if result is None:
+            return None
+        body, stale = result
+
+        full = normalize.series(
+            [body], zone=zone, normalizer=normalize.price, provenance=self.provenance
+        )
+        now = self.clock.now()
+        forward = tuple(p for p in full.points if p.at >= now)
+        if not forward:
+            return None
+
+        issued = [p.updated_at for p in forward if p.updated_at is not None]
+        return Series[ScalarObservation](
+            zone=zone,
+            points=tuple(self._mark_stale(p, stale) for p in forward),
+            granularity=full.granularity,
+            issued_at=max(issued) if issued else None,
+        )
+
     async def load(self, zone: str) -> Load | None:
         result = await self._fetch(Signal.TOTAL_LOAD, Temporality.LATEST, zone=zone)
         if result is None:

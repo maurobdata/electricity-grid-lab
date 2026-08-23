@@ -84,8 +84,49 @@ async def walk(base_url: str, *, steps: int, zone: str | None) -> int:
             )
             await show(get, key, moment.isoformat(), compact=True)
 
+        await show_forward_price(get, key)
+
         print("\n  The clock is left paused. `make up` or the PWA will resume it.\n")
         return 0
+
+
+async def show_forward_price(get: Any, zone: str) -> None:
+    """What the day-ahead auction has already settled for hours still ahead.
+
+    Worth its own line rather than a column in the walk: it is the only forward-looking
+    thing in this output that is not a forecast. The prices below are a cleared market
+    result waiting for its delivery hour, and saying that out loud is the difference
+    between a prediction and a fact.
+    """
+    try:
+        forward = await get(f"/grid/{zone}/price/forward")
+    except httpx.HTTPError:
+        print(
+            "\n  forward price   none in this scenario."
+            "\n                  Recordings made before forward price was captured have"
+            "\n                  none; re-record with `make scenario-live`."
+        )
+        return
+
+    points = forward.get("points") or []
+    if not points:
+        return
+
+    values = [p["value"] for p in points if p.get("value") is not None]
+    cleared = sum(1 for p in points if p.get("source"))
+    unit = f"{points[0].get('currency', 'EUR')}/{points[0].get('unit', 'MWh')}"
+
+    plural = "" if len(points) == 1 else "s"
+    print(f"\n  forward price   {len(points)} period{plural} to {points[-1]['at'][:16]}")
+    print(f"                  {min(values):.2f} .. {max(values):.2f} {unit}")
+    if forward.get("issued_at"):
+        print(f"                  cleared {forward['issued_at'][:16]} — settled, not forecast")
+    if cleared:
+        print(f"                  {cleared} of {len(points)} set by a published auction")
+    else:
+        print("                  no exchange named: modelled, or generated for this scenario")
+    if any(v < 0 for v in values):
+        print("                  ! goes negative — the market pays you to consume")
 
 
 async def show(get: Any, zone: str, when: str, *, compact: bool = False) -> None:
