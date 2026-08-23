@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
-from gridlab import __version__
+from gridlab import __version__, telemetry
 from gridlab.agent.gridclient import GridClient, GridUnavailable
 from gridlab.agent.llm import (
     AgentError,
@@ -73,6 +73,12 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
             structlog.processors.TimeStamper(fmt="iso", utc=True),
             structlog.processors.JSONRenderer(),
         ]
+    )
+
+    telemetry.configure(
+        enabled=settings.gridlab_tracing_enabled,
+        endpoint=settings.otel_exporter_otlp_endpoint,
+        service="gridlab-agent",
     )
 
     state = AgentState(settings)
@@ -216,17 +222,24 @@ async def chat(state: Agent, body: ChatRequest, request: Request) -> EventSource
         log.info("agent.turn", mode=status.get("mode"), zones=len(zones))
 
         try:
-            async for event in state.backend.run(
-                system=system,
-                conversation=conversation,
-                user_message=body.message,
-                tools=state.tools,
-                context=context,
+            with telemetry.span(
+                "agent.turn",
+                mode=status.get("mode"),
+                provenance=status.get("provenance"),
+                model=state.backend.model,
+                question_chars=len(body.message),
             ):
-                if await request.is_disconnected():
-                    log.info("agent.client_disconnected")
-                    return
-                yield _translate(event)
+                async for event in state.backend.run(
+                    system=system,
+                    conversation=conversation,
+                    user_message=body.message,
+                    tools=state.tools,
+                    context=context,
+                ):
+                    if await request.is_disconnected():
+                        log.info("agent.client_disconnected")
+                        return
+                    yield _translate(event)
         except Exception as exc:
             log.exception("agent.turn_failed")
             yield _event("error", {"message": f"{type(exc).__name__}: {exc}", "kind": "internal"})

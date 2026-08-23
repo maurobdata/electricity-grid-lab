@@ -28,6 +28,7 @@ from typing import Any, Self
 import httpx
 import structlog
 
+from gridlab import telemetry
 from gridlab.emaps import errors
 from gridlab.emaps.signals import (
     FORECAST_NEEDS_WINDOW,
@@ -287,6 +288,15 @@ class EMapsClient:
 
     async def _get(self, path: str, params: dict[str, Any]) -> dict[str, Any]:
         url = f"{self._base_url}/{path}"
+
+        with telemetry.span(
+            "electricitymaps.request", path=path, zone=params.get("zone")
+        ) as current:
+            return await self._attempt(path, params, url, current)
+
+    async def _attempt(
+        self, path: str, params: dict[str, Any], url: str, current: Any = None
+    ) -> dict[str, Any]:
         last_error: Exception | None = None
 
         for attempt in range(self._retries + 1):
@@ -315,6 +325,8 @@ class EMapsClient:
                 # Never log the token. `params` carries no secret; the header does.
                 params={k: v for k, v in params.items() if k != "auth-token"},
             )
+
+            telemetry.record(current, http_status=response.status_code, attempts=attempt + 1)
 
             if response.status_code == 200:
                 body: Any = response.json()

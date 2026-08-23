@@ -1,0 +1,20 @@
+{
+  "_human_verdict": "PASS",
+  "_why": "The tool refused and the answer says so, names what is available, and states no figure.",
+  "case_id": "unavailable_zone",
+  "question": "What is the carbon intensity in Tokyo right now?",
+  "mode": "replay",
+  "provenance": "recorded",
+  "zones": ["DK-DK2", "DE"],
+  "rounds": 2,
+  "answer": "That zone is not available in this session - the lab is replaying a recording that covers only DK-DK2 and DE, so I cannot give you a figure for it. I can tell you about either of those instead.",
+  "tools": [
+    {
+      "name": "get_current_grid",
+      "arguments": {"zone": "JP-TK"},
+      "ok": false,
+      "duration_ms": 11.4,
+      "result": {"error": "There is no zone JP-TK in the current mode. Available: DK-DK2, DE."}
+    }
+  ]
+}

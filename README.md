@@ -46,6 +46,8 @@ make probe    # ask a real token what it can actually reach
 make record   # record raw API responses into fixtures/
 make scenario # regenerate the bundled (synthetic) scenarios
 make scenario-live  # record a REAL scenario from the live API
+make demo     # walk the current scenario and narrate it
+make eval ARGS=--offline   # check the eval checkers, no key needed
 make down
 ```
 
@@ -193,9 +195,9 @@ simple, and the forecast overlay and the synthetic hatch want exact control.
 | 2c · `make scenario-live` — real, replayable, provenance-preserving recordings | done |
 | 3 · PWA — zone picker, now panel, mix, forecast, flows, compare | done |
 | 4 · Agent sandbox — seven read-only tools, visible tool trace | done |
-| 5 · Evals, OpenTelemetry tracing, demo scenarios | next |
+| 5 · Evals, OpenTelemetry tracing, demo walkthrough | done |
 
-269 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
+303 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
 
 21 real API responses are committed in [`fixtures/`](fixtures/) and every one of them is
 parsed by the test suite, so the adapter is pinned to what the API actually sends rather
@@ -238,6 +240,53 @@ empty. Phase 5 measures whether it actually does.
 
 Without an `ANTHROPIC_API_KEY` the service still runs and still publishes its tools; only
 the model call is unavailable.
+
+---
+
+## Evaluating the agent
+
+```bash
+make eval                  # run the cases against the live agent, then check
+make eval ARGS=--offline   # re-check committed transcripts, no key needed
+make eval ARGS=--judge     # add an LLM judge for what code cannot check
+make eval ARGS=--align     # score the judge itself, TPR/TNR
+```
+
+Capturing a transcript costs model calls; checking one costs nothing. So capture is a
+separate step, transcripts are written to disk, and every later run of the checkers is free
+— improving a checker never means paying for the answers again.
+
+**The most important check is deterministic.** The agent's first rule is *never state a
+number you did not get from a tool*, and that is mechanically decidable: pull every number
+out of the answer and look for it in the tool traffic. No judge, no cost, no flakiness. It
+allows rounding (`75.2318` → `75%`) and fraction-to-percent (`0.08` → `8%`), and it is
+honest about its limit — arithmetic on grounded numbers is reported as unverified rather
+than silently passed, because this check is precise about invention and imprecise about
+derivation.
+
+The LLM judge covers only what code cannot: did the answer explain the difference between
+the two mixes, did it treat a forecast as a prediction, did it avoid a league table. **And
+the judge is itself scored** against hand-labelled examples, reported as true positive and
+true negative rates separately — a judge that passes everything scores 100% TPR and 0% TNR,
+which a single accuracy figure would hide completely.
+
+`evals/examples/` holds hand-written transcripts, each built to break one checker, with a
+human verdict attached. They are what the checkers are unit-tested against: *a checker that
+has stopped catching anything looks exactly like a checker with nothing to catch.*
+
+---
+
+## Tracing
+
+```bash
+docker compose --profile tracing up phoenix   # then GRIDLAB_TRACING_ENABLED=true
+```
+
+Three spans, which are the three questions asked when something looks wrong: what did
+Electricity Maps say, which tools did the agent run, how long did a turn take. Off by
+default and behind a profile, so instrumentation that costs a service to run gets turned on
+when you want it. When disabled, `span()` is a no-op context manager — no branching
+anywhere else in the codebase.
 
 ---
 
