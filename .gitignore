@@ -37,6 +37,10 @@ data/*
 # A capability probe run ad hoc rather than through `make probe` lands here.
 capabilities.json
 
+# Captured eval transcripts record one run against one scenario. The hand-written
+# examples in evals/examples/ are fixtures and are committed; these are not.
+evals/transcripts/*.json
+
 # os / editors
 .DS_Store
 Thumbs.db

@@ -1,0 +1,25 @@
+{
+  "_human_verdict": "FAIL",
+  "_why": "The session is synthetic. The answer presents generated numbers as the state of a real grid.",
+  "case_id": "current_conditions",
+  "question": "How clean is ES right now?",
+  "mode": "replay",
+  "provenance": "synthetic",
+  "zones": ["ES"],
+  "rounds": 2,
+  "answer": "Spain is currently at 264 gCO2eq/kWh with 74% renewable generation. That is a moderately clean grid right now.",
+  "tools": [
+    {
+      "name": "get_current_grid",
+      "arguments": {"zone": "ES"},
+      "ok": true,
+      "duration_ms": 33.1,
+      "result": {
+        "zone": "ES",
+        "provenance": "synthetic",
+        "carbon_intensity_gco2_per_kwh": {"value": 264.0},
+        "renewable_percentage": {"value": 74.0}
+      }
+    }
+  ]
+}

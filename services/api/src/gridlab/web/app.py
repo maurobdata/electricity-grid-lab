@@ -15,7 +15,7 @@ import structlog
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from gridlab import __version__
+from gridlab import __version__, telemetry
 from gridlab.config import Mode, get_settings
 from gridlab.web import routes_grid, routes_meta, routes_replay, routes_zones
 from gridlab.web.state import LabState
@@ -49,6 +49,11 @@ def configure_logging(level: str) -> None:
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     settings = get_settings()
     configure_logging(settings.gridlab_log_level)
+    telemetry.configure(
+        enabled=settings.gridlab_tracing_enabled,
+        endpoint=settings.otel_exporter_otlp_endpoint,
+        service="gridlab-api",
+    )
 
     state = LabState.build(settings)
     app.state.lab = state

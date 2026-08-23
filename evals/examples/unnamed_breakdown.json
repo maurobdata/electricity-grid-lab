@@ -1,0 +1,25 @@
+{
+  "_human_verdict": "FAIL",
+  "_why": "Used get_mix but never said whether the figures are production or flow-traced, which is the distinction the question turns on.",
+  "case_id": "flow_tracing",
+  "question": "Is the electricity in DK-DK2 actually generated there, or brought in?",
+  "mode": "replay",
+  "provenance": "recorded",
+  "zones": ["DK-DK2"],
+  "rounds": 2,
+  "answer": "The mix was 75.2% wind and 1.3% gas at the recorded time.",
+  "tools": [
+    {
+      "name": "get_mix",
+      "arguments": {"zone": "DK-DK2", "flow_traced": true},
+      "ok": true,
+      "duration_ms": 44.9,
+      "result": {
+        "zone": "DK-DK2",
+        "provenance": "recorded",
+        "flow_traced": true,
+        "sources": [{"source": "wind", "percent": 75.2}, {"source": "gas", "percent": 1.3}]
+      }
+    }
+  ]
+}

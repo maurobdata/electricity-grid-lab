@@ -34,6 +34,7 @@ services:
       # not exist until a probe has been run, and Docker turns a bind mount of a missing
       # file into a directory.
       - ./data:/app/data:ro
+      - ./evals:/app/evals
       - gridlab-data:/data
     networks: [frontnet, datanet]
     healthcheck:

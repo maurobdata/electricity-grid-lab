@@ -25,6 +25,7 @@ from typing import Any, Protocol
 
 import structlog
 
+from gridlab import telemetry
 from gridlab.agent.gridclient import GridUnavailable
 from gridlab.agent.tools import ToolContext, ToolSpec
 
@@ -254,25 +255,37 @@ async def _invoke(
         # Only reachable if the model invents a name, which strict schemas should prevent.
         return {"error": f"No tool named {name!r}."}, False, 0.0
 
-    try:
-        result = await tool.handler(context, **arguments)
-        ok = True
-    except GridUnavailable as exc:
-        # The expected failure: a zone that does not exist, a signal outside the plan, a
-        # window nobody has. This is an answer, not a crash.
-        result = {"error": str(exc)}
-        ok = False
-    except TypeError as exc:
-        result = {"error": f"Wrong arguments for {name}: {exc}"}
-        ok = False
-    except Exception as exc:
-        log.exception("agent.tool_failed", tool=name)
-        result = {"error": f"{name} failed unexpectedly: {type(exc).__name__}."}
-        ok = False
+    with telemetry.span("agent.tool", tool=name, **_span_args(arguments)) as current:
+        try:
+            result = await tool.handler(context, **arguments)
+            ok = True
+        except GridUnavailable as exc:
+            # The expected failure: a zone that does not exist, a signal outside the plan,
+            # a window nobody has. This is an answer, not a crash.
+            result = {"error": str(exc)}
+            ok = False
+        except TypeError as exc:
+            result = {"error": f"Wrong arguments for {name}: {exc}"}
+            ok = False
+        except Exception as exc:
+            log.exception("agent.tool_failed", tool=name)
+            result = {"error": f"{name} failed unexpectedly: {type(exc).__name__}."}
+            ok = False
 
-    elapsed = round((time.perf_counter() - started) * 1000, 1)
+        elapsed = round((time.perf_counter() - started) * 1000, 1)
+        telemetry.record(current, ok=ok, duration_ms=elapsed, provenance=result.get("provenance"))
+
     log.info("agent.tool", tool=name, ok=ok, ms=elapsed, args=arguments)
     return result, ok, elapsed
+
+
+def _span_args(arguments: dict[str, Any]) -> dict[str, Any]:
+    """Tool arguments, flattened for a span. Scalars only; a nested object is not a tag."""
+    return {
+        f"arg.{key}": value
+        for key, value in arguments.items()
+        if isinstance(value, str | int | float | bool)
+    }
 
 
 def _explain(exc: Any) -> str:

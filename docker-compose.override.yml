@@ -17,6 +17,7 @@ services:
       - ./fixtures:/app/fixtures:ro
       - ./scenarios:/app/scenarios:ro
       - ./data:/app/data:ro
+      - ./evals:/app/evals
       - gridlab-data:/data
 
   web:

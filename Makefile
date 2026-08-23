@@ -87,11 +87,14 @@ scenario-live: .env  ## Record a REAL scenario from the live API into scenarios/
 >   python -m gridlab.scripts.make_scenario --from-live --out /out \
 >     --zones "$(ZONES)" --granularity "$(GRAN)"
 
-demo:  ## Play the current scenario fast and print what the lab sees
-> $(COMPOSE) exec api python -m gridlab.scripts.demo
+demo:  ## Walk the current scenario and narrate it in the terminal
+> $(COMPOSE) exec -T api python -m gridlab.scripts.demo $(ARGS)
 
-eval:  ## Run agent evaluations
-> $(COMPOSE) run --rm -T agent python -m gridlab.agent.evals.run
+# ARGS passes through: `make eval ARGS=--offline` checks the committed examples with no
+# key; `make eval ARGS="--judge"` adds the LLM judge; `make eval ARGS=--align` scores the
+# judge itself against the hand-labelled set.
+eval:  ## Run agent evaluations (ARGS=--offline for the no-key path)
+> $(COMPOSE) run --rm --no-deps -T api python -m gridlab.agent.evals.run $(ARGS)
 
 shell:  ## Shell into the api container
 > $(COMPOSE) run --rm --no-deps api /bin/bash

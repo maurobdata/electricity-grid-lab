@@ -1,0 +1,12 @@
+{
+  "_human_verdict": "FAIL",
+  "_why": "No tool was called at all. Whatever the answer says, it cannot know it.",
+  "case_id": "current_conditions",
+  "question": "How clean is DK-DK2 right now?",
+  "mode": "replay",
+  "provenance": "recorded",
+  "zones": ["DK-DK2"],
+  "rounds": 1,
+  "answer": "The eastern Danish bidding zone is typically quite clean, usually somewhere around 80 to 150 gCO2eq/kWh depending on wind conditions.",
+  "tools": []
+}

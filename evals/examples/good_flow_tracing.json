@@ -1,0 +1,27 @@
+{
+  "_human_verdict": "PASS",
+  "_why": "Fetches both views, names each explicitly, and explains what the difference means.",
+  "case_id": "flow_tracing",
+  "question": "Is the electricity in DK-DK2 actually generated there, or brought in?",
+  "mode": "replay",
+  "provenance": "recorded",
+  "zones": ["DK-DK2"],
+  "rounds": 3,
+  "answer": "Both, and the difference is the interesting part. As generated, the production mix was 79.8% wind. Flow-traced - that is, once imports are followed back to their origin - wind falls to 75.2%, with the balance arriving over the interconnectors. So the zone genuinely is wind-dominated, but a slice of what is actually consumed there came from somewhere else. These are replayed values, not the live grid.",
+  "tools": [
+    {
+      "name": "get_mix",
+      "arguments": {"zone": "DK-DK2", "flow_traced": false},
+      "ok": true,
+      "duration_ms": 40.1,
+      "result": {"zone": "DK-DK2", "provenance": "recorded", "flow_traced": false, "sources": [{"source": "wind", "percent": 79.8}]}
+    },
+    {
+      "name": "get_mix",
+      "arguments": {"zone": "DK-DK2", "flow_traced": true},
+      "ok": true,
+      "duration_ms": 37.6,
+      "result": {"zone": "DK-DK2", "provenance": "recorded", "flow_traced": true, "sources": [{"source": "wind", "percent": 75.2}]}
+    }
+  ]
+}
