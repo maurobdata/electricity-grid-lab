@@ -23,7 +23,7 @@ from collections.abc import Iterable
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
 class Provenance(StrEnum):
@@ -154,8 +154,18 @@ class Flows(Observation):
 
     edges: tuple[FlowEdge, ...]
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def net_import_mw(self) -> float:
+        """Net power arriving from all neighbours. Negative means a net exporter.
+
+        A **computed field**, not a plain property, because a plain property is invisible to
+        ``model_dump`` — and this figure is the whole import/export story. It was silently
+        absent from every nested serialization: ``/grid/{zone}/flows`` injected it by hand,
+        so it looked fine, while ``/grid/{zone}/now`` returned flows without it and the
+        agent's ``get_current_grid`` reported ``net_import_mw: null`` for a zone moving
+        1,500 MW across its borders.
+        """
         return -sum(e.net_flow_mw for e in self.edges)
 
 

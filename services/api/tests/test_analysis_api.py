@@ -125,3 +125,26 @@ def test_baseline_rejects_an_unknown_signal_with_the_valid_list(client: TestClie
     response = client.get("/api/v1/analysis/DK-DK2/baseline", params={"signal": "vibes"})
     assert response.status_code == 400
     assert "carbon_intensity" in response.json()["detail"]["available"]
+
+
+def test_the_rail_surfaces_a_negative_price_that_already_happened(client: TestClient) -> None:
+    """The fixture opens at -12.50 EUR/MWh, an hour that has elapsed by the time the clock
+    reaches the end of the window.
+
+    Germany ran five hours below zero on 23 August 2026 and this rail said nothing, because
+    the detector only ever looked forward — while the "now" panel flagged the current hour
+    in red. A panel that highlights something and a rail that ignores it is worse than
+    either alone.
+    """
+    from datetime import UTC, datetime
+
+    from gridlab.clock import FrozenClock
+
+    app.state.lab.source.clock = FrozenClock(datetime(2026, 2, 4, 3, tzinfo=UTC))
+    body = client.get("/api/v1/analysis/DK-DK2/findings").json()
+
+    negatives = [f for f in body["findings"] if f["kind"] == "negative_price"]
+    assert negatives, "an elapsed negative price produced no finding"
+    assert any("went negative" in f["headline"] for f in negatives), (
+        "an elapsed dip was reported in the present tense"
+    )

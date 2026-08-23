@@ -349,3 +349,125 @@ def test_every_finding_carries_provenance() -> None:
     assert len(findings) == 2
     assert findings[0].derived.provenance is Provenance.RECORDED
     assert findings[1].derived.provenance is Provenance.SYNTHETIC
+
+
+# --- regressions found against live data, 23 August 2026 ---------------------
+
+
+def test_a_falling_carbon_swing_names_its_values_in_time_order() -> None:
+    """DE read "falls 2.5x — 197 to 483" on real forecast data: the verb said one thing and
+    the numbers said the other, because they were printed largest-last rather than in the
+    order they occur. A headline that contradicts itself is worse than no headline."""
+    falling = series({0: 483, 1: 300, 2: 197})
+    finding = carbon_swing(falling)[0]
+
+    assert "falls" in finding.headline
+    assert "483 to 197" in finding.headline, finding.headline
+
+
+def test_a_climbing_carbon_swing_still_reads_low_to_high() -> None:
+    finding = carbon_swing(series({0: 197, 1: 300, 2: 483}))[0]
+    assert "climbs" in finding.headline
+    assert "197 to 483" in finding.headline
+
+
+def test_exchange_is_reported_in_megawatts_not_as_a_share_of_consumption() -> None:
+    """The flow-traced breakdown's total is not a verified consumption figure.
+
+    Recorded DK-DK2 at 12:00 on 23 August 2026: production 1,017 MW, flow-traced total
+    2,098 MW, net *exports* 1,523 MW. Nothing sensible reads those as a zone's consumption,
+    so a percentage derived from that denominator states something the data cannot support.
+    The net exchange comes straight from `electricity-flows` and needs no denominator.
+    """
+    findings = import_dependence(
+        production=mix({"solar": 418, "wind": 367, "biomass": 211, "gas": 17}, flow_traced=False),
+        consumption=mix(
+            {"solar": 1050, "wind": 607, "biomass": 300, "coal": 51, "gas": 52}, flow_traced=True
+        ),
+        flows=flows({"DE": 726.0, "DK-DK1": 576.0, "SE-SE4": 221.0}),
+    )
+
+    assert len(findings) == 1
+    finding = findings[0]
+    assert "1,523 MW" in finding.headline, finding.headline
+    assert "%" not in finding.headline, "a share of consumption was quoted again"
+    assert finding.intent is not None and "%" not in finding.intent.reason
+
+
+def test_a_net_exporter_is_described_as_exporting() -> None:
+    """Positive edges are exports, so the sentence must say so. `net_import_mw` is negative
+    here, and reading its sign off the wrong variable inverted the verb once already."""
+    finding = import_dependence(
+        production=mix({"solar": 418, "wind": 367}, flow_traced=False),
+        consumption=mix({"solar": 1050, "wind": 607, "coal": 51}, flow_traced=True),
+        flows=flows({"DE": 726.0, "DK-DK1": 576.0}),
+    )[0]
+    assert "net exporting" in finding.headline
+    assert "mostly to DE" in finding.headline
+
+
+def test_a_net_importer_is_described_as_importing() -> None:
+    finding = import_dependence(
+        production=mix({"wind": 300, "gas": 100}, flow_traced=False),
+        consumption=mix({"wind": 300, "gas": 100, "coal": 400}, flow_traced=True),
+        flows=flows({"DE": -700.0, "SE-SE4": -50.0}),
+    )[0]
+    assert "net importing" in finding.headline
+    assert "mostly from DE" in finding.headline
+
+
+def test_the_exchange_finding_says_why_it_avoids_a_percentage() -> None:
+    """The caveat is the evidence that the omission was a decision rather than an oversight."""
+    finding = import_dependence(
+        production=mix({"solar": 418, "wind": 367}, flow_traced=False),
+        consumption=mix({"solar": 1050, "wind": 607, "coal": 51}, flow_traced=True),
+        flows=flows({"DE": 726.0, "DK-DK1": 576.0}),
+    )[0]
+    caveats = " ".join(finding.derived.caveats)
+    assert "not a share of consumption" in caveats
+    assert "net exporter" in caveats
+
+
+def test_an_elapsed_negative_price_is_phrased_in_the_past() -> None:
+    """Both directions in time are worth surfacing; they are not the same news.
+
+    Germany ran five hours below zero on the morning of 23 August 2026. Reporting that in
+    the present tense would read as a dip about to happen.
+    """
+    finding = negative_price(prices({0: -0.6, 1: -1.9, 2: -5.0}), kind="history")[0]
+    assert "Price went negative" in finding.headline
+    assert "earned money" in finding.detail
+
+
+def test_a_forward_negative_price_stays_in_the_present() -> None:
+    finding = negative_price(prices({0: -0.6, 1: -1.9, 2: -5.0}))[0]
+    assert "Price goes negative" in finding.headline
+    assert "earns money" in finding.detail
+
+
+def test_the_same_window_past_and_future_are_different_findings() -> None:
+    """Their ids must differ, or narration cached for one would be served for the other."""
+    ahead = negative_price(prices({0: -5, 1: -6}))[0]
+    behind = negative_price(prices({0: -5, 1: -6}), kind="history")[0]
+    assert ahead.id != behind.id
+
+
+def test_every_finding_explains_itself_on_hover() -> None:
+    """`detail` is the tooltip, and the tooltip is where a finding's caveats are read.
+
+    A chip with an empty one is a claim with no visible qualification — `renewable_surge`
+    shipped that way and hovering it said nothing at all.
+    """
+    produced = [
+        *negative_price(prices({0: 20, 1: -5, 2: -40})),
+        *carbon_swing(series({0: 100, 1: 200, 2: 400})),
+        *renewable_surge(series({0: 20, 1: 35, 2: 75})),
+        *import_dependence(
+            production=mix({"wind": 800, "gas": 200}, flow_traced=False),
+            consumption=mix({"wind": 500, "gas": 150, "coal": 350}, flow_traced=True),
+            flows=flows({"DE": -400}),
+        ),
+    ]
+    assert len(produced) == 4
+    for finding in produced:
+        assert finding.detail.strip(), f"{finding.kind} has no detail to show on hover"

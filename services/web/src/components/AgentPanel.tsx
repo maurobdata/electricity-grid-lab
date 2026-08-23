@@ -122,7 +122,13 @@ export function AgentPanel({
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+        // Normalise line endings before looking for a frame boundary.
+        //
+        // SSE separates frames with a blank line, and the server sends CRLF — so the
+        // separator on the wire is `\r\n\r\n`, which contains no `\n\n` for `split` to
+        // find. Without this the buffer grew forever, no frame was ever parsed, and the
+        // panel rendered an empty answer while the agent ran a complete turn behind it.
+        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
 
         const frames = buffer.split("\n\n");
         buffer = frames.pop() ?? "";
