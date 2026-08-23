@@ -35,6 +35,8 @@ export function ForecastPanel({
   onSignalChange,
   now,
   forecastUnavailable,
+  highlight,
+  onClearHighlight,
 }: {
   history: Series | undefined;
   forecast: Series | undefined;
@@ -42,6 +44,9 @@ export function ForecastPanel({
   onSignalChange: (next: string) => void;
   now: string;
   forecastUnavailable?: boolean;
+  /** A window a finding or the agent asked to be marked. */
+  highlight?: { from: string; to: string };
+  onClearHighlight?: () => void;
 }) {
   const spec = SIGNALS.find((s) => s.key === signal) ?? SIGNALS[0];
 
@@ -98,18 +103,32 @@ export function ForecastPanel({
       </CardHeader>
 
       <CardContent>
-        <Select
-          value={signal}
-          onChange={(event) => onSignalChange(event.target.value)}
-          className="mb-3"
-          aria-label="Signal"
-        >
-          {SIGNALS.map((option) => (
-            <option key={option.key} value={option.key}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Select
+            value={signal}
+            onChange={(event) => onSignalChange(event.target.value)}
+            aria-label="Signal"
+          >
+            {SIGNALS.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
+
+          {/* A highlight arrived from somewhere else — a finding, or the agent — so there
+              has to be a visible way back out of it. A mark the reader cannot remove is a
+              mark they will assume is part of the data. */}
+          {highlight && onClearHighlight && (
+            <button
+              onClick={onClearHighlight}
+              className="rounded-md border border-border px-2 py-1 text-[0.7rem] text-muted-foreground hover:bg-accent"
+              title="Stop marking this window"
+            >
+              Clear highlight
+            </button>
+          )}
+        </div>
 
         <TimeSeries
           series={series}
@@ -117,6 +136,7 @@ export function ForecastPanel({
           unit={spec.unit}
           nowAt={now}
           zeroBased={spec.zeroBased}
+          highlight={highlight}
           emptyMessage={
             forecastUnavailable ? "No forecast for this signal" : "No data in this window"
           }

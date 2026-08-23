@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import type { ViewIntent } from "@/lib/viewState";
 
 const AGENT = import.meta.env.VITE_AGENT_URL ?? "http://localhost:8001";
 
@@ -33,6 +34,14 @@ interface Turn {
   question: string;
   text: string;
   tools: ToolTrace[];
+  /**
+   * Views the agent offered this turn.
+   *
+   * Offers, not actions. They render as controls the user may press or ignore, and nothing
+   * moves until one is pressed — see ADR 0010. The agent cannot reach the interface; it can
+   * only ask.
+   */
+  intents: ViewIntent[];
   error?: string;
   done?: boolean;
   rounds?: number;
@@ -45,7 +54,17 @@ const SUGGESTIONS = [
   "Compare the zones available and explain the spread.",
 ];
 
-export function AgentPanel({ zone }: { zone: string | undefined }) {
+export function AgentPanel({
+  zone,
+  onIntent,
+  blocked,
+}: {
+  zone: string | undefined;
+  /** Applied only when the user presses the control. */
+  onIntent?: (intent: ViewIntent) => void;
+  /** Why an offered view cannot be carried out right now, or null when it can. */
+  blocked?: (intent: ViewIntent) => string | null;
+}) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -69,7 +88,7 @@ export function AgentPanel({ zone }: { zone: string | undefined }) {
     setBusy(true);
 
     const index = turns.length;
-    setTurns((current) => [...current, { question, text: "", tools: [] }]);
+    setTurns((current) => [...current, { question, text: "", tools: [], intents: [] }]);
 
     const patch = (fn: (turn: Turn) => Turn) =>
       setTurns((current) => current.map((turn, i) => (i === index ? fn(turn) : turn)));
@@ -137,7 +156,8 @@ export function AgentPanel({ zone }: { zone: string | undefined }) {
         <div>
           <CardTitle>Agent</CardTitle>
           <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-            Seven read-only tools. Its working is shown, so its answers can be checked.
+            Read-only tools, and its working is shown — so its answers can be checked.
+            Any view it offers is a suggestion until you press it.
           </p>
         </div>
         {hasKey === false && <Badge variant="warn">no API key</Badge>}
@@ -178,6 +198,32 @@ export function AgentPanel({ zone }: { zone: string | undefined }) {
 
               {turn.text && (
                 <div className="text-sm whitespace-pre-wrap">{turn.text}</div>
+              )}
+
+              {turn.intents.length > 0 && onIntent && (
+                <div className="flex flex-wrap gap-1.5">
+                  {turn.intents.map((intent) => {
+                    const why = blocked?.(intent) ?? null;
+                    return (
+                      <button
+                        key={intent.reason}
+                        onClick={() => onIntent(intent)}
+                        disabled={why !== null}
+                        title={why ?? "Change what is on screen to this."}
+                        className={cn(
+                          "rounded-md border border-border px-2 py-1 text-[0.7rem] transition-colors",
+                          why === null
+                            ? "hover:bg-accent"
+                            : "cursor-not-allowed opacity-40",
+                        )}
+                      >
+                        {/* The agent's own words, because this is a label on a button and
+                            an unexplained view change is disorienting. */}
+                        {intent.reason}
+                      </button>
+                    );
+                  })}
+                </div>
               )}
 
               {turn.error && (
@@ -278,6 +324,7 @@ type SseEvent =
       event: "tool_result";
       data: { id: string; name: string; ok: boolean; content: unknown; duration_ms: number };
     }
+  | { event: "view_intent"; data: ViewIntent }
   | { event: "done"; data: { stop_reason: string | null; rounds: number } }
   | { event: "error"; data: { message: string; kind: string } };
 
@@ -315,6 +362,13 @@ function apply(turn: Turn, event: string, data: unknown): Turn {
             : tool,
         ),
       };
+
+    case "view_intent":
+      // Deduplicated by reason: a model that proposes the same view twice in one turn
+      // should not produce two identical buttons.
+      return turn.intents.some((existing) => existing.reason === frame.data.reason)
+        ? turn
+        : { ...turn, intents: [...turn.intents, frame.data] };
 
     case "done":
       return { ...turn, done: true, rounds: frame.data.rounds };
