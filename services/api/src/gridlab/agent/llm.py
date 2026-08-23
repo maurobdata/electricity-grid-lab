@@ -176,18 +176,19 @@ class AnthropicBackend:
 
         while rounds < MAX_ROUNDS:
             rounds += 1
+            stream_kwargs: dict[str, Any] = {
+                "model": self._model,
+                "max_tokens": 4096,
+                "system": system,
+                "messages": conversation.messages,
+                "tools": payload,
+            }
+            if _supports_adaptive_thinking(self._model):
+                # Adaptive lets capable models decide how much to think. Haiku currently
+                # rejects it, and the cheaper model is useful for local smoke tests.
+                stream_kwargs["thinking"] = {"type": "adaptive"}
             try:
-                async with client.messages.stream(
-                    model=self._model,
-                    max_tokens=4096,
-                    system=system,
-                    messages=conversation.messages,
-                    tools=payload,
-                    # Adaptive lets the model decide how much to think. These questions
-                    # range from one lookup to a multi-zone comparison, so a fixed budget
-                    # would be wrong at one end or the other.
-                    thinking={"type": "adaptive"},
-                ) as stream:
+                async with client.messages.stream(**stream_kwargs) as stream:
                     async for chunk in stream.text_stream:
                         yield TextDelta(chunk)
                     message = await stream.get_final_message()
@@ -277,6 +278,11 @@ async def _invoke(
 
     log.info("agent.tool", tool=name, ok=ok, ms=elapsed, args=arguments)
     return result, ok, elapsed
+
+
+def _supports_adaptive_thinking(model: str) -> bool:
+    """Whether to send Anthropic's adaptive thinking option for this model."""
+    return "haiku" not in model.lower()
 
 
 def _span_args(arguments: dict[str, Any]) -> dict[str, Any]:

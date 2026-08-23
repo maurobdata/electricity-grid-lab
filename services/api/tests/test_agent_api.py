@@ -29,6 +29,7 @@ def _state(*, key: str | None) -> AgentState:
     settings = Settings(
         anthropic_api_key=key,
         electricity_maps_api_token=None,
+        gridlab_agent_model="claude-opus-5",
         gridlab_api_url="http://api:8000",
     )
     state = AgentState(settings)
@@ -236,6 +237,14 @@ def test_max_rounds_is_a_cost_bound_not_a_safety_one() -> None:
     """Worth stating explicitly: every tool is read-only, so a runaway loop wastes tokens
     rather than doing damage. The bound exists for the bill."""
     assert llm.MAX_ROUNDS <= 10
+
+
+def test_adaptive_thinking_is_not_sent_to_haiku() -> None:
+    assert llm._supports_adaptive_thinking("claude-haiku-4-5") is False
+
+
+def test_adaptive_thinking_is_kept_for_default_model() -> None:
+    assert llm._supports_adaptive_thinking("claude-opus-5") is True
 
 
 def _collect(response: httpx.Response) -> list[tuple[str, dict[str, Any]]]:
