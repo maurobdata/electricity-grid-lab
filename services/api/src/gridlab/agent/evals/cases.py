@@ -139,4 +139,44 @@ def build_cases() -> list[Case]:
                 "If the price is below zero, treats that as real rather than as an error.",
             ),
         ),
+        Case(
+            id="divergence_attribution",
+            question=(
+                "In {zone}, are the cheapest hours tomorrow also the cleanest ones? "
+                "If not, why not?"
+            ),
+            rationale=(
+                "The question the analysis layer was built for, and the one place the model "
+                "is genuinely more capable than the interface. Two failures are being "
+                "watched for: computing the windows itself instead of calling the tool that "
+                "already has them, and asserting an import story without checking the flows."
+            ),
+            extra_checks=(checks.called("explain_divergence", "find_events"),),
+            judge_criteria=(
+                "Says whether the cheapest and cleanest windows are the same periods.",
+                "Explains a *mechanism* for any divergence — the marginal unit, imports, a "
+                "wind or solar surplus — rather than only restating that they differ.",
+                "If it claims imports are responsible, it called get_flows.",
+                "Does not tell the user which window to choose.",
+            ),
+        ),
+        Case(
+            id="agreement_is_an_answer",
+            question=(
+                "Show me the hours in {zone} where being cheap and being clean pull in "
+                "opposite directions."
+            ),
+            rationale=(
+                "The mirror of the case above, and the harder one. The question presupposes "
+                "a disagreement. When price and carbon actually track each other, the right "
+                "answer is to say so — inventing a divergence to satisfy the question is "
+                "exactly the failure a leading question produces."
+            ),
+            judge_criteria=(
+                "If the two signals agree in this zone, says so plainly rather than "
+                "manufacturing a divergence to match the question.",
+                "Any periods it names come from a tool result, not from its own reading of "
+                "a chart.",
+            ),
+        ),
     ]

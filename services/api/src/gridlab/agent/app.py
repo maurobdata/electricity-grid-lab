@@ -35,6 +35,7 @@ from gridlab.agent.llm import (
     ToolCall,
     ToolResult,
     TurnFinished,
+    ViewProposed,
 )
 from gridlab.agent.prompts import system_prompt
 from gridlab.agent.tools import ToolContext, build_tools
@@ -178,7 +179,12 @@ async def tools(state: Agent) -> dict[str, Any]:
 async def chat(state: Agent, body: ChatRequest, request: Request) -> EventSourceResponse:
     """One turn, streamed as Server-Sent Events.
 
-    Event types: `text`, `tool_call`, `tool_result`, `done`, `error`.
+    Event types: `text`, `tool_call`, `tool_result`, `view_intent`, `done`, `error`.
+
+    `view_intent` is a **proposal**, not an instruction. It carries a view the agent is
+    offering — a window to highlight, a panel to focus — for the client to render as a
+    control the user may click or ignore. Nothing on the server changed when it was
+    emitted, and nothing will if it is dropped. See ADR 0010.
     """
 
     async def stream() -> AsyncIterator[dict[str, str]]:
@@ -255,6 +261,8 @@ def _translate(event: Any) -> dict[str, str]:
             return _event("tool_call", asdict(event))
         case ToolResult():
             return _event("tool_result", asdict(event))
+        case ViewProposed():
+            return _event("view_intent", event.intent)
         case TurnFinished():
             return _event("done", asdict(event))
         case AgentError():

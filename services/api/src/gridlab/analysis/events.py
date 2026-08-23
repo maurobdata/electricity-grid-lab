@@ -40,6 +40,7 @@ from gridlab.domain.models import (
     Finding,
     Flows,
     InputRef,
+    IntentKind,
     MixBreakdown,
     ScalarObservation,
     Series,
@@ -183,7 +184,7 @@ def negative_price(
                     Evidence(label="periods", value=float(hours)),
                 ),
                 intent=ViewIntent(
-                    kind="highlight_window",
+                    kind=IntentKind.HIGHLIGHT_WINDOW,
                     reason=(
                         f"{hours} period(s) of negative price from {_stamp(run[0].at, span=span)}"
                     ),
@@ -257,7 +258,7 @@ def carbon_swing(forecast: Series[ScalarObservation]) -> list[Finding]:
                 Evidence(label="highest", value=high.value, unit="gCO2eq/kWh", at=high.at),
             ),
             intent=ViewIntent(
-                kind="highlight_window",
+                kind=IntentKind.HIGHLIGHT_WINDOW,
                 reason=f"carbon intensity moves {ratio:.1f}x across this window",
                 zone=forecast.zone,
                 signal="carbon_intensity",
@@ -309,7 +310,7 @@ def renewable_surge(forecast: Series[ScalarObservation]) -> list[Finding]:
                 Evidence(label="to", value=high.value, unit="%", at=high.at),
             ),
             intent=ViewIntent(
-                kind="highlight_window",
+                kind=IntentKind.HIGHLIGHT_WINDOW,
                 reason=f"renewable share climbs {rise:.0f} points across this window",
                 zone=forecast.zone,
                 signal="renewable_percentage",
@@ -406,7 +407,7 @@ def import_dependence(
                 ),
             ),
             intent=ViewIntent(
-                kind="focus",
+                kind=IntentKind.FOCUS,
                 reason=f"{abs(share):.0%} of this zone's electricity crosses a border",
                 zone=consumption.zone,
                 panel="mix",
@@ -528,7 +529,7 @@ def cheap_and_clean_disagree(divergence: Divergence, aligned: Aligned) -> list[F
                 ),
             ),
             intent=ViewIntent(
-                kind="highlight_window",
+                kind=IntentKind.HIGHLIGHT_WINDOW,
                 reason="the cheapest and cleanest windows are different hours",
                 zone=divergence.zone,
                 signal="price",

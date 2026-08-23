@@ -24,8 +24,10 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
+from pydantic import ValidationError
 
 from gridlab.agent.gridclient import GridClient, GridUnavailable
+from gridlab.domain.models import IntentKind, ViewIntent
 
 log = structlog.get_logger(__name__)
 
@@ -36,6 +38,13 @@ SERIES_SIGNALS = (
     "price",
     "load",
 )
+
+#: Panels the interface can be asked to focus.
+#:
+#: Named here rather than discovered from the front end, because this list is part of the
+#: contract: an intent naming a panel that does not exist renders as a control that does
+#: nothing, which is worse than refusing to make it.
+VIEW_PANELS = ("now", "mix", "flows", "forecast", "compare", "findings")
 
 #: Horizons the API accepts vary per signal; 24 is the only value every forecasting signal
 #: takes. Offering the full set here would invite a 400 the model cannot diagnose.
@@ -58,6 +67,14 @@ class ToolSpec:
     parameters: dict[str, Any]
     handler: Callable[..., Awaitable[dict[str, Any]]]
     required: tuple[str, ...] = ()
+
+    proposes_view: bool = False
+    """Whether a successful call should also be surfaced as a `view_intent` event.
+
+    Declared here rather than matched on the tool's name in the agent loop, so that "which
+    tools can steer the interface" is a property of the registry — the same place the rest
+    of the boundary is stated — and is greppable rather than remembered.
+    """
 
     def schema(self) -> dict[str, Any]:
         return {
@@ -354,6 +371,82 @@ async def explain_divergence(
     }
 
 
+async def propose_view(
+    ctx: ToolContext,
+    *,
+    kind: str,
+    reason: str,
+    zone: str | None = None,
+    zones: list[str] | None = None,
+    signal: str | None = None,
+    panel: str | None = None,
+    at: str | None = None,
+    until: str | None = None,
+) -> dict[str, Any]:
+    """Offer the user a view of what the answer is about.
+
+    **This does not change anything.** The intent travels to the client, which renders it
+    as a control the user may click. That is the whole design: the agent steers attention
+    by invitation, never by moving the interface under someone's hands (ADR 0010), and the
+    read-only guarantee of ADR 0005 is untouched — nothing here writes, anywhere.
+
+    Validated against the same :class:`~gridlab.domain.models.ViewIntent` the deterministic
+    detectors build, so a shape the UI cannot apply is refused here rather than arriving as
+    a silently ignored no-op.
+    """
+    try:
+        intent_kind = IntentKind(kind)
+    except ValueError:
+        raise GridUnavailable(
+            f"{kind!r} is not something the interface can do. Valid: "
+            f"{', '.join(k.value for k in IntentKind)}."
+        ) from None
+
+    if signal is not None and signal not in SERIES_SIGNALS:
+        raise GridUnavailable(f"signal must be one of {', '.join(SERIES_SIGNALS)}.")
+    if panel is not None and panel not in VIEW_PANELS:
+        raise GridUnavailable(f"panel must be one of {', '.join(VIEW_PANELS)}.")
+
+    # Zones go through the same allowlist every other tool uses. An intent naming a zone
+    # that does not exist would render as a control that breaks the page when clicked.
+    checked_zone = await ctx.require_zone(zone) if zone else None
+    checked_zones = [await ctx.require_zone(z) for z in (zones or [])]
+
+    try:
+        intent = ViewIntent(
+            kind=intent_kind,
+            reason=reason,
+            zone=checked_zone,
+            zones=tuple(checked_zones),
+            signal=signal,
+            panel=panel,
+            at=_parse_time(at) if at else None,
+            until=_parse_time(until) if until else None,
+        )
+    except ValidationError as exc:
+        raise GridUnavailable(
+            f"That view does not make sense: {exc.error_count()} problem(s)."
+        ) from exc
+
+    return {
+        "intent": intent.model_dump(mode="json"),
+        "_note": (
+            "Offered to the user, not applied. They see a control labelled with your "
+            "reason and may ignore it. Say what you are showing them in your answer as "
+            "well — the answer has to stand on its own for someone who never clicks."
+        ),
+    }
+
+
+def _parse_time(value: str) -> datetime:
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        raise GridUnavailable(
+            f"{value!r} is not a time. Use ISO 8601, e.g. 2026-09-11T14:00:00Z."
+        ) from None
+
+
 async def get_flows(ctx: ToolContext, *, zone: str) -> dict[str, Any]:
     key = await ctx.require_zone(zone)
     body = await ctx.client.flows(key)
@@ -563,6 +656,51 @@ def build_tools() -> list[ToolSpec]:
             parameters={"zone": _ZONE},
             required=("zone",),
             handler=find_events,
+        ),
+        ToolSpec(
+            name="propose_view",
+            description=(
+                "Offer the user a view of what your answer is about — focus a panel, "
+                "highlight a window on the charts, switch signal or zone. **This does not "
+                "change anything**: they see a control labelled with your reason and may "
+                "ignore it, so your answer must still stand on its own in words. Use it "
+                "when there is a specific thing on screen worth looking at, not on every "
+                "reply."
+            ),
+            parameters={
+                "kind": {
+                    "type": "string",
+                    "enum": [k.value for k in IntentKind],
+                    "description": "What to offer. `seek` only works in replay mode.",
+                },
+                "reason": {
+                    "type": "string",
+                    "description": (
+                        "Shown on the control itself, so write it for the user: 'show the "
+                        "negative-price window tonight', not 'highlighting window'."
+                    ),
+                },
+                "zone": _ZONE,
+                "zones": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "For `compare`.",
+                },
+                "signal": _SIGNAL,
+                "panel": {
+                    "type": "string",
+                    "enum": list(VIEW_PANELS),
+                    "description": "For `focus`.",
+                },
+                "at": {
+                    "type": "string",
+                    "description": "ISO 8601 start, e.g. 2026-09-11T14:00:00Z.",
+                },
+                "until": {"type": "string", "description": "ISO 8601 end, for a window."},
+            },
+            required=("kind", "reason"),
+            handler=propose_view,
+            proposes_view=True,
         ),
         ToolSpec(
             name="explain_divergence",

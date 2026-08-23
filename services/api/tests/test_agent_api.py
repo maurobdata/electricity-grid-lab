@@ -222,6 +222,60 @@ def test_events_reach_the_client_in_order() -> None:
     assert events[-1][1]["rounds"] == 2
 
 
+def test_a_proposed_view_arrives_as_its_own_event() -> None:
+    """The client should not have to know which tool produces intents in order to render
+    one. The tool call and result are still emitted alongside it, so the working stays
+    visible — the `view_intent` event is a convenience on top, not a replacement."""
+    intent = {
+        "kind": "highlight_window",
+        "reason": "show the negative-price window tonight",
+        "zone": ZONE,
+        "signal": "price",
+        "at": "2026-08-23T10:00:00Z",
+        "until": "2026-08-23T11:00:00Z",
+    }
+    state = _state(key="test-key")
+    state.backend = _StubBackend(  # type: ignore[assignment]
+        [
+            llm.ToolCall("t1", "propose_view", {"kind": "highlight_window"}),
+            llm.ToolResult("t1", "propose_view", True, {"intent": intent}, 1.0),
+            llm.ViewProposed(intent),
+            llm.TextDelta("Prices go below zero tonight."),
+            llm.TurnFinished("end_turn", 1, 10, 5),
+        ]
+    )
+    app.state.agent = state
+
+    with TestClient(app) as client:
+        app.state.agent = state
+        with client.stream("POST", "/api/v1/chat", json={"message": "when is it cheap?"}) as r:
+            events = _collect(r)
+
+    names = [name for name, _ in events]
+    assert names == ["tool_call", "tool_result", "view_intent", "text", "done"]
+
+    payload = dict(events[2][1])
+    assert payload["kind"] == "highlight_window"
+    assert payload["reason"], "a view arriving without a reason cannot be labelled"
+    assert payload["zone"] == ZONE
+
+
+def test_a_turn_with_no_proposed_view_emits_none() -> None:
+    """The event is occasional, not structural. A client must not wait for one."""
+    state = _state(key="test-key")
+    state.backend = _StubBackend(  # type: ignore[assignment]
+        [llm.TextDelta("63 gCO2eq/kWh."), llm.TurnFinished("end_turn", 1, 10, 5)]
+    )
+    app.state.agent = state
+
+    with TestClient(app) as client:
+        app.state.agent = state
+        with client.stream("POST", "/api/v1/chat", json={"message": "how clean?"}) as r:
+            events = _collect(r)
+
+    assert "view_intent" not in [name for name, _ in events]
+
+
 def test_a_backend_error_becomes_an_error_event() -> None:
     state = _state(key="test-key")
     state.backend = _StubBackend([llm.AgentError("rate limited", kind="api")])  # type: ignore[assignment]
