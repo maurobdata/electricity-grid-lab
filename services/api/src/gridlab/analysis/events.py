@@ -54,8 +54,12 @@ CARBON_SWING_RATIO = 1.5
 #: A renewable share climbing by more than this many points is a surge worth naming.
 RENEWABLE_SURGE_POINTS = 20.0
 
-#: Net imports above this share of a zone's consumption make an import story the likely
-#: explanation for a carbon change rather than a coincidence.
+#: Net exchange, relative to the flow-traced mix total, above which the border is worth a
+#: finding.
+#:
+#: A trigger only. The denominator is *not* a verified consumption figure — see
+#: :func:`import_dependence` — so this ratio decides whether to report and never appears in
+#: anything a reader sees.
 IMPORT_DOMINANCE = 0.2
 
 #: Cheap and clean have to be at least this far apart before the disagreement is worth a
@@ -150,6 +154,11 @@ def negative_price(
 
     unit = _price_unit(series)
     span = _span(series)
+    # Elapsed hours and hours still ahead are both worth surfacing, but they are not the
+    # same news. A dip that already happened must not read as one about to.
+    elapsed = kind == "history"
+    goes, earns = ("went", "earned") if elapsed else ("goes", "earns")
+
     findings = []
     for run in runs:
         deepest = min(run, key=lambda p: p.value)
@@ -158,18 +167,18 @@ def negative_price(
         hours = len(run)
         findings.append(
             Finding(
-                id=_id("negative_price", series.zone, run[0].at, str(len(run))),
+                id=_id("negative_price", series.zone, run[0].at, str(len(run)), kind),
                 kind="negative_price",
                 zone=series.zone,
                 headline=(
-                    f"Price goes negative for {hours} period{'s' if hours > 1 else ''} "
+                    f"Price {goes} negative for {hours} period{'s' if hours > 1 else ''} "
                     f"from {_stamp(run[0].at, span=span)}, bottoming at "
                     f"{deepest.value:.2f} {unit}"
                 ),
                 detail=(
                     "The market is paying consumers to take electricity: inflexible "
-                    "generation would rather pay than shut down. Using power here earns "
-                    "money rather than costing it."
+                    "generation would rather pay than shut down. Using power here "
+                    f"{earns} money rather than costing it."
                 ),
                 at=run[0].at,
                 until=run[-1].at,
@@ -232,7 +241,11 @@ def carbon_swing(forecast: Series[ScalarObservation]) -> list[Finding]:
 
     span = _span(forecast)
 
+    # Read the pair in the order they happen, not in the order of their size. Naming the
+    # smaller value first while the verb says "falls" produces a sentence that contradicts
+    # itself — which is how DE read on 24 August: "falls 2.5x — 197 to 483".
     rising = high.at > low.at
+    first, second = (low, high) if rising else (high, low)
     return [
         Finding(
             id=_id("carbon_swing", forecast.zone, low.at, f"{ratio:.2f}"),
@@ -240,9 +253,8 @@ def carbon_swing(forecast: Series[ScalarObservation]) -> list[Finding]:
             zone=forecast.zone,
             headline=(
                 f"Carbon intensity {'climbs' if rising else 'falls'} "
-                f"{ratio:.1f}x — {low.value:.0f} to {high.value:.0f} gCO₂eq/kWh "
-                f"between {_stamp(min(low.at, high.at), span=span)} and "
-                f"{_stamp(max(low.at, high.at), span=span)}"
+                f"{ratio:.1f}x — {first.value:.0f} to {second.value:.0f} gCO₂eq/kWh "
+                f"between {_stamp(first.at, span=span)} and {_stamp(second.at, span=span)}"
             ),
             detail=(
                 "A forecast, not an outcome. It is what was predicted at the issue time "
@@ -300,6 +312,11 @@ def renewable_surge(forecast: Series[ScalarObservation]) -> list[Finding]:
                 f"Renewable share rises {rise:.0f} points to {high.value:.0f}% "
                 f"by {_stamp(high.at, span=_span(forecast))}"
             ),
+            detail=(
+                "A forecast, not an outcome. A rising renewable share usually pulls carbon "
+                "intensity down with it, but not always — what the zone is importing "
+                "counts too, and the two are worth reading together."
+            ),
             at=low.at,
             until=high.at,
             magnitude=round(rise, 1),
@@ -340,7 +357,19 @@ def import_dependence(
     still be consuming a neighbour's coal.
 
     The detector compares the two breakdowns source by source and reports the largest
-    divergence, with the net import that explains it.
+    divergence, with the net exchange that explains it.
+
+    **It reports megawatts, not a share of consumption, and that is deliberate.** The
+    obvious headline — "this zone imports 40% of its electricity" — needs a consumption
+    figure, and the flow-traced breakdown's total is not reliably one. Recorded DK-DK2 at
+    12:00 on 23 August 2026 shows production totalling 1,017 MW, the flow-traced breakdown
+    totalling 2,098 MW, and net *exports* of 1,523 MW: no single reading of those three
+    makes them a zone's consumption. Since ``docs/electricity-maps-api.md`` does not
+    document what that total means, the honest move is to quote the net exchange, which
+    ``electricity-flows`` states directly, and leave the ratio alone.
+
+    The ratio is still used as a *trigger* — an exchange small relative to the traced mix is
+    not a story — but it never reaches a sentence.
     """
     if not production.entries or not consumption.entries:
         return []
@@ -350,8 +379,9 @@ def import_dependence(
     if not total or total <= 0:
         return []
 
-    share = net_import / total
-    if abs(share) < IMPORT_DOMINANCE:
+    # Relative size only, to decide whether this is worth reporting. See the docstring for
+    # why it is not quoted: the denominator is not a verified consumption figure.
+    if abs(net_import / total) < IMPORT_DOMINANCE:
         return []
 
     produced = {e.source: e.percent or 0.0 for e in production.entries}
@@ -367,7 +397,7 @@ def import_dependence(
     if abs(gap) < 1.0:
         return []
 
-    importing = share > 0
+    importing = net_import > 0
     partners = sorted(
         (e for e in flows.edges if (e.net_flow_mw < 0) == importing),
         key=lambda e: abs(e.net_flow_mw),
@@ -375,14 +405,14 @@ def import_dependence(
     )
     partner = partners[0].counterpart_zone if partners else None
 
-    verb = "imports" if importing else "exports"
+    verb = "importing" if importing else "exporting"
     return [
         Finding(
             id=_id("import_dependence", consumption.zone, consumption.at, source),
             kind="import_dependence",
             zone=consumption.zone,
             headline=(
-                f"{consumption.zone} {verb} {abs(share):.0%} of its electricity"
+                f"{consumption.zone} is net {verb} {abs(net_import):,.0f} MW"
                 + (f", mostly {'from' if importing else 'to'} {partner}" if partner else "")
                 + f" — {source} is {abs(gap):.0f} points "
                 + ("higher" if gap > 0 else "lower")
@@ -396,7 +426,9 @@ def import_dependence(
             at=consumption.at,
             magnitude=round(gap, 2),
             unit="percentage points",
-            significance=min(1.0, abs(share)),
+            # Relative size of the exchange, used only to order like findings. Not
+            # quoted anywhere, for the reason in the docstring.
+            significance=min(1.0, abs(net_import / total)),
             evidence=(
                 Evidence(label="net import", value=round(net_import, 1), unit="MW"),
                 Evidence(
@@ -408,13 +440,15 @@ def import_dependence(
             ),
             intent=ViewIntent(
                 kind=IntentKind.FOCUS,
-                reason=f"{abs(share):.0%} of this zone's electricity crosses a border",
+                reason=(
+                    f"{abs(net_import):,.0f} MW is crossing this zone's borders — see the two mixes"
+                ),
                 zone=consumption.zone,
                 panel="mix",
                 at=consumption.at,
             ),
             derived=Derived(
-                method=f"events.import_dependence(share>={IMPORT_DOMINANCE})",
+                method=(f"events.import_dependence(net_exchange/mix_total>={IMPORT_DOMINANCE})"),
                 inputs=(
                     InputRef(
                         zone=production.zone,
@@ -445,6 +479,10 @@ def import_dependence(
                     "Net exchange at one instant. It names the largest trading partner, "
                     "not the origin of any particular electron — flow-tracing resolves that "
                     "across the whole network, not one border.",
+                    "Megawatts, not a share of consumption. The flow-traced breakdown's "
+                    "total is not a verified consumption figure — for DK-DK2 it has been "
+                    "observed exceeding domestic production while the zone was a net "
+                    "exporter — so no percentage is derived from it.",
                 ),
             ),
         )

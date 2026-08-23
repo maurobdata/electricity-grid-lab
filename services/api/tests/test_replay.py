@@ -330,3 +330,83 @@ def test_a_generated_price_never_claims_an_auction_set_it() -> None:
             assert not any(p.source for p in data.price_forward.points), (
                 f"{scenario.id}/{zone} is synthetic but names an exchange that set its prices"
             )
+
+
+def test_the_fallback_scenario_is_the_newest_recording(tmp_path: Path) -> None:
+    """Filename order is chronological for date-stamped recordings, so taking the first
+    reliably chose the *oldest* data on disk. By 11 September there will be a fortnight of
+    these, and a typo in GRIDLAB_SCENARIO would quietly boot the lab into the stalest one —
+    which, before forward price was captured, also meant the degraded feature set.
+    """
+    from gridlab.config import Mode, Settings
+    from gridlab.web.state import LabState
+
+    directory = tmp_path / "scenarios"
+    directory.mkdir()
+    for day, provenance in (("2026-09-01", "recorded"), ("2026-09-09", "recorded")):
+        _write_scenario(directory, f"dk-dk2-{day}", provenance, day)
+    _write_scenario(directory, "zzz-synthetic", "synthetic", "2026-12-31")
+
+    state = LabState.build(
+        Settings(
+            gridlab_mode=Mode.REPLAY,
+            gridlab_scenario="does-not-exist",
+            gridlab_scenarios_dir=directory,
+            gridlab_db_path=tmp_path / "x.duckdb",
+            electricity_maps_api_token=None,
+            anthropic_api_key=None,
+            gridlab_capabilities_path=tmp_path / "none.json",
+        )
+    )
+    assert state.scenario is not None
+    assert state.scenario.id == "dk-dk2-2026-09-09"
+
+
+def test_the_fallback_prefers_a_recording_over_a_generated_scenario(tmp_path: Path) -> None:
+    """A synthetic default is a demo waiting to be given on made-up numbers, even when the
+    generated window happens to be more recent."""
+    from gridlab.config import Mode, Settings
+    from gridlab.web.state import LabState
+
+    directory = tmp_path / "scenarios"
+    directory.mkdir()
+    _write_scenario(directory, "real", "recorded", "2026-09-01")
+    _write_scenario(directory, "made-up", "synthetic", "2026-12-31")
+
+    state = LabState.build(
+        Settings(
+            gridlab_mode=Mode.REPLAY,
+            gridlab_scenario="missing",
+            gridlab_scenarios_dir=directory,
+            gridlab_db_path=tmp_path / "y.duckdb",
+            electricity_maps_api_token=None,
+            anthropic_api_key=None,
+            gridlab_capabilities_path=tmp_path / "none.json",
+        )
+    )
+    assert state.scenario is not None
+    assert state.scenario.id == "real"
+
+
+def _write_scenario(directory: Path, scenario_id: str, provenance: str, day: str) -> None:
+    import json as _json
+
+    directory.joinpath(f"{scenario_id}.json").write_text(
+        _json.dumps(
+            {
+                "id": scenario_id,
+                "title": scenario_id,
+                "provenance": provenance,
+                "start": f"{day}T00:00:00+00:00",
+                "end": f"{day}T03:00:00+00:00",
+                "granularity": "hourly",
+                "notes": "SYNTHETIC" if provenance == "synthetic" else "",
+                "zones": {
+                    "DK-DK2": {
+                        "carbon_intensity": [{"at": f"{day}T00:00:00+00:00", "value": 100.0}]
+                    }
+                },
+            }
+        ),
+        encoding="utf-8",
+    )

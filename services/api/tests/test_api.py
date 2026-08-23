@@ -311,3 +311,24 @@ def test_openapi_documents_the_provenance_contract() -> None:
     schema: dict[str, Any] = app.openapi()
     assert "provenance" in schema["info"]["description"]
     assert "synthetic" in schema["info"]["description"]
+
+
+def test_net_import_survives_inside_the_snapshot(client: TestClient) -> None:
+    """A plain @property is invisible to `model_dump`, so this figure went missing wherever
+    flows were nested. `/grid/{zone}/flows` injected it by hand and looked correct, while
+    `/grid/{zone}/now` served flows without it and the agent's `get_current_grid` reported
+    `net_import_mw: null` for a zone moving 1,500 MW across its borders.
+    """
+    nested = client.get("/api/v1/grid/DK-DK2/now").json()["flows"]
+    direct = client.get("/api/v1/grid/DK-DK2/flows").json()
+
+    assert "net_import_mw" in nested, "the snapshot dropped net_import_mw again"
+    assert nested["net_import_mw"] == direct["net_import_mw"]
+
+
+def test_net_import_sign_says_which_way_the_power_goes(client: TestClient) -> None:
+    """Positive edges are exports, so a zone exporting on balance has a negative net import.
+    The fixture sends 800 MW to DE and 200 to SE-SE4 at this hour."""
+    flows = client.get("/api/v1/grid/DK-DK2/now").json()["flows"]
+    outbound = sum(e["net_flow_mw"] for e in flows["edges"])
+    assert flows["net_import_mw"] == pytest.approx(-outbound)

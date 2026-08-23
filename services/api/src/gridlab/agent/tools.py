@@ -665,7 +665,8 @@ def build_tools() -> list[ToolSpec]:
                 "change anything**: they see a control labelled with your reason and may "
                 "ignore it, so your answer must still stand on its own in words. Use it "
                 "when there is a specific thing on screen worth looking at, not on every "
-                "reply."
+                "reply. **Name the `signal` whenever the window is about one** — a price "
+                "window marked on a carbon chart is a band with no visible reason."
             ),
             parameters={
                 "kind": {

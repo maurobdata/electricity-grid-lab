@@ -7,11 +7,14 @@ decision easy to find and easy to change.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import structlog
 from fastapi import Request
 
 from gridlab.clock import ReplayClock
 from gridlab.config import Mode, Settings
+from gridlab.domain.models import Provenance
 from gridlab.emaps.client import EMapsClient
 from gridlab.sources.base import GridSource
 from gridlab.sources.live import LiveSource
@@ -59,6 +62,30 @@ class LabState:
         """
         return self.source.scenario if isinstance(self.source, ReplaySource) else None
 
+    @staticmethod
+    def _fallback(available: Sequence[Scenario]) -> Scenario:
+        """Which scenario to play when the configured one is missing.
+
+        **The newest real recording**, and the emphasis matters on both words.
+
+        Sorting by filename and taking the first gave the *oldest* — recordings are
+        date-stamped (`dk-dk2-2026-08-22.json`), so alphabetical order is chronological
+        order, and the fallback reliably chose the least current data on disk. By 11
+        September there will be a fortnight of these, and a typo in `GRIDLAB_SCENARIO`
+        would quietly boot the lab into the oldest one.
+
+        A recording also beats a generated scenario, because a synthetic default is a
+        demo waiting to be given on made-up numbers. A fresh clone with no key has only
+        synthetic ones and still gets a working lab.
+
+        Ordering is by the window's end rather than the id, so it stays right if the
+        naming convention ever changes.
+        """
+        return max(
+            available,
+            key=lambda s: (s.provenance is not Provenance.SYNTHETIC, s.end),
+        )
+
     @classmethod
     def build(cls, settings: Settings) -> LabState:
         library = ScenarioLibrary(settings.gridlab_scenarios_dir)
@@ -85,11 +112,12 @@ class LabState:
                     f"needs at least one. Run `make scenario` to generate the bundled ones, "
                     f"or `make record` if you have an Electricity Maps token."
                 )
-            scenario = available[0]
+            scenario = cls._fallback(available)
             log.warning(
                 "gridlab.scenario_fallback",
                 requested=settings.gridlab_scenario,
                 using=scenario.id,
+                provenance=scenario.provenance.value,
             )
 
         clock = ReplayClock(

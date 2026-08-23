@@ -36,6 +36,12 @@ Lab = Annotated[LabState, Depends(lab)]
 #: question dissolves, which is itself worth being able to show.
 DEFAULT_WINDOW_PERIODS = 3
 
+#: How far back the detectors look for something that already happened.
+#:
+#: A day, which is all a key without ``past-range`` has anyway. Long enough that an event
+#: from this morning is still news at teatime, short enough that the rail is about today.
+RECENT_PRICE_HOURS = 24
+
 
 async def _forward_carbon(state: LabState, zone: str) -> Series[ScalarObservation] | None:
     """The carbon forecast, capped at the horizon price can actually reach.
@@ -192,6 +198,19 @@ async def findings(
     price = await state.source.price_forward(zone)
     if price is not None:
         found += event_detection.negative_price(price)
+
+    # Elapsed hours too, not only the ones still ahead.
+    #
+    # Germany ran five consecutive hours below zero on 23 August 2026, bottoming at
+    # -5.00 EUR/MWh, and this rail said nothing about it while the "now" panel was
+    # simultaneously flagging the current hour in red. A panel that highlights something
+    # and a rail that ignores it is worse than either alone.
+    now = state.source.clock.now()
+    past_price = await state.source.history(
+        zone, signal="price", start=now - timedelta(hours=RECENT_PRICE_HOURS), end=now
+    )
+    if past_price is not None:
+        found += event_detection.negative_price(past_price, kind="history")
 
     carbon = await _forward_carbon(state, zone)
     if carbon is not None:
