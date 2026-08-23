@@ -327,6 +327,34 @@ class Derived(Base):
         )
 
 
+class IntentKind(StrEnum):
+    """What a :class:`ViewIntent` asks the client to do.
+
+    A closed vocabulary rather than free text, so that an intent the UI cannot apply is
+    rejected where it is built instead of arriving as a silently ignored no-op. Both the
+    deterministic detectors and the agent construct intents, and neither should be able to
+    invent a verb.
+    """
+
+    FOCUS = "focus"
+    """Bring one panel forward and give it room."""
+
+    SELECT_ZONE = "select_zone"
+    """Change the zone in focus."""
+
+    SET_SIGNAL = "set_signal"
+    """Change which measurement the series panels are showing."""
+
+    HIGHLIGHT_WINDOW = "highlight_window"
+    """Mark a stretch of time on the charts, without changing anything else."""
+
+    COMPARE = "compare"
+    """Put several zones side by side."""
+
+    SEEK = "seek"
+    """Move the replay clock. Refused in live mode, where there is nothing to seek."""
+
+
 class ViewIntent(Base):
     """A proposed change to what the user is looking at.
 
@@ -340,9 +368,7 @@ class ViewIntent(Base):
     shown and why.
     """
 
-    kind: str
-    """`focus`, `select_zone`, `set_signal`, `highlight_window`, `compare`, or `seek`."""
-
+    kind: IntentKind
     reason: str
     zone: str | None = None
     zones: tuple[str, ...] = ()

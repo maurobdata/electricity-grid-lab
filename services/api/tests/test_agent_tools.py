@@ -19,6 +19,7 @@ import pytest
 
 from gridlab.agent import tools as t
 from gridlab.agent.gridclient import GridClient, GridUnavailable
+from gridlab.agent.prompts import system_prompt
 from gridstub import ZONE, _api_handler
 
 
@@ -55,7 +56,16 @@ def test_the_tool_surface_is_exactly_this_list() -> None:
         "get_forward_price",
         "find_events",
         "explain_divergence",
+        # the interaction layer — proposes a view, changes nothing, ADR 0010
+        "propose_view",
     }
+
+
+def test_only_one_tool_may_steer_the_interface() -> None:
+    """`proposes_view` decides which results become a `view_intent` event, so it is part of
+    the boundary rather than a convenience flag. A second tool acquiring it should be a
+    decision somebody made, not something that happened."""
+    assert {tool.name for tool in t.build_tools() if tool.proposes_view} == {"propose_view"}
 
 
 def test_every_schema_is_strict_and_closed() -> None:
@@ -377,3 +387,110 @@ async def test_divergence_passes_its_caveats_through(ctx: t.ToolContext) -> None
     or the model cannot disclose what it does not know."""
     result = await t.explain_divergence(ctx, zone=ZONE)
     assert result["caveats"], "the caveats were dropped between the API and the model"
+
+
+# --- proposing a view -------------------------------------------------------
+
+
+async def test_a_proposed_view_is_returned_not_applied(ctx: t.ToolContext) -> None:
+    """The whole design of ADR 0010. The intent travels outward; nothing on the server
+    moved, and nothing will if the user ignores it."""
+    result = await t.propose_view(
+        ctx,
+        kind="highlight_window",
+        reason="show the negative-price window tonight",
+        zone=ZONE,
+        signal="price",
+        at="2026-08-23T10:00:00Z",
+        until="2026-08-23T11:00:00Z",
+    )
+    assert result["intent"]["kind"] == "highlight_window"
+    assert result["intent"]["zone"] == ZONE
+    assert result["intent"]["reason"]
+    assert "not applied" in result["_note"]
+
+
+async def test_a_view_the_interface_cannot_perform_is_refused(ctx: t.ToolContext) -> None:
+    """Refused where it is built. An unknown verb would otherwise arrive at the client as a
+    control that silently does nothing when clicked."""
+    with pytest.raises(GridUnavailable, match="highlight_window"):
+        await t.propose_view(ctx, kind="teleport", reason="why not")
+
+
+async def test_a_proposed_view_cannot_name_an_unknown_panel(ctx: t.ToolContext) -> None:
+    with pytest.raises(GridUnavailable, match="panel must be"):
+        await t.propose_view(ctx, kind="focus", reason="look here", panel="dashboard")
+
+
+async def test_a_proposed_view_cannot_name_an_unknown_signal(ctx: t.ToolContext) -> None:
+    with pytest.raises(GridUnavailable, match="signal must be"):
+        await t.propose_view(ctx, kind="set_signal", reason="look here", signal="vibes")
+
+
+async def test_a_proposed_view_goes_through_the_same_zone_allowlist(
+    ctx: t.ToolContext,
+) -> None:
+    """An intent naming a zone that does not exist would break the page when clicked."""
+    with pytest.raises(GridUnavailable):
+        await t.propose_view(ctx, kind="select_zone", reason="over here", zone="ZZ")
+    with pytest.raises(GridUnavailable):
+        await t.propose_view(ctx, kind="compare", reason="these two", zones=[ZONE, "ZZ"])
+
+
+async def test_a_proposed_view_rejects_a_time_it_cannot_parse(ctx: t.ToolContext) -> None:
+    with pytest.raises(GridUnavailable, match="ISO 8601"):
+        await t.propose_view(ctx, kind="highlight_window", reason="tonight", at="this evening")
+
+
+async def test_a_proposed_view_reminds_the_model_to_answer_in_words(
+    ctx: t.ToolContext,
+) -> None:
+    """A view is an addition, never the substance. Someone who never clicks must still get
+    an answer."""
+    result = await t.propose_view(ctx, kind="focus", reason="the mix", panel="mix")
+    assert "stand on its own" in result["_note"]
+
+
+# --- the prompt's new job ---------------------------------------------------
+
+
+def test_prompt_sends_the_model_to_the_detectors_first() -> None:
+    """The division of labour that keeps numbers checkable: the lab computes, the model
+    explains. A model that searches a series itself derives figures nobody can verify."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "find_events" in prompt
+    assert "before searching a series yourself" in prompt
+
+
+def test_prompt_forbids_arithmetic_the_model_did_in_its_head() -> None:
+    """The deterministic eval pulls numbers out of the answer and looks for them in the
+    tool traffic. A number the model averaged itself will not be there."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "numbers you worked out yourself" in prompt
+
+
+def test_prompt_says_a_forward_price_is_not_a_forecast() -> None:
+    """The distinction ADR 0012 exists to preserve, restated where the model will read it."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "Forward prices are not a forecast" in prompt
+    assert "Never call them predictions" in prompt
+
+
+def test_prompt_requires_a_flows_citation_for_an_import_claim() -> None:
+    """An import story asserted without checking the flows is exactly the plausible-sounding
+    claim this lab exists to make checkable."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "get_flows` before claiming an import effect" in prompt
+
+
+def test_prompt_forbids_recommending_a_schedule() -> None:
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "do not recommend a schedule" in prompt.lower()
+
+
+def test_prompt_says_a_proposed_view_moves_nothing() -> None:
+    """If the model believes it is driving the interface, it will write answers that only
+    make sense to someone who clicked."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "does not move anything" in prompt.lower()
+    assert "as though nobody will click" in prompt

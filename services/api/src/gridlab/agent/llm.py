@@ -64,6 +64,18 @@ class ToolResult:
 
 
 @dataclass(frozen=True)
+class ViewProposed:
+    """A view the agent is offering, already validated.
+
+    Carried as its own event rather than left for the client to dig out of a tool result,
+    so the UI does not have to know which tool produces intents in order to render one. The
+    tool call and its result are still emitted alongside it — the working stays visible.
+    """
+
+    intent: dict[str, Any]
+
+
+@dataclass(frozen=True)
 class TurnFinished:
     stop_reason: str | None
     rounds: int
@@ -77,7 +89,7 @@ class AgentError:
     kind: str = "error"
 
 
-AgentEvent = TextDelta | ToolCall | ToolResult | TurnFinished | AgentError
+AgentEvent = TextDelta | ToolCall | ToolResult | ViewProposed | TurnFinished | AgentError
 
 
 @dataclass
@@ -219,6 +231,14 @@ class AnthropicBackend:
 
                 outcome, ok, elapsed = await _invoke(by_name, call.name, arguments, context)
                 yield ToolResult(call.id, call.name, ok, outcome, elapsed)
+
+                # Tools that steer the interface say so in the registry, so the loop never
+                # has to know one tool's name from another.
+                spec = by_name.get(call.name)
+                if ok and spec is not None and spec.proposes_view:
+                    intent = outcome.get("intent") if isinstance(outcome, dict) else None
+                    if isinstance(intent, dict):
+                        yield ViewProposed(intent)
 
                 results.append(
                     {
