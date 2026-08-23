@@ -36,6 +36,14 @@ interface Props {
   height?: number;
   /** Pin the lower bound to zero. Right for percentages, wrong for prices, which go below. */
   zeroBased?: boolean;
+  /**
+   * A stretch of time to mark, drawn behind everything else.
+   *
+   * Set when a finding or an agent answer is about a particular window. Deliberately a
+   * band rather than a crop: the point is to show *where* in the day the thing happens,
+   * which is lost the moment the surrounding hours are thrown away.
+   */
+  highlight?: { from: string; to: string };
   className?: string;
   emptyMessage?: string;
 }
@@ -49,6 +57,7 @@ export function TimeSeries({
   nowAt,
   height = 168,
   zeroBased = false,
+  highlight,
   className,
   emptyMessage = "No data",
 }: Props) {
@@ -146,6 +155,27 @@ export function TimeSeries({
             <stop offset="100%" stopColor={series[0]?.color ?? "#38bdf8"} stopOpacity="0" />
           </linearGradient>
         </defs>
+
+        {highlight &&
+          (() => {
+            // Clamped to the plot, so a window reaching past the edge of the data marks the
+            // part that is visible instead of vanishing or overflowing the axis.
+            const from = Math.max(PADDING.left, Math.min(x(highlight.from), width - PADDING.right));
+            const to = Math.max(PADDING.left, Math.min(x(highlight.to), width - PADDING.right));
+            const left = Math.min(from, to);
+            // A zero-length window is an instant, not nothing: give it enough width to see.
+            const bandWidth = Math.max(Math.abs(to - from), 2);
+            return (
+              <rect
+                x={left}
+                y={PADDING.top}
+                width={bandWidth}
+                height={plotHeight}
+                className="fill-primary/15 stroke-primary/40"
+                strokeWidth={0.5}
+              />
+            );
+          })()}
 
         {ticks.map((tick) => (
           <g key={tick}>

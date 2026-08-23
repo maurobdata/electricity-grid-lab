@@ -7,6 +7,12 @@
  * grows out of it will not have this shape.
  *
  * See `docs/adr/0007-defer-product-decision.md` — the layout is a workbench, not a design.
+ *
+ * **What the app is looking at lives in one object**, not in a handful of `useState` calls
+ * scattered here. That is what lets something other than the user change it: a finding
+ * knows which window is worth seeing, the agent knows which panel its answer is about, and
+ * a URL can reopen a view somebody shared. All three go through the same reducer, in
+ * `lib/viewState.ts`, and none of them can do anything a control here could not.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,6 +20,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { AgentPanel } from "@/components/AgentPanel";
 import { CapabilityStrip } from "@/components/CapabilityStrip";
 import { ComparePanel } from "@/components/ComparePanel";
+import { FindingsRail } from "@/components/FindingsRail";
 import { FlowsPanel } from "@/components/FlowsPanel";
 import { ForecastPanel } from "@/components/ForecastPanel";
 import { MixPanel } from "@/components/MixPanel";
@@ -21,16 +28,14 @@ import { ModeBar } from "@/components/ModeBar";
 import { NowPanel } from "@/components/NowPanel";
 import { Select } from "@/components/ui/select";
 import { pollInterval, useQuery } from "@/hooks/useApi";
+import { useViewState } from "@/hooks/useViewState";
 import { api } from "@/lib/api";
 import { zoneLabel } from "@/lib/format";
+import { isSignal, type ViewIntent } from "@/lib/viewState";
 
 export default function App() {
-  const [zone, setZone] = useState<string>();
-  const [flowTraced, setFlowTraced] = useState(true);
-  const [seriesSignal, setSeriesSignal] = useState("carbon_intensity");
-  const [compareSignal, setCompareSignal] = useState("carbon_intensity");
-  const [compareZones, setCompareZones] = useState<string[]>([]);
   const [reload, setReload] = useState(0);
+  const [activeFinding, setActiveFinding] = useState<string>();
 
   const bump = useCallback(() => setReload((n) => n + 1), []);
 
@@ -40,6 +45,33 @@ export default function App() {
   const mode = status.data?.mode ?? "replay";
   const speed = status.data?.replay?.speed ?? 1;
   const interval = pollInterval(mode, speed);
+
+  // Seeking is the one intent the client cannot satisfy alone: the replay clock lives on
+  // the server, so the hook hands it back here to be performed.
+  const seek = useCallback(
+    (to: string) => {
+      void api.seek(to).then(bump);
+    },
+    [bump],
+  );
+
+  const { view, dispatch, set, clearHighlight, blocked } = useViewState(mode, seek);
+
+  const onFindingIntent = useCallback(
+    (intent: ViewIntent, findingId: string) => {
+      setActiveFinding(findingId);
+      dispatch(intent);
+    },
+    [dispatch],
+  );
+
+  const onAgentIntent = useCallback(
+    (intent: ViewIntent) => {
+      setActiveFinding(undefined);
+      dispatch(intent);
+    },
+    [dispatch],
+  );
 
   /*
    * Every data query is keyed on the scenario as well as the zone.
@@ -59,46 +91,61 @@ export default function App() {
   const scenarios = useQuery(() => api.scenarios(), [], { refreshToken: reload });
   const capabilities = useQuery(() => api.capabilities(), [], { refreshToken: reload });
 
+  const zone = view.zone;
+
   // Follow the data rather than holding a stale selection: switching scenarios changes
   // which zones exist, and a zone that has gone away would otherwise 404 every panel.
   useEffect(() => {
     if (zones.length === 0) return;
-    if (!zone || !zones.some((z) => z.key === zone)) setZone(zones[0]!.key);
-    setCompareZones((current) => {
-      const kept = current.filter((key) => zones.some((z) => z.key === key));
-      return kept.length >= 2 ? kept : zones.slice(0, 4).map((z) => z.key);
-    });
-  }, [zones, zone]);
+    if (!zone || !zones.some((z) => z.key === zone)) set("zone", zones[0]!.key);
+    set(
+      "compareZones",
+      (() => {
+        const kept = view.compareZones.filter((key) => zones.some((z) => z.key === key));
+        return kept.length >= 2 ? kept : zones.slice(0, 4).map((z) => z.key);
+      })(),
+    );
+    // `view.compareZones` is read but deliberately not a dependency: this effect exists to
+    // reconcile the selection with the zone list, and re-running it whenever the selection
+    // changes would fight the user for control of it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zones, zone, set]);
 
   const enabled = Boolean(zone);
   const common = { intervalMs: interval, enabled, refreshToken: reload };
 
   const snapshot = useQuery(() => api.now(zone!), [scenarioId, zone], common);
-  const mix = useQuery(() => api.mix(zone!, flowTraced), [scenarioId, zone, flowTraced], common);
+  const mix = useQuery(
+    () => api.mix(zone!, view.flowTraced),
+    [scenarioId, zone, view.flowTraced],
+    common,
+  );
   // The opposite breakdown, fetched quietly so the panel can quantify the difference
   // between the two views rather than making the reader toggle back and forth.
   const otherMix = useQuery(
-    () => api.mix(zone!, !flowTraced),
-    [scenarioId, zone, !flowTraced],
+    () => api.mix(zone!, !view.flowTraced),
+    [scenarioId, zone, !view.flowTraced],
     common,
   );
   const flows = useQuery(() => api.flows(zone!), [scenarioId, zone], common);
 
   const history = useQuery(
-    () => api.history(zone!, seriesSignal),
-    [scenarioId, zone, seriesSignal],
+    () => api.history(zone!, view.signal),
+    [scenarioId, zone, view.signal],
     common,
   );
   const forecast = useQuery(
-    () => api.forecast(zone!, seriesSignal, 72),
-    [scenarioId, zone, seriesSignal],
+    () => api.forecast(zone!, view.signal, 72),
+    [scenarioId, zone, view.signal],
     common,
   );
 
+  const findings = useQuery(() => api.findings(zone!), [scenarioId, zone], common);
+
   const comparison = useQuery(
-    () => api.compare(compareZones, compareSignal),
-    [scenarioId, compareZones.join(","), compareSignal],
-    { ...common, enabled: compareZones.length >= 2 },
+    () => api.compare(view.compareZones, view.compareSignal),
+    [scenarioId, view.compareZones.join(","), view.compareSignal],
+    { ...common, enabled: view.compareZones.length >= 2 },
   );
 
   if (status.error && !status.data) {
@@ -126,7 +173,7 @@ export default function App() {
           </div>
           <Select
             value={zone ?? ""}
-            onChange={(event) => setZone(event.target.value)}
+            onChange={(event) => set("zone", event.target.value)}
             className="h-9 min-w-[16rem] text-sm"
             aria-label="Zone"
           >
@@ -137,6 +184,13 @@ export default function App() {
             ))}
           </Select>
         </header>
+
+        <FindingsRail
+          findings={findings.data}
+          unavailable={findings.status === 404}
+          onIntent={onFindingIntent}
+          activeId={activeFinding}
+        />
 
         {snapshot.data && (
           <NowPanel
@@ -151,8 +205,8 @@ export default function App() {
           <MixPanel
             mix={mix.data}
             other={otherMix.data}
-            flowTraced={flowTraced}
-            onToggle={setFlowTraced}
+            flowTraced={view.flowTraced}
+            onToggle={(next) => set("flowTraced", next)}
             unavailable={mix.status === 404}
           />
           <FlowsPanel flows={flows.data} unavailable={flows.status === 404} />
@@ -161,28 +215,33 @@ export default function App() {
         <ForecastPanel
           history={history.data}
           forecast={forecast.data}
-          signal={seriesSignal}
-          onSignalChange={setSeriesSignal}
+          signal={view.signal}
+          onSignalChange={(next) => dispatch({ kind: "set_signal", signal: next, reason: next })}
           now={status.data.now}
           forecastUnavailable={forecast.status === 404}
+          highlight={view.highlight}
+          onClearHighlight={clearHighlight}
         />
 
         <ComparePanel
           comparison={comparison.data}
           zones={zones}
-          selected={compareZones}
+          selected={view.compareZones}
           onToggleZone={(key) =>
-            setCompareZones((current) =>
-              current.includes(key)
-                ? current.filter((existing) => existing !== key)
-                : [...current, key],
+            set(
+              "compareZones",
+              view.compareZones.includes(key)
+                ? view.compareZones.filter((existing) => existing !== key)
+                : [...view.compareZones, key],
             )
           }
-          signal={compareSignal}
-          onSignalChange={setCompareSignal}
+          signal={view.compareSignal}
+          // Narrowed rather than cast: the panel hands back a raw `string` from a `<select>`,
+          // and the view state only admits signals that exist.
+          onSignalChange={(next) => isSignal(next) && set("compareSignal", next)}
         />
 
-        <AgentPanel zone={zone} />
+        <AgentPanel zone={zone} onIntent={onAgentIntent} blocked={blocked} />
 
         <CapabilityStrip capabilities={capabilities.data} />
 
