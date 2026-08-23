@@ -160,6 +160,14 @@ def dk2_wind_lull() -> dict[str, Any]:
                         "points": forecast_points,
                     }
                 },
+                # The same prices, offered as the forward view. Replay clips them at the
+                # clock, so whatever is still ahead reads as day-ahead.
+                #
+                # `source` and `issued_at` are both null, and deliberately: no auction
+                # cleared these, so there is no exchange to name and no publication time to
+                # quote. Putting a plausible timestamp here would be inventing the one field
+                # whose entire job is to say when a real market spoke.
+                "price_forward": {"points": dk2_price},
             }
         },
     }
@@ -283,6 +291,10 @@ def es_solar_surplus() -> dict[str, Any]:
                         "points": forecast_points,
                     }
                 },
+                # See the note in `dk2_wind_lull`: the forward view is the same series,
+                # clipped at the replay clock, and none of it cleared anywhere — so there is
+                # no exchange and no publication time to record.
+                "price_forward": {"points": price},
             }
         },
     }

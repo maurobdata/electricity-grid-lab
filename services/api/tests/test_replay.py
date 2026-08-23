@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -128,6 +129,70 @@ async def test_horizon_truncates_the_forecast(scenario: Scenario) -> None:
     assert [p.at.hour for p in series.points] == [0, 1, 2]
 
 
+# --- forward price ----------------------------------------------------------
+
+
+async def test_price_forward_is_clipped_at_the_clock(scenario: Scenario) -> None:
+    """The opposite of the forecast rule, and deliberately so.
+
+    A forecast is kept over its elapsed hours because the gap against what happened is the
+    comparison worth seeing. A cleared price laid over the hour it settled is the same
+    number twice, and `history` already answers for it.
+    """
+    series = await source(scenario, 2).price_forward("DK-DK2")
+    assert series is not None
+    assert [p.at.hour for p in series.points] == [2, 3]
+
+
+async def test_price_forward_keeps_who_set_the_price(scenario: Scenario) -> None:
+    """`source` is the only thing separating a settled auction result from a model.
+
+    `combined` returns both kinds interleaved in one series, so losing this field would
+    blend a market outcome with an estimate and leave no way to tell afterwards.
+    """
+    series = await source(scenario, 0).price_forward("DK-DK2")
+    assert series is not None
+    sources = [getattr(p, "source", "missing") for p in series.points]
+    assert sources == ["nordpool.com", "nordpool.com", "nordpool.com", None]
+
+
+async def test_price_forward_carries_scenario_provenance(scenario: Scenario) -> None:
+    series = await source(scenario, 0).price_forward("DK-DK2")
+    assert series is not None
+    assert series.provenance is Provenance.SYNTHETIC
+    assert series.issued_at == at(0)
+
+
+async def test_price_forward_runs_out_at_the_end_of_the_window(scenario: Scenario) -> None:
+    """Past the last cleared period there is nothing — not a flat line held forever.
+
+    Day-ahead prices exist only out to the end of the delivery day the auction covered.
+    Extending the final value would invent a market result for hours nobody has bid on.
+    """
+    exhausted = ReplaySource(scenario, FrozenClock(at(3) + timedelta(hours=1)))
+    assert await exhausted.price_forward("DK-DK2") is None
+
+
+async def test_price_forward_is_absent_from_a_scenario_recorded_without_it(
+    scenario_dict: dict[str, object],
+) -> None:
+    """Scenarios recorded before forward price existed must still load and still serve.
+
+    They simply have no forward view. Failing to parse them would make every recording made
+    before today unplayable, which is the opposite of what a dated archive is for.
+    """
+    zones: Any = scenario_dict["zones"]
+    zones["DK-DK2"].pop("price_forward")
+    older = Scenario.model_validate(scenario_dict)
+
+    assert await ReplaySource(older, FrozenClock(at(0))).price_forward("DK-DK2") is None
+    assert (await ReplaySource(older, FrozenClock(at(0))).price("DK-DK2")) is not None
+
+
+async def test_price_forward_is_nothing_for_an_unknown_zone(scenario: Scenario) -> None:
+    assert await source(scenario, 0).price_forward("PL") is None
+
+
 # --- history ----------------------------------------------------------------
 
 
@@ -238,4 +303,30 @@ def test_bundled_scenarios_are_valid_and_labelled() -> None:
             assert "SYNTHETIC" in scenario.notes.upper(), (
                 f"{scenario.id} is synthetic but its notes do not say so. That note is "
                 f"what stops a generated chart being shown as measured data."
+            )
+
+
+def test_a_generated_price_never_claims_an_auction_set_it() -> None:
+    """`source` and `issued_at` are the two fields that say a real market spoke.
+
+    A synthetic scenario has no exchange and no clearing time, and filling either with
+    something plausible would forge the one piece of evidence that separates a settled
+    day-ahead result from a shape somebody made up. The provenance badge says `synthetic`
+    either way; these fields are what survives being quoted out of the UI.
+    """
+    directory = Path("/app/scenarios")
+    if not directory.is_dir() or not list(directory.glob("*.json")):
+        pytest.skip("bundled scenarios not mounted")
+
+    for scenario in ScenarioLibrary(directory).all():
+        if scenario.provenance is not Provenance.SYNTHETIC:
+            continue
+        for zone, data in scenario.zones.items():
+            if data.price_forward is None:
+                continue
+            assert data.price_forward.issued_at is None, (
+                f"{scenario.id}/{zone} is synthetic but names a time its prices cleared"
+            )
+            assert not any(p.source for p in data.price_forward.points), (
+                f"{scenario.id}/{zone} is synthetic but names an exchange that set its prices"
             )

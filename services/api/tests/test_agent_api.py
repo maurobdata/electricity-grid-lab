@@ -62,7 +62,10 @@ def test_tools_endpoint_publishes_the_whole_surface(client_without_key: TestClie
     """Reviewable without reading the source: anything not listed here cannot be done."""
     body = client_without_key.get("/api/v1/tools").json()
 
-    assert len(body["tools"]) == 7
+    # Pinned against the registry rather than a literal, so the count cannot drift from the
+    # surface. `test_agent_tools.py` is where the names themselves are held.
+    assert len(body["tools"]) == len(build_tools())
+    assert len(body["tools"]) >= 7
     for tool in body["tools"]:
         assert tool["schema"]["additionalProperties"] is False
     assert any("read-only" in c for c in body["constraints"])

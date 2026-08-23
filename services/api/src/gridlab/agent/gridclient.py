@@ -94,6 +94,17 @@ class GridClient:
     async def compare(self, zones: list[str], signal: str) -> dict[str, Any]:
         return await self._get("/compare", {"zones": ",".join(zones), "signal": signal})  # type: ignore[no-any-return]
 
+    async def price_forward(self, zone: str) -> dict[str, Any]:
+        return await self._get(f"/grid/{zone}/price/forward")  # type: ignore[no-any-return]
+
+    async def findings(self, zone: str) -> dict[str, Any]:
+        return await self._get(f"/analysis/{zone}/findings")  # type: ignore[no-any-return]
+
+    async def divergence(self, zone: str, window_periods: int) -> dict[str, Any]:
+        return await self._get(  # type: ignore[no-any-return]
+            f"/analysis/{zone}/divergence", {"window_periods": window_periods}
+        )
+
 
 def _detail(response: httpx.Response) -> str | None:
     """Pull the human-readable part out of a FastAPI error body.

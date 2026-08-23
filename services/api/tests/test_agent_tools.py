@@ -34,10 +34,16 @@ def ctx() -> Iterator[t.ToolContext]:
 # --- the boundary itself ----------------------------------------------------
 
 
-def test_there_are_exactly_the_seven_named_tools() -> None:
-    """The brief names seven. Anything else appearing here is a decision that needs an ADR,
-    not a quiet addition."""
+def test_the_tool_surface_is_exactly_this_list() -> None:
+    """The declared list **is** the security boundary (ADR 0005), so it is pinned here.
+
+    A tool appearing in this set is a decision. The seven at the top are the ones the brief
+    named; the three below were added with the analysis layer, and every one of them is
+    read-only — which is why they needed no ADR of their own, only this test being updated
+    deliberately rather than a number being bumped.
+    """
     assert {tool.name for tool in t.build_tools()} == {
+        # the original seven
         "get_current_grid",
         "get_forecast",
         "get_mix",
@@ -45,6 +51,10 @@ def test_there_are_exactly_the_seven_named_tools() -> None:
         "get_flows",
         "query_history",
         "compare_zones",
+        # added with gridlab.analysis — read-only, ADR 0009
+        "get_forward_price",
+        "find_events",
+        "explain_divergence",
     }
 
 
@@ -107,6 +117,9 @@ async def test_every_tool_validates_its_zone(ctx: t.ToolContext) -> None:
         lambda: t.get_forecast(ctx, zone="ZZ"),
         lambda: t.query_history(ctx, zone="ZZ"),
         lambda: t.compare_zones(ctx, zones=["ZZ", "YY"]),
+        lambda: t.get_forward_price(ctx, zone="ZZ"),
+        lambda: t.find_events(ctx, zone="ZZ"),
+        lambda: t.explain_divergence(ctx, zone="ZZ"),
     ):
         with pytest.raises(GridUnavailable):
             await call()
@@ -210,6 +223,8 @@ async def test_every_tool_result_carries_provenance(ctx: t.ToolContext) -> None:
         await t.get_forecast(ctx, zone=ZONE),
         await t.query_history(ctx, zone=ZONE),
         await t.compare_zones(ctx, zones=[ZONE, "DK-DK2"]),
+        await t.get_forward_price(ctx, zone=ZONE),
+        await t.explain_divergence(ctx, zone=ZONE),
     ):
         assert result.get("provenance") == "recorded", result
 
@@ -301,3 +316,64 @@ def test_recorded_sessions_are_told_not_to_speak_in_the_present() -> None:
 
     prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
     assert "not current" in prompt
+
+
+# --- the analysis tools -----------------------------------------------------
+
+
+async def test_forward_price_is_never_called_a_forecast(ctx: t.ToolContext) -> None:
+    """The distinction the whole endpoint exists to preserve. A cleared auction result is
+    not a prediction, and a model told otherwise will score it against an outcome."""
+    result = await t.get_forward_price(ctx, zone=ZONE)
+    note = result["_note"]
+    assert "not a forecast" in note
+    assert "do not score them against an outcome" in note.lower()
+
+
+async def test_forward_price_says_how_many_periods_actually_cleared(
+    ctx: t.ToolContext,
+) -> None:
+    """`combined` blends settled and modelled prices. A model that cannot tell them apart
+    will present a model's guess as a market outcome."""
+    result = await t.get_forward_price(ctx, zone=ZONE)
+    assert "6 of 12 were set by a published exchange" in result["_note"]
+
+
+async def test_find_events_returns_the_deterministic_findings(ctx: t.ToolContext) -> None:
+    result = await t.find_events(ctx, zone=ZONE)
+    assert result["count"] == 1
+    finding = result["findings"][0]
+    assert finding["kind"] == "negative_price"
+    assert finding["evidence"], "a finding reached the model without its evidence"
+    assert finding["provenance"] == "recorded"
+
+
+async def test_find_events_tells_the_model_not_to_recompute(ctx: t.ToolContext) -> None:
+    """The division of labour that keeps numbers honest: the lab computes, the model
+    explains. A model that re-derives a figure has made it up as far as the eval is
+    concerned, because it will not appear in the tool traffic."""
+    note = (await t.find_events(ctx, zone=ZONE))["_note"]
+    assert "do not recompute them" in note
+    assert "not by a model" in note
+
+
+async def test_divergence_reports_the_cost_on_both_objectives(ctx: t.ToolContext) -> None:
+    result = await t.explain_divergence(ctx, zone=ZONE)
+    assert result["hours_apart"] == 7.0
+    assert result["cheapest_window"]["other_mean"] == 210.0
+    assert result["cleanest_window"]["other_mean"] == 30.0
+    assert result["agreement"] == "weak"
+
+
+async def test_divergence_forbids_recommending_a_schedule(ctx: t.ToolContext) -> None:
+    """The solver's job, not the model's — and the choice is the user's, not either."""
+    note = (await t.explain_divergence(ctx, zone=ZONE))["_note"]
+    assert "Do not recommend a schedule" in note
+    assert "cite get_flows" in note
+
+
+async def test_divergence_passes_its_caveats_through(ctx: t.ToolContext) -> None:
+    """Caveats written where the limitation is known must survive the trip to the model,
+    or the model cannot disclose what it does not know."""
+    result = await t.explain_divergence(ctx, zone=ZONE)
+    assert result["caveats"], "the caveats were dropped between the API and the model"

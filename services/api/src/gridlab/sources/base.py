@@ -80,6 +80,27 @@ class GridSource(ABC):
         """
 
     @abstractmethod
+    async def price_forward(self, zone: str) -> Series[ScalarObservation] | None:
+        """Day-ahead prices for delivery periods that have not happened yet.
+
+        Deliberately separate from :meth:`forecast` rather than a ``signal="price"`` branch
+        of it, for two reasons.
+
+        First, it is not a forecast. Day-ahead prices are an **auction result** published
+        ahead of delivery: once the market clears at 12:00 CET, tomorrow's prices are
+        settled fact waiting for their delivery hour. Calling that a prediction invites
+        every consumer above this layer to score it against an outcome it already is.
+
+        Second, the API agrees. ``price-day-ahead/forecast`` rejects ``horizonHours``
+        outright and demands an explicit window, so the horizon-shaped signature that
+        :meth:`forecast` offers cannot be honoured here. The forward view comes from
+        ``price-day-ahead/combined``, which needs only a zone.
+
+        Returns ``None`` when the plan or the zone has no day-ahead price at all — coverage
+        is Europe plus a few zones, not global.
+        """
+
+    @abstractmethod
     async def flows(self, zone: str) -> Flows | None: ...
 
     @abstractmethod

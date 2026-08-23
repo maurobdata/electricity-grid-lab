@@ -266,6 +266,94 @@ async def get_price(ctx: ToolContext, *, zone: str) -> dict[str, Any]:
     }
 
 
+async def get_forward_price(ctx: ToolContext, *, zone: str) -> dict[str, Any]:
+    key = await ctx.require_zone(zone)
+    body = await ctx.client.price_forward(key)
+    result = _series(body, ctx.max_points)
+    cleared = sum(1 for p in body.get("points", []) if p.get("source"))
+    result["_note"] = (
+        "These are day-ahead auction results for delivery periods that have not happened "
+        "yet — settled prices awaiting their hour, not a forecast. Do not describe them as "
+        "predictions, and do not score them against an outcome. "
+        f"{cleared} of {len(body.get('points', []))} were set by a published exchange; the "
+        "rest are Electricity Maps' own modelled values."
+    )
+    return result
+
+
+async def find_events(ctx: ToolContext, *, zone: str) -> dict[str, Any]:
+    """Deterministic findings for a zone.
+
+    Exists so the model does not have to search a series for what is interesting. It is
+    slower and less reliable at that than a comparison operator, and every number it
+    reported would be one it derived rather than read.
+    """
+    key = await ctx.require_zone(zone)
+    body = await ctx.client.findings(key)
+    return {
+        "zone": key,
+        "at": body.get("at"),
+        "count": body.get("count", 0),
+        "findings": [
+            {
+                "kind": f["kind"],
+                "headline": f["headline"],
+                "detail": f.get("detail") or None,
+                "at": f["at"],
+                "until": f.get("until"),
+                "magnitude": f.get("magnitude"),
+                "unit": f.get("unit"),
+                "provenance": f["derived"]["provenance"],
+                "evidence": [
+                    {"label": e["label"], "value": e["value"], "unit": e.get("unit")}
+                    for e in f.get("evidence", [])
+                ],
+                "caveats": f["derived"].get("caveats", []),
+            }
+            for f in body.get("findings", [])
+        ],
+        "_note": (
+            "Computed arithmetically before you were asked, not by a model. Quote these "
+            "numbers as they are; do not recompute them, and do not add findings of your "
+            "own that no tool returned. An empty list means the grid is quiet, which is a "
+            "real answer."
+        ),
+    }
+
+
+async def explain_divergence(
+    ctx: ToolContext, *, zone: str, window_periods: int = 3
+) -> dict[str, Any]:
+    """Whether cheap and clean mean the same periods in this zone today.
+
+    The numbers are computed; the *explanation* is the model's job, and it is the one thing
+    here a UI genuinely cannot do — saying why this zone disagrees today requires joining
+    mix, flows and price and knowing how a power market works.
+    """
+    key = await ctx.require_zone(zone)
+    body = await ctx.client.divergence(key, window_periods)
+    return {
+        "zone": key,
+        "periods_compared": body.get("periods"),
+        "rank_correlation": body.get("correlation"),
+        "agreement": body.get("agreement"),
+        "cleanest_window": body.get("best_a"),
+        "cheapest_window": body.get("best_b"),
+        "hours_apart": body.get("separation_hours"),
+        "disagreeing_periods": body.get("disagreeing_periods", []),
+        "provenance": body["derived"]["provenance"],
+        "caveats": body["derived"].get("caveats", []),
+        "_note": (
+            "`cleanest_window.other_mean` is what the clean window costs in price; "
+            "`cheapest_window.other_mean` is what the cheap window costs in carbon. "
+            "Explain *why* the two disagree here — imports, the marginal unit, a solar or "
+            "wind surplus — and cite get_flows before claiming an import effect. Do not "
+            "recommend a schedule: which trade is worth making is the user's call, not "
+            "yours."
+        ),
+    }
+
+
 async def get_flows(ctx: ToolContext, *, zone: str) -> dict[str, Any]:
     key = await ctx.require_zone(zone)
     body = await ctx.client.flows(key)
@@ -440,6 +528,18 @@ def build_tools() -> list[ToolSpec]:
             handler=get_price,
         ),
         ToolSpec(
+            name="get_forward_price",
+            description=(
+                "Day-ahead prices for delivery periods that have not happened yet. These "
+                "are auction results published ahead of delivery — settled, not predicted "
+                "— so never call them a forecast. Reaches to the end of the delivery day "
+                "the auction covered, usually about 24 hours."
+            ),
+            parameters={"zone": _ZONE},
+            required=("zone",),
+            handler=get_forward_price,
+        ),
+        ToolSpec(
             name="get_flows",
             description=(
                 "Cross-border exchange with each neighbour, netted. Positive means this "
@@ -449,6 +549,42 @@ def build_tools() -> list[ToolSpec]:
             parameters={"zone": _ZONE},
             required=("zone",),
             handler=get_flows,
+        ),
+        ToolSpec(
+            name="find_events",
+            description=(
+                "What the lab has already found worth looking at in this zone: negative "
+                "prices, large carbon swings, renewable surges, import dependence, and "
+                "windows where cheap and clean disagree. Computed arithmetically, not by a "
+                "model. **Call this before searching a series yourself** — it is faster, it "
+                "is exact, and the numbers come with the evidence that produced them. An "
+                "empty list means the grid is quiet."
+            ),
+            parameters={"zone": _ZONE},
+            required=("zone",),
+            handler=find_events,
+        ),
+        ToolSpec(
+            name="explain_divergence",
+            description=(
+                "Whether the cheapest periods and the cleanest periods are the same periods "
+                "in this zone today. Returns a rank correlation, both best windows, and "
+                "what each costs on the other objective. The numbers are computed for you; "
+                "your job is to explain *why* they disagree, using the mix and the flows."
+            ),
+            parameters={
+                "zone": _ZONE,
+                "window_periods": {
+                    "type": "integer",
+                    "description": (
+                        "How long the flexible block is, in periods. 3 hourly periods is a "
+                        "plausible EV charge. A long enough block covers both windows and "
+                        "the disagreement disappears."
+                    ),
+                },
+            },
+            required=("zone",),
+            handler=explain_divergence,
         ),
         ToolSpec(
             name="query_history",
