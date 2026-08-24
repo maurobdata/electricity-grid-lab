@@ -410,3 +410,57 @@ def _write_scenario(directory: Path, scenario_id: str, provenance: str, day: str
         ),
         encoding="utf-8",
     )
+
+
+def test_a_clone_with_no_env_opens_on_the_newest_recording(tmp_path: Path) -> None:
+    """The default has to age correctly.
+
+    Naming a scenario pins the lab to a file that gets staler every day a recording is
+    made, and the default used to name a *synthetic* one — so a clone with no `.env` opened
+    on generated numbers while real recordings sat beside them.
+    """
+    from gridlab.config import Mode, Settings
+    from gridlab.web.state import LabState
+
+    directory = tmp_path / "scenarios"
+    directory.mkdir()
+    _write_scenario(directory, "made-up", "synthetic", "2026-12-31")
+    _write_scenario(directory, "dk-dk2-2026-09-01", "recorded", "2026-09-01")
+    _write_scenario(directory, "dk-dk2-2026-09-09", "recorded", "2026-09-09")
+
+    state = LabState.build(
+        Settings(
+            gridlab_mode=Mode.REPLAY,
+            gridlab_scenarios_dir=directory,
+            gridlab_db_path=tmp_path / "d.duckdb",
+            electricity_maps_api_token=None,
+            anthropic_api_key=None,
+            gridlab_capabilities_path=tmp_path / "none.json",
+        )
+    )
+    assert state.scenario is not None
+    assert state.scenario.id == "dk-dk2-2026-09-09"
+
+
+def test_a_clone_with_only_generated_scenarios_still_starts(tmp_path: Path) -> None:
+    """The no-key promise in CLAUDE.md: a fresh clone runs with no token and no network,
+    and the synthetic scenarios are committed precisely so that it can."""
+    from gridlab.config import Mode, Settings
+    from gridlab.web.state import LabState
+
+    directory = tmp_path / "scenarios"
+    directory.mkdir()
+    _write_scenario(directory, "made-up", "synthetic", "2026-02-04")
+
+    state = LabState.build(
+        Settings(
+            gridlab_mode=Mode.REPLAY,
+            gridlab_scenarios_dir=directory,
+            gridlab_db_path=tmp_path / "e.duckdb",
+            electricity_maps_api_token=None,
+            anthropic_api_key=None,
+            gridlab_capabilities_path=tmp_path / "none.json",
+        )
+    )
+    assert state.scenario is not None
+    assert state.scenario.id == "made-up"
