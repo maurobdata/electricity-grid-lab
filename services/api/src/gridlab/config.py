@@ -41,7 +41,18 @@ class Settings(BaseSettings):
 
     # --- Runtime ------------------------------------------------------------
     gridlab_mode: Mode = Mode.REPLAY
-    gridlab_scenario: str = "dk2-wind-lull"
+    gridlab_scenario: str = ""
+    """Which scenario to replay. Blank means the newest real recording on disk.
+
+    Blank rather than a named scenario so that the default ages correctly. Naming one pins
+    the lab to a file that gets staler every day a recording is made, and naming a
+    *synthetic* one — as this used to — meant a clone with no `.env` opened on generated
+    numbers while real recordings sat beside them.
+
+    `LabState._fallback` resolves it: newest first, and a recording in preference to a
+    generated scenario. A clone with neither still starts, because the synthetic ones are
+    committed.
+    """
     gridlab_replay_speed: float = Field(default=60.0, gt=0)
     gridlab_zones: str = "DK-DK1,DK-DK2,DE,FR,ES,PL,NO-NO2,SE-SE4"
     gridlab_log_level: str = "INFO"

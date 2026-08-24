@@ -316,7 +316,12 @@ export default function App() {
 
         {!view.focused && (
           <>
-            <AgentPanel zone={zone} onIntent={onAgentIntent} blocked={blocked} />
+            <AgentPanel
+              zone={zone}
+              provenance={status.data.provenance}
+              onIntent={onAgentIntent}
+              blocked={blocked}
+            />
             <CapabilityStrip capabilities={capabilities.data} />
           </>
         )}

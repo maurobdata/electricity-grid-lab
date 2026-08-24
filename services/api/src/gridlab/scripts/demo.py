@@ -85,9 +85,59 @@ async def walk(base_url: str, *, steps: int, zone: str | None) -> int:
             await show(get, key, moment.isoformat(), compact=True)
 
         await show_forward_price(get, key)
+        await show_divergence(get, key)
+        await show_findings(get, key)
 
         print("\n  The clock is left paused. `make up` or the PWA will resume it.\n")
         return 0
+
+
+async def show_divergence(get: Any, zone: str) -> None:
+    """Whether the cheap hours and the clean hours are the same hours.
+
+    The one figure that needs both halves of the plan at once, and the reason forward price
+    was wired up at all.
+    """
+    try:
+        result = await get(f"/analysis/{zone}/divergence")
+    except httpx.HTTPError:
+        print("\n  cheap vs clean  needs a carbon forecast and a forward price that overlap.")
+        return
+
+    best_a, best_b = result.get("best_a"), result.get("best_b")
+    print(f"\n  cheap vs clean  rank correlation {result['correlation']} ({result['agreement']})")
+    if best_a and best_b:
+        unit = result.get("b_unit") or "EUR/MWh"
+        print(
+            f"                  cheapest from {best_b['start'][11:16]} "
+            f"at {best_b['mean']} {unit} (carbon {best_b['other_mean']})"
+        )
+        print(
+            f"                  cleanest from {best_a['start'][11:16]} "
+            f"at {best_a['mean']} gCO2eq/kWh (price {best_a['other_mean']})"
+        )
+        print(f"                  {result['separation_hours']}h apart")
+
+
+async def show_findings(get: Any, zone: str) -> None:
+    """What the detectors found, which is the part to read out loud.
+
+    Deterministic: no model was asked and no key is needed. Worth saying on stage, and
+    worth having in a terminal when a browser is not available.
+    """
+    try:
+        body = await get(f"/analysis/{zone}/findings")
+    except httpx.HTTPError:
+        return
+
+    findings = body.get("findings") or []
+    if not findings:
+        print("\n  findings        nothing unusual in this window — which is a real answer")
+        return
+
+    print(f"\n  findings        {len(findings)}, most significant first. No model involved.")
+    for finding in findings:
+        print(f"                  * {finding['headline']}")
 
 
 async def show_forward_price(get: Any, zone: str) -> None:

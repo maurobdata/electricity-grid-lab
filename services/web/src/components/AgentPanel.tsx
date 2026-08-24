@@ -13,9 +13,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Provenance } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { ViewIntent } from "@/lib/viewState";
 
@@ -56,10 +58,19 @@ const SUGGESTIONS = [
 
 export function AgentPanel({
   zone,
+  provenance,
   onIntent,
   blocked,
 }: {
   zone: string | undefined;
+  /**
+   * What the agent is currently looking at.
+   *
+   * Its answers quote numbers from whatever the lab is serving, so the panel carries the
+   * same badge every other panel does. The prompt already requires it to say so in prose;
+   * this is the version that survives being screenshotted.
+   */
+  provenance?: Provenance;
   /** Applied only when the user presses the control. */
   onIntent?: (intent: ViewIntent) => void;
   /** Why an offered view cannot be carried out right now, or null when it can. */
@@ -166,7 +177,10 @@ export function AgentPanel({
             Any view it offers is a suggestion until you press it.
           </p>
         </div>
-        {hasKey === false && <Badge variant="warn">no API key</Badge>}
+        <div className="flex shrink-0 items-center gap-1.5">
+          {hasKey === false && <Badge variant="warn">no API key</Badge>}
+          {provenance && <ProvenanceBadge provenance={provenance} />}
+        </div>
       </CardHeader>
 
       <CardContent>

@@ -152,6 +152,7 @@ that does and does not guarantee.
 | [`docs/electricity-maps-api.md`](docs/electricity-maps-api.md) | The API surface, verified against the live API — including four things the first pass guessed wrong |
 | [`docs/adr/`](docs/adr/) | Decisions, and what would reverse them |
 | [`docs/research/`](docs/research/) | Four contradictory research passes. Hypotheses, not requirements. |
+| [`docs/DEMO.md`](docs/DEMO.md) | The runbook: what to record on the morning, what to show, and what breaks |
 | [`CLAUDE.md`](CLAUDE.md) | Working rules for this repository |
 
 ---
