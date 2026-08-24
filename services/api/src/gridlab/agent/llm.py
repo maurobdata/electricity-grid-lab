@@ -151,6 +151,23 @@ class AnthropicBackend:
             self._client = AsyncAnthropic(api_key=self._api_key)
         return self._client
 
+    async def complete(self, prompt: str, *, max_tokens: int = 256) -> str:
+        """One prompt, one short answer, no tools.
+
+        Separate from :meth:`run` because narration has nothing to look up — the finding
+        arrives carrying its own evidence, so a tool-calling turn would spend three or four
+        round trips reaching facts already in the prompt.
+        """
+        client = self._ensure_client()
+        message = await client.messages.create(
+            model=self._model,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return "".join(
+            block.text for block in message.content if getattr(block, "type", None) == "text"
+        )
+
     @staticmethod
     def _tool_payload(tools: Sequence[ToolSpec]) -> list[dict[str, Any]]:
         return [

@@ -53,6 +53,7 @@ must not depend on the live grid doing something interesting at 17:00, and venue
 not a dependency worth taking.
 
 ```bash
+make atlas    # cheap-vs-clean across 41 European zones -> data/atlas.json
 make test     # offline test suite: no network, no key
 make lint     # ruff + mypy --strict
 make probe    # ask a real token what it can actually reach
@@ -209,6 +210,9 @@ simple, and the forecast overlay and the synthetic hatch want exact control.
 | 3 · PWA — zone picker, now panel, mix, forecast, flows, compare | done |
 | 4 · Agent sandbox — seven read-only tools, visible tool trace | done |
 | 5 · Evals, OpenTelemetry tracing, demo walkthrough | done |
+| 6 · Forward price, deterministic analysis layer, findings | done |
+| 7 · View-state contract, agent proposes views, panel shell | done |
+| 8 · Cross-zone atlas, cached narration | done |
 
 303 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
 

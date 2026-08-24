@@ -16,9 +16,11 @@
  * less.
  */
 
+import { useState } from "react";
+
 import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Finding, Findings } from "@/lib/api";
+import { narrate, type Finding, type Findings, type Narration } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ViewIntent } from "@/lib/viewState";
@@ -53,6 +55,33 @@ export function FindingsRail({
 }) {
   const items = findings?.findings ?? [];
 
+  /*
+   * Explanations, fetched on demand and remembered.
+   *
+   * On demand because each is a model call, and a rail of five findings that narrated
+   * itself on arrival would spend five calls to answer a question nobody asked. Remembered
+   * because the server caches by finding id and this avoids even the round trip.
+   */
+  const [explained, setExplained] = useState<Record<string, Narration | "loading">>({});
+  const [open, setOpen] = useState<string>();
+
+  const explain = (finding: Finding) => {
+    setOpen((current) => (current === finding.id ? undefined : finding.id));
+    if (explained[finding.id]) return;
+    setExplained((current) => ({ ...current, [finding.id]: "loading" }));
+    void narrate(finding)
+      .then((n) => setExplained((current) => ({ ...current, [finding.id]: n })))
+      .catch(() =>
+        setExplained((current) => ({
+          ...current,
+          // Never a dead end: the finding's own words are always available.
+          [finding.id]: { id: finding.id, text: finding.detail, source: "template", cached: false },
+        })),
+      );
+  };
+
+  const showing = open ? explained[open] : undefined;
+
   return (
     <Card>
       <CardHeader>
@@ -84,9 +113,28 @@ export function FindingsRail({
                 key={finding.id}
                 finding={finding}
                 active={finding.id === activeId}
+                explaining={open === finding.id}
                 onClick={() => finding.intent && onIntent(toIntent(finding), finding.id)}
+                onExplain={() => explain(finding)}
               />
             ))}
+          </div>
+        )}
+
+        {open && (
+          <div className="mt-2 rounded-lg border border-border bg-muted/30 p-2.5 text-xs">
+            {showing === "loading" || showing === undefined ? (
+              <span className="text-muted-foreground">Working out why…</span>
+            ) : (
+              <>
+                <p className="leading-snug">{showing.text}</p>
+                <p className="mt-1.5 text-[0.65rem] text-muted-foreground">
+                  {showing.source === "model"
+                    ? "Written by a model from the finding above — it adds no numbers of its own, and any it invented would have been discarded."
+                    : "The detector's own wording. " + (showing.note ?? "")}
+                </p>
+              </>
+            )}
           </div>
         )}
       </CardContent>
@@ -97,25 +145,26 @@ export function FindingsRail({
 function FindingChip({
   finding,
   active,
+  explaining,
   onClick,
+  onExplain,
 }: {
   finding: Finding;
   active: boolean;
+  explaining: boolean;
   onClick: () => void;
+  onExplain: () => void;
 }) {
   const clickable = Boolean(finding.intent);
   return (
-    <button
-      onClick={onClick}
-      disabled={!clickable}
+    <div
+      role="group"
       // A caveat is not decoration: it is what the number is *not*, written where the
       // limitation was known. Surfaced on hover rather than buried in a response body.
       title={[finding.detail, ...finding.derived.caveats].filter(Boolean).join("\n\n")}
       className={cn(
         "min-w-[15rem] max-w-[22rem] shrink-0 snap-start rounded-lg border p-2.5 text-left transition-colors",
         "border-border bg-muted/30",
-        clickable && "hover:bg-accent",
-        !clickable && "cursor-default opacity-80",
         active && "ring-2 ring-ring",
       )}
     >
@@ -138,7 +187,30 @@ function FindingChip({
             .join(" · ")}
         </p>
       )}
-    </button>
+
+      <div className="mt-2 flex gap-1.5">
+        <button
+          onClick={onClick}
+          disabled={!clickable}
+          className={cn(
+            "rounded-md border border-border px-1.5 py-0.5 text-[0.65rem] transition-colors",
+            clickable ? "hover:bg-accent" : "cursor-default opacity-40",
+          )}
+        >
+          Show me
+        </button>
+        <button
+          onClick={onExplain}
+          title="Ask the agent why this is happening. One model call, then cached."
+          className={cn(
+            "rounded-md border border-border px-1.5 py-0.5 text-[0.65rem] transition-colors hover:bg-accent",
+            explaining && "bg-accent text-foreground",
+          )}
+        >
+          Why?
+        </button>
+      </div>
+    </div>
   );
 }
 

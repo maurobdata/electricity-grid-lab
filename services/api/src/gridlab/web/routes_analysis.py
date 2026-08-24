@@ -12,6 +12,7 @@ value is easier to mistake for a measured one than a measured one is.
 
 from __future__ import annotations
 
+import json
 from datetime import timedelta
 from typing import Annotated, Any
 
@@ -250,3 +251,70 @@ async def findings(
             "findings of the same kind and does not compare across kinds."
         ),
     }
+
+
+@router.get("/atlas", response_model=None, summary="Cheap versus clean, across many zones")
+async def atlas(
+    state: Lab,
+    sort: Annotated[
+        str,
+        Query(description="`carbon_avoided` (default), `correlation`, `price_premium` or `zone`."),
+    ] = "carbon_avoided",
+) -> dict[str, Any]:
+    """The last sweep `make atlas` produced.
+
+    **Served from a file, never computed here.** Two live requests per zone against an API
+    with no published rate limit is not something to do while somebody is waiting, and
+    certainly not on stage. See ADR 0011.
+
+    Sorted by **avoidable carbon** by default rather than by correlation, and that choice is
+    the whole lesson of the first sweep. Rank correlation is scale-free: NO-NO3 scored -0.85
+    on 24 August 2026 — "strongly opposed" — over a carbon range of 36 to 39 gCO₂eq/kWh, so
+    choosing the clean window there buys 2.7 gCO₂eq/kWh for a 95 EUR/MWh premium. Ranking on
+    the coefficient puts that zone first. Ranking on what the choice actually avoids puts
+    Croatia first, at 120 gCO₂eq/kWh for 70 EUR/MWh, which is a decision somebody could
+    reasonably make either way.
+
+    404 when no sweep has been run. The atlas has no replay equivalent: one zone's numbers
+    can be replayed, a picture of every grid cannot.
+    """
+    path = state.settings.gridlab_atlas_path
+    if not path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                "No atlas has been built. Run `make atlas` with an Electricity Maps token - "
+                "it sweeps European zones and writes data/atlas.json. This is a live sweep "
+                "with no replay equivalent."
+            ),
+        )
+
+    try:
+        artifact: dict[str, Any] = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise HTTPException(status_code=500, detail=f"Atlas file unreadable: {exc}") from exc
+
+    zones = list(artifact.get("zones", []))
+    ok = [z for z in zones if z.get("status") == "ok"]
+    rest = [z for z in zones if z.get("status") != "ok"]
+
+    keys = {
+        "carbon_avoided": lambda z: -(z.get("carbon_avoided") or 0.0),
+        "price_premium": lambda z: -(z.get("price_premium") or 0.0),
+        # Ascending: the most opposed first, which is what somebody asking for this wants.
+        "correlation": lambda z: z.get("correlation") if z.get("correlation") is not None else 2,
+        "zone": lambda z: z.get("zone", ""),
+    }
+    if sort not in keys:
+        raise HTTPException(
+            status_code=400,
+            detail={"error": f"Unknown sort {sort!r}", "available": sorted(keys)},
+        )
+
+    artifact["zones"] = sorted(ok, key=keys[sort]) + rest
+    artifact["sorted_by"] = sort
+    # Zones that could not be scored are kept, at the end. A zone with no day-ahead market
+    # is a fact about coverage, and dropping it would make the atlas look more complete
+    # than it is.
+    artifact["unscored"] = len(rest)
+    return artifact

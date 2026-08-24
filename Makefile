@@ -16,7 +16,7 @@ NOCONV := MSYS_NO_PATHCONV=1
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live demo eval shell clean
+.PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live atlas demo eval shell clean
 
 help:  ## Show this help
 > @grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -87,6 +87,12 @@ scenario:  ## Regenerate the bundled (synthetic) replay scenarios
 # ZONES and GRAN are overridable: `make scenario-live ZONES=DK-DK2,DE,PL GRAN=15_minutes`
 ZONES ?= DK-DK2,DE
 GRAN  ?= hourly
+
+# Writes into data/, which the api container mounts, so /api/v1/atlas can serve it. A live
+# sweep with no replay equivalent: one zone's numbers can be replayed, a picture of every
+# grid cannot. ARGS passes through -- `make atlas ARGS=--all` sweeps every reachable zone.
+atlas: .env  ## Cheap-vs-clean across many zones -> data/atlas.json (live, throttled)
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T --volume "$(CURDIR)/data":/out api python -m gridlab.scripts.build_atlas --out /out $(ARGS)
 
 scenario-live: .env  ## Record a REAL scenario from the live API into scenarios/
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T \

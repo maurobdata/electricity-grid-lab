@@ -18,6 +18,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AgentPanel } from "@/components/AgentPanel";
+import { AtlasPanel } from "@/components/AtlasPanel";
 import { CapabilityStrip } from "@/components/CapabilityStrip";
 import { ComparePanel } from "@/components/ComparePanel";
 import { FindingsRail } from "@/components/FindingsRail";
@@ -36,6 +37,9 @@ import { isSignal, type PanelId, type ViewIntent } from "@/lib/viewState";
 export default function App() {
   const [reload, setReload] = useState(0);
   const [activeFinding, setActiveFinding] = useState<string>();
+  // Sort order is a property of the panel rather than of the view: it changes what the
+  // atlas emphasises, not what the app is looking at, so it stays out of the URL.
+  const [atlasSort, setAtlasSort] = useState("carbon_avoided");
 
   const bump = useCallback(() => setReload((n) => n + 1), []);
 
@@ -159,6 +163,10 @@ export default function App() {
 
   const findings = useQuery(() => api.findings(zone!), [scenarioId, zone], common);
 
+  // Not keyed on the scenario or the clock: the atlas is a file somebody built from the
+  // live API, and replaying a recording does not change it.
+  const atlas = useQuery(() => api.atlas(atlasSort), [atlasSort], { refreshToken: reload });
+
   const comparison = useQuery(
     () => api.compare(view.compareZones, view.compareSignal),
     [scenarioId, view.compareZones.join(","), view.compareSignal],
@@ -266,6 +274,20 @@ export default function App() {
             highlight={view.highlight}
             onClearHighlight={clearHighlight}
             focused={view.focused === "forecast"}
+            onToggleFocus={toggleFocus}
+          />
+        )}
+
+        {shows("atlas") && (
+          <AtlasPanel
+            atlas={atlas.data}
+            unavailable={atlas.status === 404}
+            sort={atlasSort}
+            onSortChange={setAtlasSort}
+            onIntent={onAgentIntent}
+            currentZone={zone}
+            availableZones={zones.map((z) => z.key)}
+            focused={view.focused === "atlas"}
             onToggleFocus={toggleFocus}
           />
         )}
