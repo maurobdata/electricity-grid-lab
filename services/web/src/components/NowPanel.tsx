@@ -9,8 +9,9 @@
  * identical if you simply leave the card out, and only one of those is worth acting on.
  */
 
-import { ProvenanceBadge, ValueFlags } from "@/components/ProvenanceBadge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PanelShell } from "@/components/PanelShell";
+import { ValueFlags } from "@/components/ProvenanceBadge";
+import type { PanelId } from "@/lib/viewState";
 import type { GridSnapshot, ScalarObservation } from "@/lib/api";
 import {
   carbonBand,
@@ -26,12 +27,16 @@ export function NowPanel({
   zoneName,
   now,
   stale,
+  focused,
+  onToggleFocus,
 }: {
   snapshot: GridSnapshot;
   zoneName: string;
   /** The lab's clock — wall time when live, the scenario position when replaying. */
   now: string;
   stale?: boolean;
+  focused?: boolean;
+  onToggleFocus?: (id: PanelId) => void;
 }) {
   const carbon = snapshot.carbon_intensity;
   const band = carbonBand(carbon?.value);
@@ -48,32 +53,27 @@ export function NowPanel({
   const clock = new Date(now);
 
   return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Now · {zoneName}</CardTitle>
-          <p
-            className="numeric mt-0.5 text-[0.7rem] text-muted-foreground"
-            title={`Reading timestamped ${formatDateTime(reading)}`}
-          >
-            {formatDateTime(now)}
-            <span className="text-muted-foreground/60">
-              {" · reading "}
-              {formatRelative(reading, clock)}
-            </span>
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <ValueFlags
-            isEstimated={carbon?.is_estimated}
-            isStale={stale || carbon?.is_stale}
-            method={carbon?.estimation_method}
-          />
-          <ProvenanceBadge provenance={snapshot.provenance} />
-        </div>
-      </CardHeader>
-
-      <CardContent>
+    <PanelShell
+      id="now"
+      title={`Now · ${zoneName}`}
+      numericSubtitle
+      subtitle={
+        <span title={`Reading timestamped ${formatDateTime(reading)}`}>
+          {formatDateTime(now)}
+          <span className="text-muted-foreground/60">
+            {" · reading "}
+            {formatRelative(reading, clock)}
+          </span>
+        </span>
+      }
+      provenance={snapshot.provenance}
+      isEstimated={carbon?.is_estimated}
+      isStale={stale || carbon?.is_stale}
+      estimationMethod={carbon?.estimation_method}
+      focused={focused}
+      onToggleFocus={onToggleFocus}
+    >
+      <>
         <div className="flex items-end gap-3">
           <div
             className="numeric text-5xl leading-none font-semibold tabular-nums"
@@ -136,8 +136,8 @@ export function NowPanel({
             Price source: {snapshot.price.source}
           </p>
         )}
-      </CardContent>
-    </Card>
+      </>
+    </PanelShell>
   );
 }
 

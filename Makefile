@@ -16,7 +16,7 @@ NOCONV := MSYS_NO_PATHCONV=1
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs restart build web pwa test lint fmt probe record scenario scenario-live demo eval shell clean
+.PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live demo eval shell clean
 
 help:  ## Show this help
 > @grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -49,8 +49,15 @@ web: .env  ## Start the PWA as well (API + agent must be up)
 
 pwa: web  ## Alias for web
 
-test:  ## Run the offline test suite (no network, no key)
+# The dev server deliberately does not register a service worker -- it would fight hot
+# reload -- so `make web` cannot show you the installed-app behaviour. This builds the PWA
+# and serves it the way a browser would really receive it.
+preview:  ## Build the PWA and serve it like production (service worker active), :4173
+> $(COMPOSE) --profile web run --rm --no-deps -p 4173:4173 web sh -c "npm run build && npx vite preview --host 0.0.0.0 --port 4173"
+
+test:  ## Run the offline test suite (no network, no key) -- API and web
 > $(API) pytest -q
+> $(COMPOSE) --profile web run --rm --no-deps -T web npm test
 
 lint:  ## Ruff check + mypy --strict, and the web typecheck
 > $(API) sh -c "ruff check src tests && ruff format --check src tests && mypy src"

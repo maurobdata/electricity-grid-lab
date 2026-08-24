@@ -174,10 +174,34 @@ Re-check these the moment a trial or event key exists; each changes what is buil
    points rather than 24 — but that is not verified on this signal, and no code should
    assume it.
 2. `price-day-ahead/forecast` with an explicit `start`/`end`. Never called once. It may give
-   a longer or cleaner window than `combined`.
-3. Whether `combined` reaches past +24 h when called shortly after the noon clearing.
-4. Day-ahead price coverage across the 350 zones — documented as Europe plus a few, never
+   a longer or cleaner window than `combined` — and given the finding below, it is now the
+   only candidate for reaching further than a day.
+3. Day-ahead price coverage across the 350 zones — documented as Europe plus a few, never
    enumerated.
+
+#### Measured since: `combined` is a rolling +24 h window
+
+The open question was whether `combined` reaches past +24 h when called shortly after the
+noon clearing. **It does not.** Two live recordings, at opposite ends of the day:
+
+| Recorded at | Rows | Span | Auction cleared |
+|---|---|---|---|
+| 2026-08-23 19:00Z | 25 | `08-23 19:00Z` → `08-24 19:00Z` | `08-23 11:24Z` |
+| 2026-08-24 08:13Z | 25 | `08-24 08:00Z` → `08-25 08:00Z` | `08-24 07:32Z` |
+
+Both are exactly 25 hourly rows anchored on the current hour, **regardless of proximity to
+the clearing** — the second was fetched 41 minutes after its auction cleared and still
+stopped at +24 h. So `combined` is a rolling window, not a view of the delivery day: it
+truncates the published auction result rather than serving all of it.
+
+Consequences:
+
+- The forward price horizon is **a flat 24 hours from whenever you ask**, and it does not
+  grow after lunch. Anything planning around "tomorrow's whole delivery day" is planning
+  around a window this endpoint does not give.
+- Recording in the morning and recording in the evening yield the same *depth*, so the
+  daily recording can run at any hour without losing forward price.
+- If a longer forward window is ever needed, item 2 above is the only remaining candidate.
 
 ---
 
