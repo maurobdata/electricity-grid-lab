@@ -31,7 +31,7 @@ import { pollInterval, useQuery } from "@/hooks/useApi";
 import { useViewState } from "@/hooks/useViewState";
 import { api } from "@/lib/api";
 import { zoneLabel } from "@/lib/format";
-import { isSignal, type ViewIntent } from "@/lib/viewState";
+import { isSignal, type PanelId, type ViewIntent } from "@/lib/viewState";
 
 export default function App() {
   const [reload, setReload] = useState(0);
@@ -71,6 +71,23 @@ export default function App() {
       dispatch(intent);
     },
     [dispatch],
+  );
+
+  /*
+   * Focus promotes one panel and hides the rest.
+   *
+   * Pressing the control on the panel already focused returns to the full board, so the
+   * affordance is its own way out — the alternative is a mode you can enter and not leave.
+   * On a phone this is the difference between reading one thing and scrolling past six.
+   */
+  const toggleFocus = useCallback(
+    (panel: PanelId) => set("focused", view.focused === panel ? undefined : panel),
+    [set, view.focused],
+  );
+
+  const shows = useCallback(
+    (panel: PanelId) => view.focused === undefined || view.focused === panel,
+    [view.focused],
   );
 
   /*
@@ -164,7 +181,7 @@ export default function App() {
       />
 
       <main className="mx-auto max-w-[1400px] space-y-4 px-4 py-4">
-        <header className="flex flex-wrap items-center justify-between gap-3">
+        <header className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
           <div>
             <h1 className="text-lg font-semibold">Grid Lab</h1>
             <p className="text-xs text-muted-foreground">
@@ -174,7 +191,7 @@ export default function App() {
           <Select
             value={zone ?? ""}
             onChange={(event) => set("zone", event.target.value)}
-            className="h-9 min-w-[16rem] text-sm"
+            className="h-9 w-full text-sm sm:w-auto sm:min-w-[16rem]"
             aria-label="Zone"
           >
             {zones.map((option) => (
@@ -192,58 +209,95 @@ export default function App() {
           activeId={activeFinding}
         />
 
-        {snapshot.data && (
+        {view.focused && (
+          /* A focused board hides five panels. Without a way back that is a trap, and the
+             control that got you here is on a panel you may have scrolled past. */
+          <button
+            onClick={() => set("focused", undefined)}
+            className="w-full rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:bg-accent"
+          >
+            Showing one panel · show all
+          </button>
+        )}
+
+        {shows("now") && snapshot.data && (
           <NowPanel
             snapshot={snapshot.data}
             zoneName={zoneName}
             now={status.data.now}
             stale={snapshot.stale}
+            focused={view.focused === "now"}
+            onToggleFocus={toggleFocus}
           />
         )}
 
+        {/* Side by side only where there is room for both. Below `lg` they stack, which is
+            the whole of the mobile layout for this pair. */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <MixPanel
-            mix={mix.data}
-            other={otherMix.data}
-            flowTraced={view.flowTraced}
-            onToggle={(next) => set("flowTraced", next)}
-            unavailable={mix.status === 404}
-          />
-          <FlowsPanel flows={flows.data} unavailable={flows.status === 404} />
+          {shows("mix") && (
+            <MixPanel
+              mix={mix.data}
+              other={otherMix.data}
+              flowTraced={view.flowTraced}
+              onToggle={(next) => set("flowTraced", next)}
+              unavailable={mix.status === 404}
+              focused={view.focused === "mix"}
+              onToggleFocus={toggleFocus}
+            />
+          )}
+          {shows("flows") && (
+            <FlowsPanel
+              flows={flows.data}
+              unavailable={flows.status === 404}
+              focused={view.focused === "flows"}
+              onToggleFocus={toggleFocus}
+            />
+          )}
         </div>
 
-        <ForecastPanel
-          history={history.data}
-          forecast={forecast.data}
-          signal={view.signal}
-          onSignalChange={(next) => dispatch({ kind: "set_signal", signal: next, reason: next })}
-          now={status.data.now}
-          forecastUnavailable={forecast.status === 404}
-          highlight={view.highlight}
-          onClearHighlight={clearHighlight}
-        />
+        {shows("forecast") && (
+          <ForecastPanel
+            history={history.data}
+            forecast={forecast.data}
+            signal={view.signal}
+            onSignalChange={(next) => dispatch({ kind: "set_signal", signal: next, reason: next })}
+            now={status.data.now}
+            forecastUnavailable={forecast.status === 404}
+            highlight={view.highlight}
+            onClearHighlight={clearHighlight}
+            focused={view.focused === "forecast"}
+            onToggleFocus={toggleFocus}
+          />
+        )}
 
-        <ComparePanel
-          comparison={comparison.data}
-          zones={zones}
-          selected={view.compareZones}
-          onToggleZone={(key) =>
-            set(
-              "compareZones",
-              view.compareZones.includes(key)
-                ? view.compareZones.filter((existing) => existing !== key)
-                : [...view.compareZones, key],
-            )
-          }
-          signal={view.compareSignal}
-          // Narrowed rather than cast: the panel hands back a raw `string` from a `<select>`,
-          // and the view state only admits signals that exist.
-          onSignalChange={(next) => isSignal(next) && set("compareSignal", next)}
-        />
+        {shows("compare") && (
+          <ComparePanel
+            comparison={comparison.data}
+            zones={zones}
+            selected={view.compareZones}
+            onToggleZone={(key) =>
+              set(
+                "compareZones",
+                view.compareZones.includes(key)
+                  ? view.compareZones.filter((existing) => existing !== key)
+                  : [...view.compareZones, key],
+              )
+            }
+            signal={view.compareSignal}
+            // Narrowed rather than cast: the panel hands back a raw `string` from a
+            // `<select>`, and the view state only admits signals that exist.
+            onSignalChange={(next) => isSignal(next) && set("compareSignal", next)}
+            focused={view.focused === "compare"}
+            onToggleFocus={toggleFocus}
+          />
+        )}
 
-        <AgentPanel zone={zone} onIntent={onAgentIntent} blocked={blocked} />
-
-        <CapabilityStrip capabilities={capabilities.data} />
+        {!view.focused && (
+          <>
+            <AgentPanel zone={zone} onIntent={onAgentIntent} blocked={blocked} />
+            <CapabilityStrip capabilities={capabilities.data} />
+          </>
+        )}
 
         <footer className="pt-2 pb-6 text-[0.65rem] text-muted-foreground">
           Data from Electricity Maps. Every value on this page carries its provenance; nothing

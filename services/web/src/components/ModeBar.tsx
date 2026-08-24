@@ -130,7 +130,7 @@ export function ModeBar({
               </Select>
             </div>
 
-            <div className="flex min-w-[16rem] flex-1 items-center gap-2">
+            <div className="flex w-full min-w-0 flex-1 items-center gap-2 sm:w-auto sm:min-w-[16rem]">
               <input
                 type="range"
                 min={0}
@@ -139,14 +139,14 @@ export function ModeBar({
                 onChange={(event) => setScrub(Number(event.target.value) / 1000)}
                 onMouseUp={(event) => seekTo(Number(event.currentTarget.value) / 1000)}
                 onTouchEnd={(event) => seekTo(Number(event.currentTarget.value) / 1000)}
-                className="h-1 w-full cursor-pointer appearance-none rounded bg-muted accent-[var(--color-primary)]"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded bg-muted accent-[var(--color-primary)]"
                 aria-label="Position in the recorded window"
               />
             </div>
           </>
         )}
 
-        <span className="numeric ml-auto text-xs text-muted-foreground">
+        <span className="numeric text-xs text-muted-foreground sm:ml-auto">
           {formatDateTime(status.now)}
         </span>
       </div>

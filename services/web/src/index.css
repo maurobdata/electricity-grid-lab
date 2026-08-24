@@ -103,3 +103,44 @@
     );
   }
 }
+
+
+/*
+ * Touch targets, enlarged for fingers only.
+ *
+ * **Deliberately outside `@layer`.** The lab is dense on purpose — 28px controls are right
+ * with a mouse — but Tailwind's utilities live in `@layer utilities`, so the same rules
+ * written in `@layer base` lose the cascade to every `h-7` in a component and silently do
+ * nothing. Unlayered CSS outranks all layers, which is exactly the escape hatch this needs.
+ *
+ * `pointer: coarse` is the honest test rather than a width breakpoint: a touchscreen laptop
+ * needs the bigger targets at 1280px, and a phone rendered into a desktop-width frame does
+ * not stop being a phone. Nothing here changes the mouse layout at any size.
+ */
+@media (pointer: coarse) {
+  button,
+  select,
+  [role="button"] {
+    min-height: 2.5rem;
+  }
+
+  /*
+   * The replay scrubber was a 6px track — how a demo reaches the interesting hour, and
+   * essentially ungrabbable with a thumb. The track grows and the handle with it.
+   */
+  input[type="range"] {
+    height: 2.5rem;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+input[type="range"] {
+  accent-color: var(--color-primary);
+}

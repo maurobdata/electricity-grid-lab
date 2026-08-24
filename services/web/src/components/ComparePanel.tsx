@@ -12,13 +12,13 @@
  * baseline. This panel deliberately does not pretend otherwise.
  */
 
-import { ProvenanceBadge } from "@/components/ProvenanceBadge";
+import { PanelShell } from "@/components/PanelShell";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import type { Comparison, ZoneInfo } from "@/lib/api";
 import { carbonBand, formatNumber, zoneLabel } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import type { PanelId } from "@/lib/viewState";
 
 const SIGNALS = [
   { key: "carbon_intensity", label: "Carbon intensity", unit: "gCO₂eq/kWh", lowerIsBetter: true },
@@ -35,6 +35,8 @@ export function ComparePanel({
   onToggleZone,
   signal,
   onSignalChange,
+  focused,
+  onToggleFocus,
 }: {
   comparison: Comparison | undefined;
   zones: ZoneInfo[];
@@ -42,6 +44,8 @@ export function ComparePanel({
   onToggleZone: (zone: string) => void;
   signal: string;
   onSignalChange: (next: string) => void;
+  focused?: boolean;
+  onToggleFocus?: (id: PanelId) => void;
 }) {
   const spec = SIGNALS.find((s) => s.key === signal) ?? SIGNALS[0];
 
@@ -61,18 +65,15 @@ export function ComparePanel({
   );
 
   return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Compare zones</CardTitle>
-          <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-            Same instant, different places
-          </p>
-        </div>
-        {comparison && <ProvenanceBadge provenance={comparison.provenance} />}
-      </CardHeader>
-
-      <CardContent>
+    <PanelShell
+      id="compare"
+      title="Compare zones"
+      subtitle="Same instant, different places"
+      provenance={comparison?.provenance}
+      focused={focused}
+      onToggleFocus={onToggleFocus}
+    >
+      <>
         <div className="mb-3 flex flex-wrap items-center gap-1.5">
           <Select
             value={signal}
@@ -155,7 +156,7 @@ export function ComparePanel({
           Iceland always wins, Poland always loses, and the table never changes. A league
           worth returning to has to score each zone against its own baseline.
         </p>
-      </CardContent>
-    </Card>
+      </>
+    </PanelShell>
   );
 }

@@ -15,12 +15,12 @@
 
 import { useMemo } from "react";
 
-import { ProvenanceBadge, ValueFlags } from "@/components/ProvenanceBadge";
+import { PanelShell } from "@/components/PanelShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { MixBreakdown } from "@/lib/api";
 import { formatNumber, formatPower, isFossil, sourceColor } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import type { PanelId } from "@/lib/viewState";
 
 export function MixPanel({
   mix,
@@ -28,6 +28,8 @@ export function MixPanel({
   flowTraced,
   onToggle,
   unavailable,
+  focused,
+  onToggleFocus,
 }: {
   mix: MixBreakdown | undefined;
   /** The other breakdown, when loaded — used only to quantify the difference. */
@@ -35,6 +37,8 @@ export function MixPanel({
   flowTraced: boolean;
   onToggle: (next: boolean) => void;
   unavailable?: boolean;
+  focused?: boolean;
+  onToggleFocus?: (id: PanelId) => void;
 }) {
   const entries = useMemo(
     () =>
@@ -64,23 +68,24 @@ export function MixPanel({
   }, [mix, other]);
 
   return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Generation mix</CardTitle>
-          {mix?.total_mw != null && (
-            <p className="numeric mt-0.5 text-[0.7rem] text-muted-foreground">
-              {formatPower(mix.total_mw)} total · {formatNumber(fossilShare, 1)}% fossil
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <ValueFlags isEstimated={mix?.is_estimated} isStale={mix?.is_stale} />
-          {mix && <ProvenanceBadge provenance={mix.provenance} />}
-        </div>
-      </CardHeader>
-
-      <CardContent>
+    <PanelShell
+      id="mix"
+      title="Generation mix"
+      numericSubtitle
+      subtitle={
+        mix?.total_mw != null
+          ? `${formatPower(mix.total_mw)} total · ${formatNumber(fossilShare, 1)}% fossil`
+          : undefined
+      }
+      provenance={mix?.provenance}
+      isEstimated={mix?.is_estimated}
+      isStale={mix?.is_stale}
+      focused={focused}
+      onToggleFocus={onToggleFocus}
+    >
+      {/* The toggle stays reachable even with nothing to show, so a reader who lands on an
+          unavailable breakdown can switch to the one that exists. */}
+      <>
         <div className="mb-3 inline-flex rounded-lg border border-border bg-muted/50 p-0.5">
           <Button
             variant="ghost"
@@ -148,7 +153,7 @@ export function MixPanel({
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </>
+    </PanelShell>
   );
 }

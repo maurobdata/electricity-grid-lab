@@ -12,13 +12,13 @@
 
 import { useMemo } from "react";
 
-import { ProvenanceBadge } from "@/components/ProvenanceBadge";
+import { PanelShell } from "@/components/PanelShell";
 import { TimeSeries } from "@/components/charts/TimeSeries";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import type { Series } from "@/lib/api";
 import { formatDateTime, formatNumber } from "@/lib/format";
+import type { PanelId } from "@/lib/viewState";
 
 const SIGNALS = [
   { key: "carbon_intensity", label: "Carbon intensity", unit: "gCO₂eq/kWh", zeroBased: true },
@@ -37,6 +37,8 @@ export function ForecastPanel({
   forecastUnavailable,
   highlight,
   onClearHighlight,
+  focused,
+  onToggleFocus,
 }: {
   history: Series | undefined;
   forecast: Series | undefined;
@@ -47,6 +49,8 @@ export function ForecastPanel({
   /** A window a finding or the agent asked to be marked. */
   highlight?: { from: string; to: string };
   onClearHighlight?: () => void;
+  focused?: boolean;
+  onToggleFocus?: (id: PanelId) => void;
 }) {
   const spec = SIGNALS.find((s) => s.key === signal) ?? SIGNALS[0];
 
@@ -78,31 +82,31 @@ export function ForecastPanel({
   const estimated = Math.max(history?.estimated_fraction ?? 0, forecast?.estimated_fraction ?? 0);
 
   return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Forecast vs actual</CardTitle>
-          {forecast?.issued_at && (
-            <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-              Forecast issued {formatDateTime(forecast.issued_at)}
-              {forecast.horizon_hours ? ` · ${forecast.horizon_hours}h horizon` : ""}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {estimated > 0 && (
-            <Badge
-              variant="warn"
-              title="Share of points Electricity Maps modelled rather than measured."
-            >
-              {formatNumber(estimated * 100)}% est
-            </Badge>
-          )}
-          {provenance && <ProvenanceBadge provenance={provenance} />}
-        </div>
-      </CardHeader>
-
-      <CardContent>
+    <PanelShell
+      id="forecast"
+      title="Forecast vs actual"
+      subtitle={
+        forecast?.issued_at
+          ? `Forecast issued ${formatDateTime(forecast.issued_at)}${
+              forecast.horizon_hours ? ` · ${forecast.horizon_hours}h horizon` : ""
+            }`
+          : undefined
+      }
+      provenance={provenance}
+      focused={focused}
+      onToggleFocus={onToggleFocus}
+      actions={
+        estimated > 0 ? (
+          <Badge
+            variant="warn"
+            title="Share of points Electricity Maps modelled rather than measured."
+          >
+            {formatNumber(estimated * 100)}% est
+          </Badge>
+        ) : undefined
+      }
+    >
+      <>
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <Select
             value={signal}
@@ -159,7 +163,7 @@ export function ForecastPanel({
             </>
           )}
         </p>
-      </CardContent>
-    </Card>
+      </>
+    </PanelShell>
   );
 }

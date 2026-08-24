@@ -33,6 +33,19 @@ make web   # add the PWA
 The PWA sits behind a Compose profile, so `make up` stays the lean pair when you are only
 working on the backend.
 
+**`make web` is the dev server, and it deliberately registers no service worker** — one
+would fight hot reload, so `vite-plugin-pwa` is configured with `devOptions: { enabled:
+false }`. To see the installed-app behaviour, build it:
+
+```bash
+make preview   # builds and serves the real PWA on :4173, service worker active
+```
+
+The build is verified: 8 precache entries, a `standalone` manifest, and the `NetworkFirst`
+rule for `/api/v1/`. Service-worker *activation* has only been checked in an embedded
+browser that refuses to register one, so confirm the offline behaviour in a real Chrome or
+Safari before relying on it.
+
 **No API key and no network are required.** The lab starts in *replay* mode, playing a
 recorded window of grid time against a virtual clock. That is the default on purpose: the
 14-day Electricity Maps trial should not be started until early September, a hackathon demo
