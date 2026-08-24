@@ -50,6 +50,14 @@ class Settings(BaseSettings):
     gridlab_scenarios_dir: Path = Path("/app/scenarios")
     gridlab_fixtures_dir: Path = Path("/app/fixtures")
 
+    gridlab_atlas_path: Path = Path("/app/data/atlas.json")
+    """Where `make atlas` writes, and where /api/v1/atlas reads.
+
+    Same reasoning as the capability probe below: inside a mounted directory, because the
+    file does not exist until a sweep has been run and Docker turns a bind mount of a
+    missing file into a directory.
+    """
+
     gridlab_capabilities_path: Path = Path("/app/data/capabilities.json")
     """Where `make probe` writes, and where /api/v1/capabilities reads.
 

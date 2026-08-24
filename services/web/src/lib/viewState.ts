@@ -28,7 +28,15 @@
 import type { Mode } from "@/lib/api";
 
 /** Panels that can be focused. Mirrors `VIEW_PANELS` in `gridlab/agent/tools.py`. */
-export const PANELS = ["now", "mix", "flows", "forecast", "compare", "findings"] as const;
+export const PANELS = [
+  "now",
+  "mix",
+  "flows",
+  "forecast",
+  "compare",
+  "findings",
+  "atlas",
+] as const;
 export type PanelId = (typeof PANELS)[number];
 
 /** Signals that exist as a series. Mirrors `SERIES_SIGNALS` in `web/routes_grid.py`. */

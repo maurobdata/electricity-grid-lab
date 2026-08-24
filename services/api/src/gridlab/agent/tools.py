@@ -44,7 +44,7 @@ SERIES_SIGNALS = (
 #: Named here rather than discovered from the front end, because this list is part of the
 #: contract: an intent naming a panel that does not exist renders as a control that does
 #: nothing, which is worse than refusing to make it.
-VIEW_PANELS = ("now", "mix", "flows", "forecast", "compare", "findings")
+VIEW_PANELS = ("now", "mix", "flows", "forecast", "compare", "findings", "atlas")
 
 #: Horizons the API accepts vary per signal; 24 is the only value every forecasting signal
 #: takes. Offering the full set here would invite a 400 the model cannot diagnose.

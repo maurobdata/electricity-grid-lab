@@ -37,6 +37,7 @@ from gridlab.agent.llm import (
     TurnFinished,
     ViewProposed,
 )
+from gridlab.agent.narrate import Narrator
 from gridlab.agent.prompts import system_prompt
 from gridlab.agent.tools import ToolContext, build_tools
 from gridlab.config import Settings, get_settings
@@ -56,6 +57,7 @@ class AgentState:
             api_key=token.get_secret_value() if token else None,
             model=settings.gridlab_agent_model,
         )
+        self.narrator = Narrator(self.backend)
 
     async def aclose(self) -> None:
         await self.client.aclose()
@@ -272,3 +274,26 @@ def _translate(event: Any) -> dict[str, str]:
 
 def _event(name: str, payload: dict[str, Any]) -> dict[str, str]:
     return {"event": name, "data": json.dumps(payload, default=str)}
+
+
+class NarrateRequest(BaseModel):
+    """One finding, as `/api/v1/analysis/{zone}/findings` returned it."""
+
+    finding: dict[str, Any] = Field(description="The finding to explain, verbatim.")
+
+
+@app.post("/api/v1/narrate", tags=["agent"])
+async def narrate(state: Agent, body: NarrateRequest) -> dict[str, Any]:
+    """Explain one already-computed finding, in a sentence or two.
+
+    **Not a chat turn.** The finding carries its own evidence, so this is a single short
+    completion with no tool loop, cached by the finding's id — which is stable for the same
+    finding computed twice, so a rail polled every few seconds costs one call per *distinct*
+    finding rather than one per poll.
+
+    Without a key it returns the detector's own wording, marked `source: "template"`. So
+    does a narration that mentions a number the finding did not contain: that is discarded
+    rather than shown, because a fluent sentence with an invented figure in it is precisely
+    what computing the finding deterministically was meant to prevent.
+    """
+    return await state.narrator.narrate(body.finding)

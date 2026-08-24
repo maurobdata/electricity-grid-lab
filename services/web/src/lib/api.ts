@@ -258,6 +258,54 @@ export interface Divergence {
   derived: Derived;
 }
 
+/** One zone's row in the cross-zone sweep. Mirrors `scripts/build_atlas.py`. */
+export interface AtlasZone {
+  zone: string;
+  status: "ok" | "no_price" | "no_carbon" | "no_overlap";
+  reason?: string;
+  periods?: number;
+  correlation?: number | null;
+  agreement?: string;
+  separation_hours?: number | null;
+  /** The dynamic range of carbon. A correlation cannot be read without it. */
+  carbon_spread?: number;
+  price_spread?: number | null;
+  /** What choosing the clean window instead of the cheap one buys, and what it costs. */
+  carbon_avoided?: number | null;
+  price_premium?: number | null;
+  negative_price_periods?: number;
+  price_unit?: string | null;
+  provenance?: Provenance;
+}
+
+export interface Atlas {
+  computed_at: string;
+  horizon_hours: number;
+  sorted_by: string;
+  unscored: number;
+  summary: {
+    zones_attempted: number;
+    zones_scored: number;
+    by_status: Record<string, number>;
+    median_correlation: number | null;
+    median_carbon_spread: number | null;
+    zones_with_low_correlation: number;
+    zones_with_negative_prices: number;
+    provenance: Provenance;
+    caveats: string[];
+  };
+  zones: AtlasZone[];
+}
+
+export interface Narration {
+  id: string;
+  text: string;
+  /** `model` when a model wrote it, `template` when the detector's own wording is used. */
+  source: "model" | "template";
+  cached: boolean;
+  note?: string;
+}
+
 export class ApiError extends Error {
   constructor(
     readonly status: number,
@@ -328,6 +376,8 @@ export const api = {
   priceForward: (zone: string) => get<Series>(`/grid/${encodeURIComponent(zone)}/price/forward`),
   findings: (zone: string) => get<Findings>(`/analysis/${encodeURIComponent(zone)}/findings`),
   divergence: (zone: string) => get<Divergence>(`/analysis/${encodeURIComponent(zone)}/divergence`),
+  /** The last `make atlas` sweep. Served from a file, never computed on request. */
+  atlas: (sort: string) => get<Atlas>("/atlas", { sort }),
 
   scenarios: () =>
     get<{ current: string | null; scenarios: ScenarioSummary[] }>("/replay/scenarios"),
@@ -337,3 +387,22 @@ export const api = {
   seek: (to: string) => post<ReplayState>("/replay/seek", { to }),
   setSpeed: (multiplier: number) => post<ReplayState>("/replay/speed", { multiplier }),
 };
+
+const AGENT = import.meta.env.VITE_AGENT_URL ?? "http://localhost:8001";
+
+/**
+ * Ask the agent to explain one already-computed finding.
+ *
+ * On the agent's port rather than the API's, because it is the only thing here that costs
+ * a model call. Cached server-side by the finding's id, so a rail that re-renders does not
+ * re-spend — and it falls back to the detector's own wording rather than failing.
+ */
+export async function narrate(finding: Finding): Promise<Narration> {
+  const response = await fetch(`${AGENT}/api/v1/narrate`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ finding }),
+  });
+  if (!response.ok) throw new ApiError(response.status, `${response.status} on /narrate`);
+  return (await response.json()) as Narration;
+}
