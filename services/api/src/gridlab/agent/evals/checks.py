@@ -39,12 +39,32 @@ _PROSE_NUMBERS = frozenset({0, 1, 2, 100})
 
 _NUMBER = re.compile(r"-?\d+(?:\.\d+)?")
 
-#: Timestamps, ISO dates and percentages-in-a-word are stripped before scanning, so their
-#: digits are not mistaken for measurements.
+#: Timestamps, dates and zone keys are stripped before scanning, so their digits are not
+#: mistaken for measurements.
+#:
+#: **Prose dates are the ones that caused trouble.** ISO timestamps were handled from the
+#: start, but a live run on 24 August 2026 failed three cases on "on 23 August", "24 August"
+#: and the bare year in "23 August 2026" — all correct answers, all reported as inventing a
+#: figure. This is the check the README calls the most important one, and a check that cries
+#: wolf on a calendar date is a check people learn to ignore.
+_MONTHS = (
+    r"Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|"
+    r"Jul(?:y)?|Aug(?:ust)?|Sep(?:t(?:ember)?)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?"
+)
+
 _STRIP = re.compile(
     r"\d{4}-\d{2}-\d{2}(?:[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?Z?)?"  # ISO timestamps
     r"|\b\d{1,2}:\d{2}\b"  # clock times
-    r"|\bDK-DK\d\b|\bNO-NO\d\b|\bSE-SE\d\b|\bIT-\w+\b"  # zone keys with digits
+    # "23 August", "23 August 2026", "23rd Aug."
+    rf"|\b\d{{1,2}}(?:st|nd|rd|th)?\s+(?:{_MONTHS})\.?(?:,?\s+\d{{4}})?\b"
+    # "August 23", "Aug 23, 2026"
+    rf"|\b(?:{_MONTHS})\.?\s+\d{{1,2}}(?:st|nd|rd|th)?(?:,?\s+\d{{4}})?\b"
+    # The 2 in "gCO2eq/kWh" is a chemical formula, not a reading. It survived until now
+    # only because 2 happens to sit on the prose allowlist below, which is a coincidence
+    # rather than a reason.
+    r"|CO2|CO₂"
+    r"|\bDK-DK\d\b|\bNO-NO\d\b|\bSE-SE\d\b|\bIT-\w+\b",  # zone keys with digits
+    re.IGNORECASE,
 )
 
 
