@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -336,3 +337,46 @@ async def test_grid_unavailable_carries_the_api_hint() -> None:
     with pytest.raises(GridUnavailable) as exc:
         await ctx.client.snapshot("NOPE")
     assert "available" in str(exc.value).lower()
+
+
+def test_a_proposed_view_carries_iso_8601_times_over_sse() -> None:
+    """Pinning a contract that is already correct.
+
+    A review raised that the SSE layer stringifies with `json.dumps(..., default=str)`,
+    which would give datetimes whatever `__str__` produces — a space instead of `T`. It
+    does not happen: `propose_view` returns `model_dump(mode="json")`, so `at` and `until`
+    are already ISO strings and the fallback never fires for them.
+
+    That is worth a test rather than a comment, because it holds by construction somewhere
+    else. Anyone returning a raw `datetime` from a view-proposing tool would silently move
+    the format to `2026-08-24 09:00:00+00:00`, which the client's `new Date()` parses
+    differently across browsers.
+    """
+    intent = {
+        "kind": "highlight_window",
+        "reason": "the cheap window",
+        "zone": ZONE,
+        "zones": [],
+        "signal": "price",
+        "panel": None,
+        "at": "2026-08-24T09:00:00Z",
+        "until": "2026-08-24T13:00:00Z",
+    }
+    state = _state(key="test-key")
+    state.backend = _StubBackend(  # type: ignore[assignment]
+        [llm.ViewProposed(intent), llm.TurnFinished("end_turn", 1, 10, 5)]
+    )
+    app.state.agent = state
+
+    with TestClient(app) as client:
+        app.state.agent = state
+        with client.stream("POST", "/api/v1/chat", json={"message": "when is it cheap?"}) as r:
+            events = _collect(r)
+
+    payload = next(data for name, data in events if name == "view_intent")
+    for field in ("at", "until"):
+        value = payload[field]
+        assert isinstance(value, str), f"{field} reached the client as {type(value).__name__}"
+        # `T` separator and a UTC marker: the two things `str(datetime)` would lose.
+        assert "T" in value and value.endswith("Z"), f"{field} is not ISO 8601 UTC: {value!r}"
+        assert datetime.fromisoformat(value.replace("Z", "+00:00")).tzinfo is not None

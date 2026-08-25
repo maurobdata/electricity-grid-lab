@@ -43,6 +43,21 @@ CACHE_SIZE = 1000
 #: chip in a rail, and a long one would not be read.
 MAX_TOKENS = 220
 
+#: Numbers at or below this are read as prose rather than as measurements.
+#:
+#: Hours of the day, counts of periods, "both signals". A grid figure worth checking —
+#: a carbon intensity, a price, a megawatt — is essentially never this small, and treating
+#: these as claims would discard almost every well-written sentence.
+PROSE_CEILING = 24.0
+
+#: How far a quoted figure may sit from the one the finding claims.
+#:
+#: 5%, or 1.0 absolute for small values. Describing 233 as 230 is rounding; describing it
+#: as 180 is not. Widening this is the wrong lever for a narration being rejected — check
+#: what :func:`claimed_numbers` returns first, because the usual cause is a figure the
+#: finding never actually asserted.
+ROUNDING_TOLERANCE = 0.05
+
 NARRATE_PROMPT = """\
 You explain one thing that has already been measured on an electricity grid.
 
@@ -83,21 +98,65 @@ def _numbers(text: str) -> set[float]:
     return found
 
 
+def claimed_numbers(finding: dict[str, Any]) -> set[float]:
+    """Every figure the finding actually asserts.
+
+    Anchored to the fields a detector composed from real measurements — the evidence values,
+    the magnitude, and the prose the detector wrote — rather than to ``str(finding)``.
+
+    Scanning the whole record looked thorough and was the opposite. A ``cheap_clean_divergence``
+    finding carried five real figures and twenty-three "known" numbers, the difference being
+    the id hash (``cheap_clean_divergence:31a6af6e489b`` contributes 31, 6 and **489**), the
+    ISO timestamps (**2026**), the alignment method string (``cadence=3600s`` contributes
+    **3600**) and the input point counts. Measured against a live finding, "prices spike to
+    489 EUR/MWh", "around 2026 MW of wind" and "the interconnector carries 3600 MW" all
+    passed the guard. None of those numbers came from the grid.
+
+    Excluded deliberately: ``id``, ``at``, ``until``, ``significance`` and the ``derived``
+    plumbing. None of them is a claim about electricity, so quoting one is not grounding.
+    """
+    values: set[float] = set()
+
+    for field in ("headline", "detail"):
+        values |= _numbers(str(finding.get(field) or ""))
+
+    magnitude = finding.get("magnitude")
+    if isinstance(magnitude, int | float):
+        values.add(abs(float(magnitude)))
+
+    for item in finding.get("evidence") or []:
+        value = item.get("value") if isinstance(item, dict) else None
+        if isinstance(value, int | float):
+            values.add(abs(float(value)))
+
+    # Caveats are prose the detector wrote about this finding, and some quote a figure.
+    for caveat in (finding.get("derived") or {}).get("caveats") or []:
+        values |= _numbers(str(caveat))
+
+    return values
+
+
 def grounded(narration: str, finding: dict[str, Any]) -> tuple[bool, set[float]]:
-    """Whether every number in the narration appears in the finding.
+    """Whether every number in the narration is one the finding actually claims.
 
     The same idea as the deterministic eval check, applied before the text is ever shown
-    rather than afterwards. Rounding is allowed — a finding of 2.8 may be described as 3 —
-    because refusing that would reject good writing. Small integers are ignored entirely:
-    "two sentences", "both signals", an hour named as 10 are ordinary prose, and treating
-    them as invented figures would discard almost everything.
+    rather than afterwards.
+
+    Two allowances, both deliberate and neither widened to make failures go away. **Rounding
+    passes**: a finding of 233 described as 230 is good writing, not invention, so a value
+    within 5% or 1.0 of a claimed figure counts. **Small integers are ignored**: "both
+    signals", "the 3 hours after midnight", an hour named as 10 — treating those as figures
+    would discard almost every well-written sentence.
+
+    What changed is the *set* being matched against, not the tolerance. See
+    :func:`claimed_numbers`.
     """
-    known = _numbers(str(finding))
+    known = claimed_numbers(finding)
     invented = set()
     for value in _numbers(narration):
-        if value <= 24:
+        if value <= PROSE_CEILING:
             continue
-        if any(abs(value - k) <= max(1.0, abs(k) * 0.05) for k in known):
+        if any(abs(value - k) <= max(1.0, abs(k) * ROUNDING_TOLERANCE) for k in known):
             continue
         invented.add(value)
     return not invented, invented

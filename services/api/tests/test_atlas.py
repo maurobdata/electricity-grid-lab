@@ -7,6 +7,7 @@ that decides what the sweep *means*, which is where a misleading number would co
 from __future__ import annotations
 
 import json
+import os
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -218,3 +219,90 @@ def test_an_unknown_sort_is_refused_with_the_valid_list(client: TestClient) -> N
     response = client.get("/api/v1/atlas", params={"sort": "vibes"})
     assert response.status_code == 400
     assert "carbon_avoided" in response.json()["detail"]["available"]
+
+
+# --- the write itself -------------------------------------------------------
+
+
+def test_a_failed_write_leaves_the_previous_artifact_intact(tmp_path: Path) -> None:
+    """The failure that made this necessary.
+
+    `Path.write_text` truncates before it writes, so an interrupted sweep left `atlas.json`
+    as a prefix of valid JSON — and the endpoint answered `500 Atlas file unreadable`
+    instead of serving the previous good sweep. Verified by truncating the real file and
+    watching the running API return 500.
+    """
+    from gridlab.scripts.build_atlas import write_atomic
+
+    target = tmp_path / "atlas.json"
+    write_atomic(target, '{"good": true}')
+
+    class Boom(Exception):
+        pass
+
+    def explode(*_: object, **__: object) -> None:
+        raise Boom("killed partway")
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(Path, "write_text", explode)
+        with pytest.raises(Boom):
+            write_atomic(target, '{"replacement": true}')
+
+    # The old artifact is untouched and still parses.
+    assert json.loads(target.read_text(encoding="utf-8")) == {"good": True}
+
+
+def test_the_temporary_file_is_not_left_behind(tmp_path: Path) -> None:
+    """Debris beside the artifact would be read by nothing and confuse everyone."""
+    from gridlab.scripts.build_atlas import write_atomic
+
+    target = tmp_path / "atlas.json"
+    write_atomic(target, '{"good": true}')
+
+    assert [p.name for p in tmp_path.iterdir()] == ["atlas.json"]
+
+
+def test_the_temporary_file_sits_beside_the_target(tmp_path: Path) -> None:
+    """`os.replace` is only atomic within one filesystem. `data/` is a bind mount, so a
+    system temp directory would be a different one and the rename would stop being atomic —
+    which is the entire point of doing this."""
+    from gridlab.scripts.build_atlas import write_atomic
+
+    seen: list[Path] = []
+    real = Path.write_text
+
+    def spy(self: Path, *args: object, **kwargs: object) -> int:
+        seen.append(self)
+        return real(self, *args, **kwargs)  # type: ignore[arg-type]
+
+    target = tmp_path / "nested" / "atlas.json"
+    target.parent.mkdir()
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(Path, "write_text", spy)
+        write_atomic(target, "{}")
+
+    assert seen and seen[0].parent == target.parent
+
+
+def test_a_reader_never_sees_a_partial_file(tmp_path: Path) -> None:
+    """The property that matters, stated directly: at no point during the write does the
+    target path hold anything other than the old content or the new."""
+    from gridlab.scripts.build_atlas import write_atomic
+
+    target = tmp_path / "atlas.json"
+    write_atomic(target, json.dumps({"version": 1}))
+
+    observed: list[Any] = []
+    real = os.replace
+
+    def watch(src: Any, dst: Any) -> None:
+        # Mid-write: the temp file exists, but the target must still be the old artifact.
+        observed.append(json.loads(Path(dst).read_text(encoding="utf-8")))
+        real(src, dst)
+
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(os, "replace", watch)
+        write_atomic(target, json.dumps({"version": 2}))
+
+    assert observed == [{"version": 1}], "the target changed before the rename"
+    assert json.loads(target.read_text(encoding="utf-8")) == {"version": 2}

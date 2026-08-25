@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -111,6 +112,32 @@ EUROPEAN_ZONES: tuple[str, ...] = (
     "SI",
     "SK",
 )
+
+
+def write_atomic(path: Path, text: str) -> None:
+    """Write a file so a reader never sees it half-written.
+
+    ``Path.write_text`` truncates before it writes, which opens a window where the file on
+    disk is a prefix of valid JSON. That is not theoretical: the sweep takes half a minute,
+    ``/api/v1/atlas`` reads the same file, and a truncated `atlas.json` makes the endpoint
+    return **500 Atlas file unreadable** rather than the previous good sweep. A run
+    interrupted partway leaves the same wreckage permanently.
+
+    Writing beside the target and renaming closes it. ``os.replace`` is atomic on POSIX and
+    on Windows, so a reader sees either the old file or the new one and never a mixture. The
+    temporary file is created in the destination directory because a rename across
+    filesystems is not atomic — and ``data/`` is a bind mount, so a system temp directory
+    would be exactly that.
+    """
+    tmp = path.with_name(f".{path.name}.tmp")
+    try:
+        tmp.write_text(text, encoding="utf-8")
+        os.replace(tmp, path)
+    except BaseException:
+        # Including KeyboardInterrupt: an interrupted sweep should leave no debris, and the
+        # previous artifact stays valid because it was never opened for writing.
+        tmp.unlink(missing_ok=True)
+        raise
 
 
 async def carbon_forecast(client: EMapsClient, zone: str) -> Series[ScalarObservation] | None:
@@ -368,9 +395,9 @@ async def _run(settings: Any, args: argparse.Namespace) -> int:
 
     args.out.mkdir(parents=True, exist_ok=True)
     dated = args.out / f"atlas-{datetime.now(UTC):%Y-%m-%d}.json"
-    dated.write_text(json.dumps(artifact, indent=2) + "\n", encoding="utf-8")
+    write_atomic(dated, json.dumps(artifact, indent=2) + "\n")
     # A stable name too, so the endpoint has something to read without globbing for a date.
-    (args.out / "atlas.json").write_text(json.dumps(artifact, indent=2) + "\n", encoding="utf-8")
+    write_atomic(args.out / "atlas.json", json.dumps(artifact, indent=2) + "\n")
 
     summary = artifact["summary"]
     print(f"\n  attempted   {summary['zones_attempted']}")
