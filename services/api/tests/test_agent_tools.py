@@ -532,3 +532,50 @@ async def test_other_intent_kinds_still_need_no_signal(ctx: t.ToolContext) -> No
     assert await t.propose_view(ctx, kind="focus", reason="the mix", panel="mix")
     assert await t.propose_view(ctx, kind="select_zone", reason="over here", zone=ZONE)
 
+
+# --- when the lab cannot be reached at all ----------------------------------
+
+
+async def test_a_dns_failure_says_it_is_not_temporary_and_names_the_fix() -> None:
+    """The message a real outage produced was accurate and useless.
+
+    A Docker daemon restart brought the containers back with the api attached to only one
+    of its two networks. The agent sits on `datanet` alone, so the hostname stopped
+    resolving — and the agent reported "[Errno -3] Temporary failure in name resolution"
+    while its own logs said it had started fine, held a key and registered every tool.
+    Nothing about it was temporary.
+    """
+    client = GridClient("http://api:8000")
+    client._client = httpx.AsyncClient(
+        base_url="http://api:8000",
+        transport=httpx.MockTransport(
+            lambda _: (_ for _ in ()).throw(
+                httpx.ConnectError("[Errno -3] Temporary failure in name resolution")
+            )
+        ),
+    )
+
+    with pytest.raises(GridUnavailable) as exc:
+        await client.status()
+
+    message = str(exc.value)
+    assert "not on a Docker network together" in message
+    assert "not a temporary failure" in message
+    assert "force-recreate" in message
+    # The original is kept: the reader may be looking for the errno.
+    assert "name resolution" in message
+
+
+async def test_an_ordinary_connection_failure_points_at_the_healthcheck() -> None:
+    """A refused connection is a different problem from an unresolvable name: the api is
+    probably still starting, and that is worth saying instead of blaming the network."""
+    client = GridClient("http://api:8000")
+    client._client = httpx.AsyncClient(
+        base_url="http://api:8000",
+        transport=httpx.MockTransport(
+            lambda _: (_ for _ in ()).throw(httpx.ConnectError("Connection refused"))
+        ),
+    )
+
+    with pytest.raises(GridUnavailable, match="healthcheck"):
+        await client.status()
