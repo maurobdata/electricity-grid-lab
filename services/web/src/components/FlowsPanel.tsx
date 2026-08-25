@@ -10,18 +10,22 @@
  * would be, and every research pass reached the same conclusion independently.
  */
 
-import { ProvenanceBadge, ValueFlags } from "@/components/ProvenanceBadge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PanelShell } from "@/components/PanelShell";
 import type { Flows } from "@/lib/api";
 import { formatPower } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import type { PanelId } from "@/lib/viewState";
 
 export function FlowsPanel({
   flows,
   unavailable,
+  focused,
+  onToggleFocus,
 }: {
   flows: Flows | undefined;
   unavailable?: boolean;
+  focused?: boolean;
+  onToggleFocus?: (id: PanelId) => void;
 }) {
   const edges = [...(flows?.edges ?? [])].sort(
     (a, b) => Math.abs(b.net_flow_mw) - Math.abs(a.net_flow_mw),
@@ -30,29 +34,30 @@ export function FlowsPanel({
   const netImport = flows?.net_import_mw ?? 0;
 
   return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Cross-border flows</CardTitle>
-          {flows && (
-            <p className="numeric mt-0.5 text-[0.7rem] text-muted-foreground">
-              {netImport >= 0 ? "Net importer" : "Net exporter"} ·{" "}
-              {formatPower(Math.abs(netImport))}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <ValueFlags isEstimated={flows?.is_estimated} isStale={flows?.is_stale} />
-          {flows && <ProvenanceBadge provenance={flows.provenance} />}
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        {unavailable || !flows ? (
-          <p className="py-6 text-center text-xs text-muted-foreground">
-            {unavailable ? "Not available for this zone." : "Loading…"}
-          </p>
-        ) : edges.length === 0 ? (
+    <PanelShell
+      id="flows"
+      title="Cross-border flows"
+      numericSubtitle
+      subtitle={
+        flows
+          ? `${netImport >= 0 ? "Net importer" : "Net exporter"} · ${formatPower(Math.abs(netImport))}`
+          : undefined
+      }
+      provenance={flows?.provenance}
+      isEstimated={flows?.is_estimated}
+      isStale={flows?.is_stale}
+      focused={focused}
+      onToggleFocus={onToggleFocus}
+      unavailable={
+        unavailable
+          ? "Not available for this zone."
+          : !flows
+            ? "Loading…"
+            : undefined
+      }
+    >
+      <>
+        {edges.length === 0 ? (
           <p className="py-6 text-center text-xs text-muted-foreground">
             No interconnector data.
           </p>
@@ -100,7 +105,7 @@ export function FlowsPanel({
             </div>
           </>
         )}
-      </CardContent>
-    </Card>
+      </>
+    </PanelShell>
   );
 }

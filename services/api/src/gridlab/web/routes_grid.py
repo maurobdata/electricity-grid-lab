@@ -104,6 +104,47 @@ async def price(zone: str, state: Lab) -> dict[str, Any]:
     return result.model_dump(mode="json")
 
 
+@router.get(
+    "/grid/{zone}/price/forward",
+    response_model=None,
+    summary="Day-ahead prices for delivery periods still ahead",
+)
+async def price_forward(zone: str, state: Lab) -> dict[str, Any]:
+    """Tomorrow's prices — an auction result, not a prediction.
+
+    The European day-ahead auction clears at 12:00 CET for the following delivery day, so
+    for most of any given afternoon these are **settled facts about hours that have not
+    happened yet**. That is a different kind of object from `/forecast`, and it is served
+    under a different path for exactly that reason: nothing above this layer should score a
+    cleared price against its own outcome.
+
+    Each point keeps its `source`. `nordpool.com` (or another exchange) is a published
+    auction result; anything else is Electricity Maps' own modelled value, and the two
+    arrive interleaved in one series.
+
+    **How far forward you get depends on when you ask.** Immediately after the noon
+    clearing the window reaches to the end of tomorrow; late in the evening it is closer to
+    24 hours. Carbon intensity forecasts reach 72 hours, so the window in which price *and*
+    carbon are both known is the shorter of the two — plan cross-signal work around roughly
+    a day, not three.
+
+    404 means this zone has no day-ahead price at all. Coverage is Europe plus a few zones.
+    """
+    await _require_zone(state, zone)
+    result = await state.source.price_forward(zone)
+    if result is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"No forward day-ahead price for {zone}. Either the zone has no day-ahead "
+                f"market, the plan does not include price - see /api/v1/capabilities - or "
+                f"in replay mode the scenario was recorded before forward price was "
+                f"captured. Re-record it with `make scenario-live`."
+            ),
+        )
+    return _series_payload(result, "price")
+
+
 @router.get("/grid/{zone}/flows", summary="Cross-border exchange")
 async def flows(zone: str, state: Lab) -> dict[str, Any]:
     """Net flow per neighbour. Positive is export, negative is import."""

@@ -121,6 +121,88 @@ returns `400 "Missing arguments \"node\""`.
 
 Level signals reject `history` despite advertising it: `latest`, `past`, `past-range` only.
 
+### `combined` is where forward price lives — verified
+
+`price-day-ahead/combined` **reaches into the future**, and it is the only forward price
+this plan can get. Measured from the committed fixture
+[`price-day-ahead__combined.json`](../fixtures/price-day-ahead__combined.json), recorded
+22 August 2026 at 20:03 UTC for DK-DK2:
+
+| | |
+|---|---|
+| Rows | 25, hourly |
+| Span | `2026-08-22T20:00Z` .. `2026-08-23T20:00Z` — **+24 h from the moment of recording** |
+| `source` | `nordpool.com` on every row |
+| `createdAt` / `updatedAt` | `2026-08-21T11:30Z` on the first two rows, `2026-08-22T11:29Z` from 22:00Z onward |
+
+That `createdAt` step is the **auction clearing**, visible in the data. SDAC clears at 12:00
+CET for the following delivery day, so a response fetched after lunch carries the rows that
+cleared at lunch. This is why forward price is reachable on a key with no `past-range`:
+tomorrow's prices are not a prediction that has to be modelled, they are **a settled auction
+result published ahead of delivery**.
+
+Consequences, all of which the code now encodes:
+
+- Use `combined`, **not** `forecast`. `price-day-ahead/forecast` rejects `horizonHours`
+  outright — `400 "Missing or invalid date parameter \"start\""` — and demands a window you
+  would have to guess. `FORECAST_NEEDS_WINDOW` in `emaps/signals.py` already refuses it
+  locally.
+- **How far forward you get depends on when you ask.** The fixture was captured at 20:03Z
+  and reached +24 h. Immediately after the 11:29Z clearing the window should reach further,
+  to the end of tomorrow. Not yet measured — see the validation list below.
+- Split the response at your clock. It reaches backwards as well as forwards, and the
+  backward half is what `history` already returns.
+- Keep `source` per row. `combined` interleaves cleared prices with modelled ones, and it is
+  the only field that tells them apart once the envelope is gone.
+
+> #### The window where price and carbon are both known is about a day
+>
+> Carbon intensity forecasts reach **72 hours**. Mix, flows and every load signal reach
+> **24 hours only**. Forward price reaches to the end of the delivery day the auction
+> covered.
+>
+> So any analysis joining price with carbon — or either with flows — is bounded by the
+> shortest of these, which is roughly **24 hours**, not 72. Design cross-signal work to a
+> day. Discovering this on stage would be worse.
+
+#### Still unmeasured about forward price
+
+Re-check these the moment a trial or event key exists; each changes what is buildable.
+
+1. `combined` with `temporalGranularity=15_minutes`. The fixture is **hourly**. European
+   day-ahead has cleared in 15-minute MTUs since 1 October 2025, so tomorrow may have 96
+   points rather than 24 — but that is not verified on this signal, and no code should
+   assume it.
+2. `price-day-ahead/forecast` with an explicit `start`/`end`. Never called once. It may give
+   a longer or cleaner window than `combined` — and given the finding below, it is now the
+   only candidate for reaching further than a day.
+3. Day-ahead price coverage across the 350 zones — documented as Europe plus a few, never
+   enumerated.
+
+#### Measured since: `combined` is a rolling +24 h window
+
+The open question was whether `combined` reaches past +24 h when called shortly after the
+noon clearing. **It does not.** Two live recordings, at opposite ends of the day:
+
+| Recorded at | Rows | Span | Auction cleared |
+|---|---|---|---|
+| 2026-08-23 19:00Z | 25 | `08-23 19:00Z` → `08-24 19:00Z` | `08-23 11:24Z` |
+| 2026-08-24 08:13Z | 25 | `08-24 08:00Z` → `08-25 08:00Z` | `08-24 07:32Z` |
+
+Both are exactly 25 hourly rows anchored on the current hour, **regardless of proximity to
+the clearing** — the second was fetched 41 minutes after its auction cleared and still
+stopped at +24 h. So `combined` is a rolling window, not a view of the delivery day: it
+truncates the published auction result rather than serving all of it.
+
+Consequences:
+
+- The forward price horizon is **a flat 24 hours from whenever you ask**, and it does not
+  grow after lunch. Anything planning around "tomorrow's whole delivery day" is planning
+  around a window this endpoint does not give.
+- Recording in the morning and recording in the evening yield the same *depth*, so the
+  daily recording can run at any hour without losing forward price.
+- If a longer forward window is ever needed, item 2 above is the only remaining candidate.
+
 ---
 
 ## Forecast horizons are per signal, not per plan

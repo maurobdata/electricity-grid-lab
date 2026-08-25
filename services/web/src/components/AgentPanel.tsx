@@ -13,10 +13,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import { ProvenanceBadge } from "@/components/ProvenanceBadge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Provenance } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import type { ViewIntent } from "@/lib/viewState";
 
 const AGENT = import.meta.env.VITE_AGENT_URL ?? "http://localhost:8001";
 
@@ -33,6 +36,14 @@ interface Turn {
   question: string;
   text: string;
   tools: ToolTrace[];
+  /**
+   * Views the agent offered this turn.
+   *
+   * Offers, not actions. They render as controls the user may press or ignore, and nothing
+   * moves until one is pressed — see ADR 0010. The agent cannot reach the interface; it can
+   * only ask.
+   */
+  intents: ViewIntent[];
   error?: string;
   done?: boolean;
   rounds?: number;
@@ -45,7 +56,26 @@ const SUGGESTIONS = [
   "Compare the zones available and explain the spread.",
 ];
 
-export function AgentPanel({ zone }: { zone: string | undefined }) {
+export function AgentPanel({
+  zone,
+  provenance,
+  onIntent,
+  blocked,
+}: {
+  zone: string | undefined;
+  /**
+   * What the agent is currently looking at.
+   *
+   * Its answers quote numbers from whatever the lab is serving, so the panel carries the
+   * same badge every other panel does. The prompt already requires it to say so in prose;
+   * this is the version that survives being screenshotted.
+   */
+  provenance?: Provenance;
+  /** Applied only when the user presses the control. */
+  onIntent?: (intent: ViewIntent) => void;
+  /** Why an offered view cannot be carried out right now, or null when it can. */
+  blocked?: (intent: ViewIntent) => string | null;
+}) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -69,7 +99,7 @@ export function AgentPanel({ zone }: { zone: string | undefined }) {
     setBusy(true);
 
     const index = turns.length;
-    setTurns((current) => [...current, { question, text: "", tools: [] }]);
+    setTurns((current) => [...current, { question, text: "", tools: [], intents: [] }]);
 
     const patch = (fn: (turn: Turn) => Turn) =>
       setTurns((current) => current.map((turn, i) => (i === index ? fn(turn) : turn)));
@@ -103,7 +133,13 @@ export function AgentPanel({ zone }: { zone: string | undefined }) {
       for (;;) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true });
+        // Normalise line endings before looking for a frame boundary.
+        //
+        // SSE separates frames with a blank line, and the server sends CRLF — so the
+        // separator on the wire is `\r\n\r\n`, which contains no `\n\n` for `split` to
+        // find. Without this the buffer grew forever, no frame was ever parsed, and the
+        // panel rendered an empty answer while the agent ran a complete turn behind it.
+        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
 
         const frames = buffer.split("\n\n");
         buffer = frames.pop() ?? "";
@@ -137,10 +173,14 @@ export function AgentPanel({ zone }: { zone: string | undefined }) {
         <div>
           <CardTitle>Agent</CardTitle>
           <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-            Seven read-only tools. Its working is shown, so its answers can be checked.
+            Read-only tools, and its working is shown — so its answers can be checked.
+            Any view it offers is a suggestion until you press it.
           </p>
         </div>
-        {hasKey === false && <Badge variant="warn">no API key</Badge>}
+        <div className="flex shrink-0 items-center gap-1.5">
+          {hasKey === false && <Badge variant="warn">no API key</Badge>}
+          {provenance && <ProvenanceBadge provenance={provenance} />}
+        </div>
       </CardHeader>
 
       <CardContent>
@@ -180,6 +220,32 @@ export function AgentPanel({ zone }: { zone: string | undefined }) {
                 <div className="text-sm whitespace-pre-wrap">{turn.text}</div>
               )}
 
+              {turn.intents.length > 0 && onIntent && (
+                <div className="flex flex-wrap gap-1.5">
+                  {turn.intents.map((intent) => {
+                    const why = blocked?.(intent) ?? null;
+                    return (
+                      <button
+                        key={intent.reason}
+                        onClick={() => onIntent(intent)}
+                        disabled={why !== null}
+                        title={why ?? "Change what is on screen to this."}
+                        className={cn(
+                          "rounded-md border border-border px-2 py-1 text-[0.7rem] transition-colors",
+                          why === null
+                            ? "hover:bg-accent"
+                            : "cursor-not-allowed opacity-40",
+                        )}
+                      >
+                        {/* The agent's own words, because this is a label on a button and
+                            an unexplained view change is disorienting. */}
+                        {intent.reason}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
               {turn.error && (
                 <p className="rounded-md border border-destructive/40 bg-destructive/10 px-2.5 py-2 text-xs text-destructive">
                   {turn.error}
@@ -212,7 +278,7 @@ export function AgentPanel({ zone }: { zone: string | undefined }) {
                 ? "Set ANTHROPIC_API_KEY in .env to enable the agent"
                 : "Ask about the grid…"
             }
-            className="h-8 flex-1 rounded-md border border-border bg-muted px-2.5 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-40"
+            className="h-10 flex-1 rounded-md border border-border bg-muted px-2.5 text-xs sm:h-8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-40"
           />
           <Button type="submit" variant="default" disabled={busy || !input.trim()}>
             {busy ? "…" : "Ask"}
@@ -278,6 +344,7 @@ type SseEvent =
       event: "tool_result";
       data: { id: string; name: string; ok: boolean; content: unknown; duration_ms: number };
     }
+  | { event: "view_intent"; data: ViewIntent }
   | { event: "done"; data: { stop_reason: string | null; rounds: number } }
   | { event: "error"; data: { message: string; kind: string } };
 
@@ -291,6 +358,11 @@ function apply(turn: Turn, event: string, data: unknown): Turn {
     case "tool_call":
       return {
         ...turn,
+        // A tool call ends a paragraph. The model narrates before calling ("I'll check
+        // whether...") and again after ("Good news: they do align"), and both arrive as
+        // plain text deltas into one string — so without a break they render as
+        // "...show you the window.Good news: they do align".
+        text: turn.text.trim() ? `${turn.text.trimEnd()}\n\n` : turn.text,
         tools: [
           ...turn.tools,
           {
@@ -315,6 +387,13 @@ function apply(turn: Turn, event: string, data: unknown): Turn {
             : tool,
         ),
       };
+
+    case "view_intent":
+      // Deduplicated by reason: a model that proposes the same view twice in one turn
+      // should not produce two identical buttons.
+      return turn.intents.some((existing) => existing.reason === frame.data.reason)
+        ? turn
+        : { ...turn, intents: [...turn.intents, frame.data] };
 
     case "done":
       return { ...turn, done: true, rounds: frame.data.rounds };

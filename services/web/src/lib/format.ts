@@ -81,23 +81,45 @@ export function formatPower(mw: number | null | undefined) {
 }
 
 /**
- * Times are rendered in the browser's own zone rather than UTC.
+ * Everything on this page is UTC, and says so.
  *
- * A grid is a local thing: "the evening peak" means something to a person in Copenhagen
- * and nothing in UTC. Everything on the wire stays UTC; only the display shifts.
+ * This used to render in the browser's own zone, on the argument that "the evening peak"
+ * means something locally and nothing in UTC. That argument does not survive contact with
+ * the rest of the system, for two reasons.
+ *
+ * **The browser's zone is not the grid's zone.** Reading DK-DK2 from Brussels rendered
+ * Danish data in Belgian time — a third arbitrary zone, not the local time of anything on
+ * screen. The lab shows several zones at once and the atlas shows forty-one; there is no
+ * single local time for that page.
+ *
+ * **The server renders times too, and it cannot know yours.** Finding headlines are
+ * composed in `analysis/events.py` in UTC. With the client on local time, a chip said
+ * "by Mon 11:00" and the band it highlighted sat under an axis reading 13:00. Both numbers
+ * were right and the page contradicted itself.
+ *
+ * So: one convention, and it is visible. `UTC` is appended wherever a full timestamp is
+ * shown, and charts carry it once on the axis rather than on every tick.
  */
+export const TIME_ZONE_LABEL = "UTC";
+
 export function formatTime(iso: string) {
-  return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return new Date(iso).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC",
+  });
 }
 
-export function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString([], {
+export function formatDateTime(iso: string, { withZone = true } = {}) {
+  const text = new Date(iso).toLocaleString("en-GB", {
     weekday: "short",
     day: "numeric",
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "UTC",
   });
+  return withZone ? `${text} ${TIME_ZONE_LABEL}` : text;
 }
 
 export function formatRelative(iso: string, now: Date = new Date()) {

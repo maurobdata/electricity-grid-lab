@@ -19,6 +19,7 @@ import pytest
 
 from gridlab.agent import tools as t
 from gridlab.agent.gridclient import GridClient, GridUnavailable
+from gridlab.agent.prompts import system_prompt
 from gridstub import ZONE, _api_handler
 
 
@@ -34,10 +35,16 @@ def ctx() -> Iterator[t.ToolContext]:
 # --- the boundary itself ----------------------------------------------------
 
 
-def test_there_are_exactly_the_seven_named_tools() -> None:
-    """The brief names seven. Anything else appearing here is a decision that needs an ADR,
-    not a quiet addition."""
+def test_the_tool_surface_is_exactly_this_list() -> None:
+    """The declared list **is** the security boundary (ADR 0005), so it is pinned here.
+
+    A tool appearing in this set is a decision. The seven at the top are the ones the brief
+    named; the three below were added with the analysis layer, and every one of them is
+    read-only — which is why they needed no ADR of their own, only this test being updated
+    deliberately rather than a number being bumped.
+    """
     assert {tool.name for tool in t.build_tools()} == {
+        # the original seven
         "get_current_grid",
         "get_forecast",
         "get_mix",
@@ -45,7 +52,20 @@ def test_there_are_exactly_the_seven_named_tools() -> None:
         "get_flows",
         "query_history",
         "compare_zones",
+        # added with gridlab.analysis — read-only, ADR 0009
+        "get_forward_price",
+        "find_events",
+        "explain_divergence",
+        # the interaction layer — proposes a view, changes nothing, ADR 0010
+        "propose_view",
     }
+
+
+def test_only_one_tool_may_steer_the_interface() -> None:
+    """`proposes_view` decides which results become a `view_intent` event, so it is part of
+    the boundary rather than a convenience flag. A second tool acquiring it should be a
+    decision somebody made, not something that happened."""
+    assert {tool.name for tool in t.build_tools() if tool.proposes_view} == {"propose_view"}
 
 
 def test_every_schema_is_strict_and_closed() -> None:
@@ -107,6 +127,9 @@ async def test_every_tool_validates_its_zone(ctx: t.ToolContext) -> None:
         lambda: t.get_forecast(ctx, zone="ZZ"),
         lambda: t.query_history(ctx, zone="ZZ"),
         lambda: t.compare_zones(ctx, zones=["ZZ", "YY"]),
+        lambda: t.get_forward_price(ctx, zone="ZZ"),
+        lambda: t.find_events(ctx, zone="ZZ"),
+        lambda: t.explain_divergence(ctx, zone="ZZ"),
     ):
         with pytest.raises(GridUnavailable):
             await call()
@@ -210,6 +233,8 @@ async def test_every_tool_result_carries_provenance(ctx: t.ToolContext) -> None:
         await t.get_forecast(ctx, zone=ZONE),
         await t.query_history(ctx, zone=ZONE),
         await t.compare_zones(ctx, zones=[ZONE, "DK-DK2"]),
+        await t.get_forward_price(ctx, zone=ZONE),
+        await t.explain_divergence(ctx, zone=ZONE),
     ):
         assert result.get("provenance") == "recorded", result
 
@@ -301,3 +326,256 @@ def test_recorded_sessions_are_told_not_to_speak_in_the_present() -> None:
 
     prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
     assert "not current" in prompt
+
+
+# --- the analysis tools -----------------------------------------------------
+
+
+async def test_forward_price_is_never_called_a_forecast(ctx: t.ToolContext) -> None:
+    """The distinction the whole endpoint exists to preserve. A cleared auction result is
+    not a prediction, and a model told otherwise will score it against an outcome."""
+    result = await t.get_forward_price(ctx, zone=ZONE)
+    note = result["_note"]
+    assert "not a forecast" in note
+    assert "do not score them against an outcome" in note.lower()
+
+
+async def test_forward_price_says_how_many_periods_actually_cleared(
+    ctx: t.ToolContext,
+) -> None:
+    """`combined` blends settled and modelled prices. A model that cannot tell them apart
+    will present a model's guess as a market outcome."""
+    result = await t.get_forward_price(ctx, zone=ZONE)
+    assert "6 of 12 were set by a published exchange" in result["_note"]
+
+
+async def test_find_events_returns_the_deterministic_findings(ctx: t.ToolContext) -> None:
+    result = await t.find_events(ctx, zone=ZONE)
+    assert result["count"] == 1
+    finding = result["findings"][0]
+    assert finding["kind"] == "negative_price"
+    assert finding["evidence"], "a finding reached the model without its evidence"
+    assert finding["provenance"] == "recorded"
+
+
+async def test_find_events_tells_the_model_not_to_recompute(ctx: t.ToolContext) -> None:
+    """The division of labour that keeps numbers honest: the lab computes, the model
+    explains. A model that re-derives a figure has made it up as far as the eval is
+    concerned, because it will not appear in the tool traffic."""
+    note = (await t.find_events(ctx, zone=ZONE))["_note"]
+    assert "do not recompute them" in note
+    assert "not by a model" in note
+
+
+async def test_divergence_reports_the_cost_on_both_objectives(ctx: t.ToolContext) -> None:
+    result = await t.explain_divergence(ctx, zone=ZONE)
+    assert result["hours_apart"] == 7.0
+    assert result["cheapest_window"]["other_mean"] == 210.0
+    assert result["cleanest_window"]["other_mean"] == 30.0
+    assert result["agreement"] == "weak"
+
+
+async def test_divergence_forbids_recommending_a_schedule(ctx: t.ToolContext) -> None:
+    """The solver's job, not the model's — and the choice is the user's, not either."""
+    note = (await t.explain_divergence(ctx, zone=ZONE))["_note"]
+    assert "Do not recommend a schedule" in note
+    assert "cite get_flows" in note
+
+
+async def test_divergence_passes_its_caveats_through(ctx: t.ToolContext) -> None:
+    """Caveats written where the limitation is known must survive the trip to the model,
+    or the model cannot disclose what it does not know."""
+    result = await t.explain_divergence(ctx, zone=ZONE)
+    assert result["caveats"], "the caveats were dropped between the API and the model"
+
+
+# --- proposing a view -------------------------------------------------------
+
+
+async def test_a_proposed_view_is_returned_not_applied(ctx: t.ToolContext) -> None:
+    """The whole design of ADR 0010. The intent travels outward; nothing on the server
+    moved, and nothing will if the user ignores it."""
+    result = await t.propose_view(
+        ctx,
+        kind="highlight_window",
+        reason="show the negative-price window tonight",
+        zone=ZONE,
+        signal="price",
+        at="2026-08-23T10:00:00Z",
+        until="2026-08-23T11:00:00Z",
+    )
+    assert result["intent"]["kind"] == "highlight_window"
+    assert result["intent"]["zone"] == ZONE
+    assert result["intent"]["reason"]
+    assert "not applied" in result["_note"]
+
+
+async def test_a_view_the_interface_cannot_perform_is_refused(ctx: t.ToolContext) -> None:
+    """Refused where it is built. An unknown verb would otherwise arrive at the client as a
+    control that silently does nothing when clicked."""
+    with pytest.raises(GridUnavailable, match="highlight_window"):
+        await t.propose_view(ctx, kind="teleport", reason="why not")
+
+
+async def test_a_proposed_view_cannot_name_an_unknown_panel(ctx: t.ToolContext) -> None:
+    with pytest.raises(GridUnavailable, match="panel must be"):
+        await t.propose_view(ctx, kind="focus", reason="look here", panel="dashboard")
+
+
+async def test_a_proposed_view_cannot_name_an_unknown_signal(ctx: t.ToolContext) -> None:
+    with pytest.raises(GridUnavailable, match="signal must be"):
+        await t.propose_view(ctx, kind="set_signal", reason="look here", signal="vibes")
+
+
+async def test_a_proposed_view_goes_through_the_same_zone_allowlist(
+    ctx: t.ToolContext,
+) -> None:
+    """An intent naming a zone that does not exist would break the page when clicked."""
+    with pytest.raises(GridUnavailable):
+        await t.propose_view(ctx, kind="select_zone", reason="over here", zone="ZZ")
+    with pytest.raises(GridUnavailable):
+        await t.propose_view(ctx, kind="compare", reason="these two", zones=[ZONE, "ZZ"])
+
+
+async def test_a_proposed_view_rejects_a_time_it_cannot_parse(ctx: t.ToolContext) -> None:
+    # A signal is supplied so the window clears the required-signal check and reaches the
+    # time parsing this test is actually about.
+    with pytest.raises(GridUnavailable, match="ISO 8601"):
+        await t.propose_view(
+            ctx, kind="highlight_window", reason="tonight", signal="price", at="this evening"
+        )
+
+
+async def test_a_proposed_view_reminds_the_model_to_answer_in_words(
+    ctx: t.ToolContext,
+) -> None:
+    """A view is an addition, never the substance. Someone who never clicks must still get
+    an answer."""
+    result = await t.propose_view(ctx, kind="focus", reason="the mix", panel="mix")
+    assert "stand on its own" in result["_note"]
+
+
+# --- the prompt's new job ---------------------------------------------------
+
+
+def test_prompt_sends_the_model_to_the_detectors_first() -> None:
+    """The division of labour that keeps numbers checkable: the lab computes, the model
+    explains. A model that searches a series itself derives figures nobody can verify."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "find_events" in prompt
+    assert "before searching a series yourself" in prompt
+
+
+def test_prompt_forbids_arithmetic_the_model_did_in_its_head() -> None:
+    """The deterministic eval pulls numbers out of the answer and looks for them in the
+    tool traffic. A number the model averaged itself will not be there."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "numbers you worked out yourself" in prompt
+
+
+def test_prompt_says_a_forward_price_is_not_a_forecast() -> None:
+    """The distinction ADR 0012 exists to preserve, restated where the model will read it."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "Forward prices are not a forecast" in prompt
+    assert "Never call them predictions" in prompt
+
+
+def test_prompt_requires_a_flows_citation_for_an_import_claim() -> None:
+    """An import story asserted without checking the flows is exactly the plausible-sounding
+    claim this lab exists to make checkable."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "get_flows` before claiming an import effect" in prompt
+
+
+def test_prompt_forbids_recommending_a_schedule() -> None:
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "do not recommend a schedule" in prompt.lower()
+
+
+def test_prompt_says_a_proposed_view_moves_nothing() -> None:
+    """If the model believes it is driving the interface, it will write answers that only
+    make sense to someone who clicked."""
+    prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
+    assert "does not move anything" in prompt.lower()
+    assert "as though nobody will click" in prompt
+
+
+async def test_a_highlight_must_name_the_signal_it_is_about(ctx: t.ToolContext) -> None:
+    """Enforced in code, not asked for in the prompt.
+
+    Every deterministic detector names one: a negative-price window sets `price`, a carbon
+    swing sets `carbon_intensity`. An agent window without a signal leaves the band on
+    whatever chart was already open — observed in a browser as an answer about price and
+    carbon marking a stretch of a *renewable share* chart.
+    """
+    with pytest.raises(GridUnavailable, match="signal"):
+        await t.propose_view(
+            ctx, kind="highlight_window", reason="the cheap window", at="2026-08-24T10:00:00Z"
+        )
+
+
+async def test_a_highlight_with_a_signal_is_accepted(ctx: t.ToolContext) -> None:
+    result = await t.propose_view(
+        ctx,
+        kind="highlight_window",
+        reason="the cheap window",
+        signal="price",
+        at="2026-08-24T10:00:00Z",
+        until="2026-08-24T13:00:00Z",
+    )
+    assert result["intent"]["signal"] == "price"
+
+
+async def test_other_intent_kinds_still_need_no_signal(ctx: t.ToolContext) -> None:
+    """The requirement is specific to a window. Focusing a panel or picking a zone is not
+    about a measurement, and demanding one would be noise."""
+    assert await t.propose_view(ctx, kind="focus", reason="the mix", panel="mix")
+    assert await t.propose_view(ctx, kind="select_zone", reason="over here", zone=ZONE)
+
+
+# --- when the lab cannot be reached at all ----------------------------------
+
+
+async def test_a_dns_failure_says_it_is_not_temporary_and_names_the_fix() -> None:
+    """The message a real outage produced was accurate and useless.
+
+    A Docker daemon restart brought the containers back with the api attached to only one
+    of its two networks. The agent sits on `datanet` alone, so the hostname stopped
+    resolving — and the agent reported "[Errno -3] Temporary failure in name resolution"
+    while its own logs said it had started fine, held a key and registered every tool.
+    Nothing about it was temporary.
+    """
+    client = GridClient("http://api:8000")
+    client._client = httpx.AsyncClient(
+        base_url="http://api:8000",
+        transport=httpx.MockTransport(
+            lambda _: (_ for _ in ()).throw(
+                httpx.ConnectError("[Errno -3] Temporary failure in name resolution")
+            )
+        ),
+    )
+
+    with pytest.raises(GridUnavailable) as exc:
+        await client.status()
+
+    message = str(exc.value)
+    assert "not on a Docker network together" in message
+    assert "not a temporary failure" in message
+    assert "force-recreate" in message
+    # The original is kept: the reader may be looking for the errno.
+    assert "name resolution" in message
+
+
+async def test_an_ordinary_connection_failure_points_at_the_healthcheck() -> None:
+    """A refused connection is a different problem from an unresolvable name: the api is
+    probably still starting, and that is worth saying instead of blaming the network."""
+    client = GridClient("http://api:8000")
+    client._client = httpx.AsyncClient(
+        base_url="http://api:8000",
+        transport=httpx.MockTransport(
+            lambda _: (_ for _ in ()).throw(httpx.ConnectError("Connection refused"))
+        ),
+    )
+
+    with pytest.raises(GridUnavailable, match="healthcheck"):
+        await client.status()

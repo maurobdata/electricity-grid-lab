@@ -16,7 +16,7 @@ NOCONV := MSYS_NO_PATHCONV=1
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs restart build web pwa test lint fmt probe record scenario scenario-live demo eval shell clean
+.PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live atlas demo eval shell clean
 
 help:  ## Show this help
 > @grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -49,8 +49,15 @@ web: .env  ## Start the PWA as well (API + agent must be up)
 
 pwa: web  ## Alias for web
 
-test:  ## Run the offline test suite (no network, no key)
+# The dev server deliberately does not register a service worker -- it would fight hot
+# reload -- so `make web` cannot show you the installed-app behaviour. This builds the PWA
+# and serves it the way a browser would really receive it.
+preview:  ## Build the PWA and serve it like production (service worker active), :4173
+> $(COMPOSE) --profile web run --rm --no-deps -p 4173:4173 web sh -c "npm run build && npx vite preview --host 0.0.0.0 --port 4173"
+
+test:  ## Run the offline test suite (no network, no key) -- API and web
 > $(API) pytest -q
+> $(COMPOSE) --profile web run --rm --no-deps -T web npm test
 
 lint:  ## Ruff check + mypy --strict, and the web typecheck
 > $(API) sh -c "ruff check src tests && ruff format --check src tests && mypy src"
@@ -80,6 +87,12 @@ scenario:  ## Regenerate the bundled (synthetic) replay scenarios
 # ZONES and GRAN are overridable: `make scenario-live ZONES=DK-DK2,DE,PL GRAN=15_minutes`
 ZONES ?= DK-DK2,DE
 GRAN  ?= hourly
+
+# Writes into data/, which the api container mounts, so /api/v1/atlas can serve it. A live
+# sweep with no replay equivalent: one zone's numbers can be replayed, a picture of every
+# grid cannot. ARGS passes through -- `make atlas ARGS=--all` sweeps every reachable zone.
+atlas: .env  ## Cheap-vs-clean across many zones -> data/atlas.json (live, throttled)
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T --volume "$(CURDIR)/data":/out api python -m gridlab.scripts.build_atlas --out /out $(ARGS)
 
 scenario-live: .env  ## Record a REAL scenario from the live API into scenarios/
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T \

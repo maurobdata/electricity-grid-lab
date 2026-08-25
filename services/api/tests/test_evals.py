@@ -308,3 +308,50 @@ def test_all_tools_failed_distinguishes_from_no_tools() -> None:
     """ "Everything refused" and "nothing was asked" call for different answers."""
     assert example("filled_the_gap").all_tools_failed
     assert not example("answered_from_memory").all_tools_failed
+
+
+# --- dates are not measurements ---------------------------------------------
+#
+# A live run on 24 August 2026 failed three otherwise-correct answers on "on 23 August",
+# "24 August" and the year in "23 August 2026". The grounding check is the one the README
+# calls most important, and one that cries wolf on a calendar date is one people learn to
+# ignore — so each shape that bit is pinned here.
+
+
+def test_a_prose_date_is_not_read_as_a_measurement() -> None:
+    from gridlab.agent.evals.checks import _numbers
+
+    for phrase in (
+        "At 19:00 UTC on 23 August, the price was",
+        "At 19:00 UTC on 23 August 2026, Germany had",
+        "cheapest and cleanest coincide on 24 August",
+        "recorded on Aug 23, 2026",
+        "the reading from August 23rd",
+    ):
+        assert _numbers(phrase) == [], f"a date leaked through as a number: {phrase!r}"
+
+
+def test_an_iso_timestamp_is_still_stripped() -> None:
+    from gridlab.agent.evals.checks import _numbers
+
+    assert _numbers("At 2026-08-23T19:00:00Z in DK-DK2") == []
+
+
+def test_a_real_measurement_beside_a_date_still_counts() -> None:
+    """The strip must not swallow the figure it sits next to — that would make the check
+    pass everything, which is the failure mode a permissive checker hides best."""
+    from gridlab.agent.evals.checks import _numbers
+
+    assert _numbers("On 23 August the price was 178.05 EUR/MWh") == [178.05]
+    assert _numbers("August 23, 2026: carbon reached 370 gCO2eq/kWh") == [370.0]
+    # The unit itself must not contribute one either: the 2 in "gCO2eq" is a chemical
+    # formula. It passed before only because 2 happens to be on the prose allowlist.
+    assert 2.0 not in _numbers("carbon reached 370 gCO2eq/kWh")
+
+
+def test_an_invented_figure_is_still_caught_beside_a_date() -> None:
+    """The genuine catch from the same run: the agent hedged its way into a price range no
+    tool had returned — "setting prices around EUR180-220/MWh"."""
+    from gridlab.agent.evals.checks import _numbers
+
+    assert 180.0 in _numbers("On 24 August the marginal unit sets prices around 180-220/MWh")

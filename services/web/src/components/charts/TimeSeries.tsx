@@ -16,7 +16,7 @@
 import { useId, useMemo, useState } from "react";
 
 import type { Provenance, ScalarObservation } from "@/lib/api";
-import { formatNumber, formatTime } from "@/lib/format";
+import { TIME_ZONE_LABEL, formatNumber, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export interface SeriesSpec {
@@ -36,6 +36,14 @@ interface Props {
   height?: number;
   /** Pin the lower bound to zero. Right for percentages, wrong for prices, which go below. */
   zeroBased?: boolean;
+  /**
+   * A stretch of time to mark, drawn behind everything else.
+   *
+   * Set when a finding or an agent answer is about a particular window. Deliberately a
+   * band rather than a crop: the point is to show *where* in the day the thing happens,
+   * which is lost the moment the surrounding hours are thrown away.
+   */
+  highlight?: { from: string; to: string };
   className?: string;
   emptyMessage?: string;
 }
@@ -49,6 +57,7 @@ export function TimeSeries({
   nowAt,
   height = 168,
   zeroBased = false,
+  highlight,
   className,
   emptyMessage = "No data",
 }: Props) {
@@ -146,6 +155,38 @@ export function TimeSeries({
             <stop offset="100%" stopColor={series[0]?.color ?? "#38bdf8"} stopOpacity="0" />
           </linearGradient>
         </defs>
+
+        {highlight &&
+          (() => {
+            /*
+             * A window that does not intersect the data is not drawn at all.
+             *
+             * This used to clamp to the plot edges so a partly-visible window still marked
+             * the part that was on screen. That is right for an overlap and badly wrong for
+             * a window that misses entirely: switching from an August recording to the May
+             * scenario left an August highlight pinned to the right-hand edge as a two-pixel
+             * sliver, which reads as "something happens at the very end of this window".
+             * Nothing is more misleading than a mark that looks meaningful and is not.
+             */
+            const from = new Date(highlight.from).getTime();
+            const to = new Date(highlight.to).getTime();
+            if (Math.max(from, to) < model.tMin || Math.min(from, to) > model.tMax) return null;
+
+            const left = Math.max(PADDING.left, Math.min(x(highlight.from), width - PADDING.right));
+            const right = Math.max(PADDING.left, Math.min(x(highlight.to), width - PADDING.right));
+            // A zero-length window is an instant, not nothing: give it enough width to see.
+            const bandWidth = Math.max(Math.abs(right - left), 2);
+            return (
+              <rect
+                x={Math.min(left, right)}
+                y={PADDING.top}
+                width={bandWidth}
+                height={plotHeight}
+                className="fill-primary/15 stroke-primary/40"
+                strokeWidth={0.5}
+              />
+            );
+          })()}
 
         {ticks.map((tick) => (
           <g key={tick}>
@@ -255,6 +296,17 @@ export function TimeSeries({
           className="fill-muted-foreground text-[9px]"
         >
           {formatTime(new Date(model.tMin).toISOString())}
+        </text>
+        {/* The zone, once, rather than on every tick. Without it the axis reads as local
+            time and silently disagrees with the finding headlines, which the server
+            composes in UTC. */}
+        <text
+          x={(PADDING.left + width - PADDING.right) / 2}
+          y={height - 5}
+          textAnchor="middle"
+          className="fill-muted-foreground/70 text-[8px]"
+        >
+          {TIME_ZONE_LABEL}
         </text>
         <text
           x={width - PADDING.right}

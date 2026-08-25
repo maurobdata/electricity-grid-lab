@@ -35,7 +35,7 @@ from pathlib import Path
 from typing import Any
 
 from gridlab.config import get_settings
-from gridlab.domain.models import Provenance
+from gridlab.domain.models import Price, Provenance
 from gridlab.emaps import errors, normalize
 from gridlab.emaps.client import EMapsClient
 from gridlab.emaps.signals import (
@@ -113,6 +113,26 @@ class Recorder:
                 self.skipped.append(f"{zone} {field} row ({exc})")
         return tuple(sorted(points, key=lambda p: p.at))
 
+    async def price_series(self, zone: str) -> tuple[sc.PricePoint, ...]:
+        """Price history, which carries one field the other scalars do not.
+
+        ``source`` names the exchange that settled each period, and it is the only thing
+        distinguishing a cleared auction result from Electricity Maps' modelled value once
+        the response envelope is gone. That is worth its own converter rather than a branch
+        inside :meth:`scalar_series`.
+        """
+        rows = await self._history_rows(Signal.PRICE_DAY_AHEAD, zone)
+        if rows is None:
+            return ()
+
+        points: list[sc.PricePoint] = []
+        for row in rows:
+            try:
+                points.append(sc.from_price(normalize.price(dict(row), zone=zone)))
+            except errors.ElectricityMapsError as exc:
+                self.skipped.append(f"{zone} price row ({exc})")
+        return tuple(sorted(points, key=lambda p: p.at))
+
     async def mix_series(self, zone: str) -> tuple[sc.MixPoint, ...]:
         """Both breakdowns, in one series.
 
@@ -153,8 +173,9 @@ class Recorder:
         signal, normalizer = SCALAR_SIGNALS[field]
         horizons = supported_horizons(signal)
         if not horizons:
-            # price-day-ahead forecasts need an explicit window rather than a horizon;
-            # `combined` is the better forward view and is left for a later pass.
+            # price-day-ahead has no horizon-shaped forecast at all. Its forward view is
+            # `combined`, captured separately by `price_forward` — a cleared auction result
+            # is not a forecast and is deliberately not filed among them.
             return None
 
         horizon = max(horizons)
@@ -179,9 +200,47 @@ class Recorder:
             points=tuple(sc.from_observation(p) for p in series.points),
         )
 
+    async def price_forward(self, zone: str) -> sc.PriceForward | None:
+        """Day-ahead prices for delivery periods that have not happened yet.
+
+        From ``price-day-ahead/combined``, which needs only a zone and returns published
+        auction prices alongside Electricity Maps' modelled ones, each row labelled with
+        its ``source``. ``price-day-ahead/forecast`` is the wrong endpoint here: it rejects
+        ``horizonHours`` and demands a window we would have to guess.
+
+        The response reaches backwards as well as forwards, and the whole of it is kept.
+        Clipping to "the future" would bake the recording time into the file, and a replay
+        clock starts wherever the scenario starts — the split belongs to whoever is reading
+        it, not to whoever wrote it.
+        """
+        try:
+            body = await self._client.fetch(Signal.PRICE_DAY_AHEAD, Temporality.COMBINED, zone=zone)
+        except errors.ElectricityMapsError as exc:
+            self.skipped.append(f"{zone} price-day-ahead/combined ({type(exc).__name__})")
+            return None
+
+        series = normalize.series([body], zone=zone, normalizer=normalize.price)
+        if not series.points:
+            return None
+
+        points = tuple(sc.from_price(p) for p in series.points if isinstance(p, Price))
+        if not points:
+            return None
+
+        # When the auction that set these prices was published. Taken from the rows rather
+        # than the wall clock: prices for one hour can be re-published, and "when was this
+        # known" is a different question from "when does it apply".
+        issued = [p.updated_at for p in series.points if p.updated_at is not None]
+        return sc.PriceForward(issued_at=max(issued) if issued else None, points=points)
+
     async def zone_data(self, zone: str) -> tuple[sc.ZoneData, str | None]:
         """Everything recordable for one zone, plus its currency if a price was found."""
-        scalars = {field: await self.scalar_series(field, zone) for field in SCALAR_SIGNALS}
+        scalars = {
+            field: await self.scalar_series(field, zone)
+            for field in SCALAR_SIGNALS
+            if field != "price"
+        }
+        prices = await self.price_series(zone)
 
         currency: str | None = None
         price_rows = await self._history_rows(Signal.PRICE_DAY_AHEAD, zone)
@@ -197,9 +256,11 @@ class Recorder:
         return (
             sc.ZoneData(
                 **scalars,
+                price=prices,
                 mix=await self.mix_series(zone),
                 flows=await self.flow_series(zone),
                 forecasts=forecasts,
+                price_forward=await self.price_forward(zone),
             ),
             currency,
         )
@@ -347,6 +408,15 @@ async def run(zones: list[str], out: Path, granularity: str, scenario_id: str | 
             print(
                 f"      forecast {field}: {len(forecast.points)} points, "
                 f"{forecast.horizon_hours}h, issued {forecast.issued_at.isoformat()}"
+            )
+        if data.price_forward is not None:
+            forward = data.price_forward
+            settled = sum(1 for p in forward.points if p.source)
+            last = forward.points[-1].at.isoformat() if forward.points else "-"
+            issued = forward.issued_at.isoformat() if forward.issued_at else "unknown"
+            print(
+                f"      price forward: {len(forward.points)} points to {last} "
+                f"({settled} from a published auction), cleared {issued}"
             )
 
     print(f"\nWrote {path}")

@@ -7,13 +7,21 @@
  * grows out of it will not have this shape.
  *
  * See `docs/adr/0007-defer-product-decision.md` — the layout is a workbench, not a design.
+ *
+ * **What the app is looking at lives in one object**, not in a handful of `useState` calls
+ * scattered here. That is what lets something other than the user change it: a finding
+ * knows which window is worth seeing, the agent knows which panel its answer is about, and
+ * a URL can reopen a view somebody shared. All three go through the same reducer, in
+ * `lib/viewState.ts`, and none of them can do anything a control here could not.
  */
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AgentPanel } from "@/components/AgentPanel";
+import { AtlasPanel } from "@/components/AtlasPanel";
 import { CapabilityStrip } from "@/components/CapabilityStrip";
 import { ComparePanel } from "@/components/ComparePanel";
+import { FindingsRail } from "@/components/FindingsRail";
 import { FlowsPanel } from "@/components/FlowsPanel";
 import { ForecastPanel } from "@/components/ForecastPanel";
 import { MixPanel } from "@/components/MixPanel";
@@ -21,16 +29,26 @@ import { ModeBar } from "@/components/ModeBar";
 import { NowPanel } from "@/components/NowPanel";
 import { Select } from "@/components/ui/select";
 import { pollInterval, useQuery } from "@/hooks/useApi";
+import { useViewState } from "@/hooks/useViewState";
 import { api } from "@/lib/api";
 import { zoneLabel } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { isSignal, type PanelId, type ViewIntent } from "@/lib/viewState";
+
+/**
+ * The deepest forecast horizon the lab asks for.
+ *
+ * Used only to decide whether a highlight still refers to something the charts can show:
+ * the replay window covers actuals, and a forecast reaches this far past its end.
+ */
+const MAX_FORECAST_HOURS = 72;
 
 export default function App() {
-  const [zone, setZone] = useState<string>();
-  const [flowTraced, setFlowTraced] = useState(true);
-  const [seriesSignal, setSeriesSignal] = useState("carbon_intensity");
-  const [compareSignal, setCompareSignal] = useState("carbon_intensity");
-  const [compareZones, setCompareZones] = useState<string[]>([]);
   const [reload, setReload] = useState(0);
+  const [activeFinding, setActiveFinding] = useState<string>();
+  // Sort order is a property of the panel rather than of the view: it changes what the
+  // atlas emphasises, not what the app is looking at, so it stays out of the URL.
+  const [atlasSort, setAtlasSort] = useState("carbon_avoided");
 
   const bump = useCallback(() => setReload((n) => n + 1), []);
 
@@ -40,6 +58,50 @@ export default function App() {
   const mode = status.data?.mode ?? "replay";
   const speed = status.data?.replay?.speed ?? 1;
   const interval = pollInterval(mode, speed);
+
+  // Seeking is the one intent the client cannot satisfy alone: the replay clock lives on
+  // the server, so the hook hands it back here to be performed.
+  const seek = useCallback(
+    (to: string) => {
+      void api.seek(to).then(bump);
+    },
+    [bump],
+  );
+
+  const { view, dispatch, set, clearHighlight, blocked } = useViewState(mode, seek);
+
+  const onFindingIntent = useCallback(
+    (intent: ViewIntent, findingId: string) => {
+      setActiveFinding(findingId);
+      dispatch(intent);
+    },
+    [dispatch],
+  );
+
+  const onAgentIntent = useCallback(
+    (intent: ViewIntent) => {
+      setActiveFinding(undefined);
+      dispatch(intent);
+    },
+    [dispatch],
+  );
+
+  /*
+   * Focus promotes one panel and hides the rest.
+   *
+   * Pressing the control on the panel already focused returns to the full board, so the
+   * affordance is its own way out — the alternative is a mode you can enter and not leave.
+   * On a phone this is the difference between reading one thing and scrolling past six.
+   */
+  const toggleFocus = useCallback(
+    (panel: PanelId) => set("focused", view.focused === panel ? undefined : panel),
+    [set, view.focused],
+  );
+
+  const shows = useCallback(
+    (panel: PanelId) => view.focused === undefined || view.focused === panel,
+    [view.focused],
+  );
 
   /*
    * Every data query is keyed on the scenario as well as the zone.
@@ -59,46 +121,93 @@ export default function App() {
   const scenarios = useQuery(() => api.scenarios(), [], { refreshToken: reload });
   const capabilities = useQuery(() => api.capabilities(), [], { refreshToken: reload });
 
+  const zone = view.zone;
+
   // Follow the data rather than holding a stale selection: switching scenarios changes
   // which zones exist, and a zone that has gone away would otherwise 404 every panel.
   useEffect(() => {
     if (zones.length === 0) return;
-    if (!zone || !zones.some((z) => z.key === zone)) setZone(zones[0]!.key);
-    setCompareZones((current) => {
-      const kept = current.filter((key) => zones.some((z) => z.key === key));
-      return kept.length >= 2 ? kept : zones.slice(0, 4).map((z) => z.key);
-    });
-  }, [zones, zone]);
+    if (!zone || !zones.some((z) => z.key === zone)) set("zone", zones[0]!.key);
+    set(
+      "compareZones",
+      (() => {
+        const kept = view.compareZones.filter((key) => zones.some((z) => z.key === key));
+        return kept.length >= 2 ? kept : zones.slice(0, 4).map((z) => z.key);
+      })(),
+    );
+    // `view.compareZones` is read but deliberately not a dependency: this effect exists to
+    // reconcile the selection with the zone list, and re-running it whenever the selection
+    // changes would fight the user for control of it.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zones, zone, set]);
+
+  /*
+   * A highlight belongs to the window it was found in.
+   *
+   * Switching from an August recording to the May scenario used to leave the August
+   * highlight in the URL, and the chart clamped it to a sliver at the right-hand edge —
+   * a mark that looked like a finding and referred to a moment three months outside the
+   * data. The chart no longer draws an out-of-range band, and the state no longer keeps
+   * one: two independent guards, because this one is about honesty rather than layout.
+   *
+   * Overlap is enough to keep it. Consecutive daily recordings of the same zone really do
+   * share hours, and a highlight that is still inside the new window is still about
+   * something the reader can see.
+   */
+  const replayWindow = status.data?.replay?.window;
+  useEffect(() => {
+    if (!view.highlight || !replayWindow?.start || !replayWindow.end) return;
+    const start = new Date(replayWindow.start).getTime();
+    // The replay window covers the *actuals*. Most findings are about the forward view —
+    // a forecast reaches 72 hours past the end of the recording, and forward price to the
+    // end of tomorrow — so the chart legitimately shows time the window does not cover.
+    // Bounding on the window alone stripped every forward finding's highlight the instant
+    // it was applied.
+    const end = new Date(replayWindow.end).getTime() + MAX_FORECAST_HOURS * 3600_000;
+    const from = new Date(view.highlight.from).getTime();
+    const to = new Date(view.highlight.to).getTime();
+    if (Math.max(from, to) < start || Math.min(from, to) > end) clearHighlight();
+  }, [scenarioId, replayWindow?.start, replayWindow?.end, view.highlight, clearHighlight]);
 
   const enabled = Boolean(zone);
   const common = { intervalMs: interval, enabled, refreshToken: reload };
 
   const snapshot = useQuery(() => api.now(zone!), [scenarioId, zone], common);
-  const mix = useQuery(() => api.mix(zone!, flowTraced), [scenarioId, zone, flowTraced], common);
+  const mix = useQuery(
+    () => api.mix(zone!, view.flowTraced),
+    [scenarioId, zone, view.flowTraced],
+    common,
+  );
   // The opposite breakdown, fetched quietly so the panel can quantify the difference
   // between the two views rather than making the reader toggle back and forth.
   const otherMix = useQuery(
-    () => api.mix(zone!, !flowTraced),
-    [scenarioId, zone, !flowTraced],
+    () => api.mix(zone!, !view.flowTraced),
+    [scenarioId, zone, !view.flowTraced],
     common,
   );
   const flows = useQuery(() => api.flows(zone!), [scenarioId, zone], common);
 
   const history = useQuery(
-    () => api.history(zone!, seriesSignal),
-    [scenarioId, zone, seriesSignal],
+    () => api.history(zone!, view.signal),
+    [scenarioId, zone, view.signal],
     common,
   );
   const forecast = useQuery(
-    () => api.forecast(zone!, seriesSignal, 72),
-    [scenarioId, zone, seriesSignal],
+    () => api.forecast(zone!, view.signal, 72),
+    [scenarioId, zone, view.signal],
     common,
   );
 
+  const findings = useQuery(() => api.findings(zone!), [scenarioId, zone], common);
+
+  // Not keyed on the scenario or the clock: the atlas is a file somebody built from the
+  // live API, and replaying a recording does not change it.
+  const atlas = useQuery(() => api.atlas(atlasSort), [atlasSort], { refreshToken: reload });
+
   const comparison = useQuery(
-    () => api.compare(compareZones, compareSignal),
-    [scenarioId, compareZones.join(","), compareSignal],
-    { ...common, enabled: compareZones.length >= 2 },
+    () => api.compare(view.compareZones, view.compareSignal),
+    [scenarioId, view.compareZones.join(","), view.compareSignal],
+    { ...common, enabled: view.compareZones.length >= 2 },
   );
 
   if (status.error && !status.data) {
@@ -117,7 +226,7 @@ export default function App() {
       />
 
       <main className="mx-auto max-w-[1400px] space-y-4 px-4 py-4">
-        <header className="flex flex-wrap items-center justify-between gap-3">
+        <header className="flex flex-wrap items-center justify-between gap-2 sm:gap-3">
           <div>
             <h1 className="text-lg font-semibold">Grid Lab</h1>
             <p className="text-xs text-muted-foreground">
@@ -126,8 +235,8 @@ export default function App() {
           </div>
           <Select
             value={zone ?? ""}
-            onChange={(event) => setZone(event.target.value)}
-            className="h-9 min-w-[16rem] text-sm"
+            onChange={(event) => set("zone", event.target.value)}
+            className="h-9 w-full text-sm sm:w-auto sm:min-w-[16rem]"
             aria-label="Zone"
           >
             {zones.map((option) => (
@@ -138,53 +247,123 @@ export default function App() {
           </Select>
         </header>
 
-        {snapshot.data && (
+        <FindingsRail
+          findings={findings.data}
+          unavailable={findings.status === 404}
+          onIntent={onFindingIntent}
+          activeId={activeFinding}
+        />
+
+        {view.focused && (
+          /* A focused board hides five panels. Without a way back that is a trap, and the
+             control that got you here is on a panel you may have scrolled past. */
+          <button
+            onClick={() => set("focused", undefined)}
+            className="w-full rounded-lg border border-dashed border-border px-3 py-2 text-xs text-muted-foreground hover:bg-accent"
+          >
+            Showing one panel · show all
+          </button>
+        )}
+
+        {shows("now") && snapshot.data && (
           <NowPanel
             snapshot={snapshot.data}
             zoneName={zoneName}
             now={status.data.now}
             stale={snapshot.stale}
+            focused={view.focused === "now"}
+            onToggleFocus={toggleFocus}
           />
         )}
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <MixPanel
-            mix={mix.data}
-            other={otherMix.data}
-            flowTraced={flowTraced}
-            onToggle={setFlowTraced}
-            unavailable={mix.status === 404}
-          />
-          <FlowsPanel flows={flows.data} unavailable={flows.status === 404} />
+        {/* Side by side only where there is room for both. Below `lg` they stack, which is
+            the whole of the mobile layout for this pair. */}
+        {/* Two columns normally; one when a panel is focused, so the panel that asked
+            for room actually gets it instead of sitting in half a grid beside a gap. */}
+        <div className={cn("grid gap-4", !view.focused && "lg:grid-cols-2")}>
+          {shows("mix") && (
+            <MixPanel
+              mix={mix.data}
+              other={otherMix.data}
+              flowTraced={view.flowTraced}
+              onToggle={(next) => set("flowTraced", next)}
+              unavailable={mix.status === 404}
+              focused={view.focused === "mix"}
+              onToggleFocus={toggleFocus}
+            />
+          )}
+          {shows("flows") && (
+            <FlowsPanel
+              flows={flows.data}
+              unavailable={flows.status === 404}
+              focused={view.focused === "flows"}
+              onToggleFocus={toggleFocus}
+            />
+          )}
         </div>
 
-        <ForecastPanel
-          history={history.data}
-          forecast={forecast.data}
-          signal={seriesSignal}
-          onSignalChange={setSeriesSignal}
-          now={status.data.now}
-          forecastUnavailable={forecast.status === 404}
-        />
+        {shows("forecast") && (
+          <ForecastPanel
+            history={history.data}
+            forecast={forecast.data}
+            signal={view.signal}
+            onSignalChange={(next) => dispatch({ kind: "set_signal", signal: next, reason: next })}
+            now={status.data.now}
+            forecastUnavailable={forecast.status === 404}
+            highlight={view.highlight}
+            onClearHighlight={clearHighlight}
+            focused={view.focused === "forecast"}
+            onToggleFocus={toggleFocus}
+          />
+        )}
 
-        <ComparePanel
-          comparison={comparison.data}
-          zones={zones}
-          selected={compareZones}
-          onToggleZone={(key) =>
-            setCompareZones((current) =>
-              current.includes(key)
-                ? current.filter((existing) => existing !== key)
-                : [...current, key],
-            )
-          }
-          signal={compareSignal}
-          onSignalChange={setCompareSignal}
-        />
+        {shows("atlas") && (
+          <AtlasPanel
+            atlas={atlas.data}
+            unavailable={atlas.status === 404}
+            sort={atlasSort}
+            onSortChange={setAtlasSort}
+            onIntent={onAgentIntent}
+            currentZone={zone}
+            availableZones={zones.map((z) => z.key)}
+            focused={view.focused === "atlas"}
+            onToggleFocus={toggleFocus}
+          />
+        )}
 
-        <AgentPanel zone={zone} />
+        {shows("compare") && (
+          <ComparePanel
+            comparison={comparison.data}
+            zones={zones}
+            selected={view.compareZones}
+            onToggleZone={(key) =>
+              set(
+                "compareZones",
+                view.compareZones.includes(key)
+                  ? view.compareZones.filter((existing) => existing !== key)
+                  : [...view.compareZones, key],
+              )
+            }
+            signal={view.compareSignal}
+            // Narrowed rather than cast: the panel hands back a raw `string` from a
+            // `<select>`, and the view state only admits signals that exist.
+            onSignalChange={(next) => isSignal(next) && set("compareSignal", next)}
+            focused={view.focused === "compare"}
+            onToggleFocus={toggleFocus}
+          />
+        )}
 
-        <CapabilityStrip capabilities={capabilities.data} />
+        {!view.focused && (
+          <>
+            <AgentPanel
+              zone={zone}
+              provenance={status.data.provenance}
+              onIntent={onAgentIntent}
+              blocked={blocked}
+            />
+            <CapabilityStrip capabilities={capabilities.data} />
+          </>
+        )}
 
         <footer className="pt-2 pb-6 text-[0.65rem] text-muted-foreground">
           Data from Electricity Maps. Every value on this page carries its provenance; nothing

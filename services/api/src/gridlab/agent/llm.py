@@ -64,6 +64,18 @@ class ToolResult:
 
 
 @dataclass(frozen=True)
+class ViewProposed:
+    """A view the agent is offering, already validated.
+
+    Carried as its own event rather than left for the client to dig out of a tool result,
+    so the UI does not have to know which tool produces intents in order to render one. The
+    tool call and its result are still emitted alongside it — the working stays visible.
+    """
+
+    intent: dict[str, Any]
+
+
+@dataclass(frozen=True)
 class TurnFinished:
     stop_reason: str | None
     rounds: int
@@ -77,7 +89,7 @@ class AgentError:
     kind: str = "error"
 
 
-AgentEvent = TextDelta | ToolCall | ToolResult | TurnFinished | AgentError
+AgentEvent = TextDelta | ToolCall | ToolResult | ViewProposed | TurnFinished | AgentError
 
 
 @dataclass
@@ -139,6 +151,23 @@ class AnthropicBackend:
             self._client = AsyncAnthropic(api_key=self._api_key)
         return self._client
 
+    async def complete(self, prompt: str, *, max_tokens: int = 256) -> str:
+        """One prompt, one short answer, no tools.
+
+        Separate from :meth:`run` because narration has nothing to look up — the finding
+        arrives carrying its own evidence, so a tool-calling turn would spend three or four
+        round trips reaching facts already in the prompt.
+        """
+        client = self._ensure_client()
+        message = await client.messages.create(
+            model=self._model,
+            max_tokens=max_tokens,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return "".join(
+            block.text for block in message.content if getattr(block, "type", None) == "text"
+        )
+
     @staticmethod
     def _tool_payload(tools: Sequence[ToolSpec]) -> list[dict[str, Any]]:
         return [
@@ -176,18 +205,19 @@ class AnthropicBackend:
 
         while rounds < MAX_ROUNDS:
             rounds += 1
+            stream_kwargs: dict[str, Any] = {
+                "model": self._model,
+                "max_tokens": 4096,
+                "system": system,
+                "messages": conversation.messages,
+                "tools": payload,
+            }
+            if _supports_adaptive_thinking(self._model):
+                # Adaptive lets capable models decide how much to think. Haiku currently
+                # rejects it, and the cheaper model is useful for local smoke tests.
+                stream_kwargs["thinking"] = {"type": "adaptive"}
             try:
-                async with client.messages.stream(
-                    model=self._model,
-                    max_tokens=4096,
-                    system=system,
-                    messages=conversation.messages,
-                    tools=payload,
-                    # Adaptive lets the model decide how much to think. These questions
-                    # range from one lookup to a multi-zone comparison, so a fixed budget
-                    # would be wrong at one end or the other.
-                    thinking={"type": "adaptive"},
-                ) as stream:
+                async with client.messages.stream(**stream_kwargs) as stream:
                     async for chunk in stream.text_stream:
                         yield TextDelta(chunk)
                     message = await stream.get_final_message()
@@ -218,6 +248,14 @@ class AnthropicBackend:
 
                 outcome, ok, elapsed = await _invoke(by_name, call.name, arguments, context)
                 yield ToolResult(call.id, call.name, ok, outcome, elapsed)
+
+                # Tools that steer the interface say so in the registry, so the loop never
+                # has to know one tool's name from another.
+                spec = by_name.get(call.name)
+                if ok and spec is not None and spec.proposes_view:
+                    intent = outcome.get("intent") if isinstance(outcome, dict) else None
+                    if isinstance(intent, dict):
+                        yield ViewProposed(intent)
 
                 results.append(
                     {
@@ -277,6 +315,11 @@ async def _invoke(
 
     log.info("agent.tool", tool=name, ok=ok, ms=elapsed, args=arguments)
     return result, ok, elapsed
+
+
+def _supports_adaptive_thinking(model: str) -> bool:
+    """Whether to send Anthropic's adaptive thinking option for this model."""
+    return "haiku" not in model.lower()
 
 
 def _span_args(arguments: dict[str, Any]) -> dict[str, Any]:

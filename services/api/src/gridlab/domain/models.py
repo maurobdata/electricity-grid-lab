@@ -19,10 +19,11 @@ Every observation carries two pieces of metadata that must never be dropped:
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import datetime
 from enum import StrEnum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, computed_field
 
 
 class Provenance(StrEnum):
@@ -153,8 +154,18 @@ class Flows(Observation):
 
     edges: tuple[FlowEdge, ...]
 
+    @computed_field  # type: ignore[prop-decorator]
     @property
     def net_import_mw(self) -> float:
+        """Net power arriving from all neighbours. Negative means a net exporter.
+
+        A **computed field**, not a plain property, because a plain property is invisible to
+        ``model_dump`` — and this figure is the whole import/export story. It was silently
+        absent from every nested serialization: ``/grid/{zone}/flows`` injected it by hand,
+        so it looked fine, while ``/grid/{zone}/now`` returned flows without it and the
+        agent's ``get_current_grid`` reported ``net_import_mw: null`` for a zone moving
+        1,500 MW across its borders.
+        """
         return -sum(e.net_flow_mw for e in self.edges)
 
 
@@ -255,3 +266,163 @@ class GridSnapshot(Base):
     your plan said no" and "we never asked" look identical otherwise, and only one of them
     is worth acting on.
     """
+
+
+# --- derived values ---------------------------------------------------------
+#
+# Everything below this line is *computed* rather than measured. The rule from
+# ADR 0004 — that a value must never be mistakable for a stronger kind of value than it is
+# — does not stop being true because arithmetic happened; it gets harder to honour, because
+# a number that came out of a calculation looks exactly like a number that came out of a
+# meter. So a derived value carries the same `provenance` field, taken as the weakest of
+# its inputs, plus a record of what those inputs were and what was done to them.
+
+
+def weakest(values: Iterable[Provenance]) -> Provenance:
+    """The least trustworthy provenance in a group, or SYNTHETIC if there are none.
+
+    A derived value is only as real as the least real thing that went into it: one
+    generated input makes the result generated, however much measured data it was mixed
+    with. Deliberately pessimistic, and deliberately the same rule
+    :attr:`Series.provenance` already applies to a run of points.
+    """
+    order = {Provenance.SYNTHETIC: 0, Provenance.RECORDED: 1, Provenance.LIVE: 2}
+    return min(values, key=lambda p: order[p], default=Provenance.SYNTHETIC)
+
+
+class InputRef(Base):
+    """One thing that went into a calculation, described well enough to fetch again.
+
+    The point is auditability. A derived number with no inputs is an assertion; a derived
+    number that names its sources is a claim somebody can check, and checking it is the
+    difference between an interesting figure and a trustworthy one.
+    """
+
+    zone: str
+    signal: str
+    kind: str
+    """Where it came from: `history`, `forecast`, `price_forward`, `snapshot`, `mix`, `flows`."""
+
+    points: int = 0
+    provenance: Provenance
+    estimated_fraction: float = 0.0
+    """Share of the input Electricity Maps modelled rather than measured."""
+
+    start: datetime | None = None
+    end: datetime | None = None
+
+
+class Derived(Base):
+    """Provenance for something computed. Embedded in every analysis result.
+
+    ``method`` names the operation and its parameters in a form a reader can reason about
+    — ``align.step_hold(cadence=3600s)`` rather than ``"aligned"``. Resampling, baselining
+    and windowing all change what a number means, so the choice cannot be left implicit.
+    """
+
+    method: str
+    inputs: tuple[InputRef, ...]
+    provenance: Provenance
+    caveats: tuple[str, ...] = ()
+    """What this number is *not*. Written at the point of calculation, where it is known."""
+
+    @classmethod
+    def of(cls, method: str, inputs: Iterable[InputRef], *caveats: str) -> Derived:
+        refs = tuple(inputs)
+        return cls(
+            method=method,
+            inputs=refs,
+            provenance=weakest(ref.provenance for ref in refs),
+            caveats=caveats,
+        )
+
+
+class IntentKind(StrEnum):
+    """What a :class:`ViewIntent` asks the client to do.
+
+    A closed vocabulary rather than free text, so that an intent the UI cannot apply is
+    rejected where it is built instead of arriving as a silently ignored no-op. Both the
+    deterministic detectors and the agent construct intents, and neither should be able to
+    invent a verb.
+    """
+
+    FOCUS = "focus"
+    """Bring one panel forward and give it room."""
+
+    SELECT_ZONE = "select_zone"
+    """Change the zone in focus."""
+
+    SET_SIGNAL = "set_signal"
+    """Change which measurement the series panels are showing."""
+
+    HIGHLIGHT_WINDOW = "highlight_window"
+    """Mark a stretch of time on the charts, without changing anything else."""
+
+    COMPARE = "compare"
+    """Put several zones side by side."""
+
+    SEEK = "seek"
+    """Move the replay clock. Refused in live mode, where there is nothing to seek."""
+
+
+class ViewIntent(Base):
+    """A proposed change to what the user is looking at.
+
+    Emitted by anything that has found something worth seeing — a deterministic detector, a
+    deep link, or the agent — and applied by the client. **Nothing here mutates server
+    state.** It is a suggestion travelling outward, which is what keeps the agent's tool
+    surface read-only (ADR 0005) while still letting it steer attention.
+
+    ``reason`` is required because an unexplained view change is disorienting: the UI shows
+    it on the control that applies the intent, so the user knows what they are about to be
+    shown and why.
+    """
+
+    kind: IntentKind
+    reason: str
+    zone: str | None = None
+    zones: tuple[str, ...] = ()
+    signal: str | None = None
+    panel: str | None = None
+    at: datetime | None = None
+    until: datetime | None = None
+
+
+class Evidence(Base):
+    """One number that justifies a finding, in the finding's own words."""
+
+    label: str
+    value: float
+    unit: str | None = None
+    at: datetime | None = None
+
+
+class Finding(Base):
+    """Something worth looking at, detected without a language model.
+
+    Findings exist so the lab can say *where to look* before anyone knows what to ask, and
+    so that any later narration has something factual to narrate. The detectors are
+    ordinary arithmetic: reproducible, free, instant, and checkable — none of which is true
+    of asking a model to notice things.
+
+    ``id`` is stable for the same finding computed twice. Narration can therefore be cached
+    against it, which is what keeps the AI layer cheap.
+    """
+
+    id: str
+    kind: str
+    zone: str
+    headline: str
+    """One line, with the number in it. Written to be read, not parsed."""
+
+    detail: str = ""
+    at: datetime
+    until: datetime | None = None
+    magnitude: float | None = None
+    unit: str | None = None
+    significance: float = 0.0
+    """0-1, for ordering. Comparable only within a kind, never across kinds."""
+
+    evidence: tuple[Evidence, ...] = ()
+    intent: ViewIntent | None = None
+    derived: Derived

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -29,6 +30,7 @@ def _state(*, key: str | None) -> AgentState:
     settings = Settings(
         anthropic_api_key=key,
         electricity_maps_api_token=None,
+        gridlab_agent_model="claude-opus-5",
         gridlab_api_url="http://api:8000",
     )
     state = AgentState(settings)
@@ -61,7 +63,10 @@ def test_tools_endpoint_publishes_the_whole_surface(client_without_key: TestClie
     """Reviewable without reading the source: anything not listed here cannot be done."""
     body = client_without_key.get("/api/v1/tools").json()
 
-    assert len(body["tools"]) == 7
+    # Pinned against the registry rather than a literal, so the count cannot drift from the
+    # surface. `test_agent_tools.py` is where the names themselves are held.
+    assert len(body["tools"]) == len(build_tools())
+    assert len(body["tools"]) >= 7
     for tool in body["tools"]:
         assert tool["schema"]["additionalProperties"] is False
     assert any("read-only" in c for c in body["constraints"])
@@ -218,6 +223,60 @@ def test_events_reach_the_client_in_order() -> None:
     assert events[-1][1]["rounds"] == 2
 
 
+def test_a_proposed_view_arrives_as_its_own_event() -> None:
+    """The client should not have to know which tool produces intents in order to render
+    one. The tool call and result are still emitted alongside it, so the working stays
+    visible — the `view_intent` event is a convenience on top, not a replacement."""
+    intent = {
+        "kind": "highlight_window",
+        "reason": "show the negative-price window tonight",
+        "zone": ZONE,
+        "signal": "price",
+        "at": "2026-08-23T10:00:00Z",
+        "until": "2026-08-23T11:00:00Z",
+    }
+    state = _state(key="test-key")
+    state.backend = _StubBackend(  # type: ignore[assignment]
+        [
+            llm.ToolCall("t1", "propose_view", {"kind": "highlight_window"}),
+            llm.ToolResult("t1", "propose_view", True, {"intent": intent}, 1.0),
+            llm.ViewProposed(intent),
+            llm.TextDelta("Prices go below zero tonight."),
+            llm.TurnFinished("end_turn", 1, 10, 5),
+        ]
+    )
+    app.state.agent = state
+
+    with TestClient(app) as client:
+        app.state.agent = state
+        with client.stream("POST", "/api/v1/chat", json={"message": "when is it cheap?"}) as r:
+            events = _collect(r)
+
+    names = [name for name, _ in events]
+    assert names == ["tool_call", "tool_result", "view_intent", "text", "done"]
+
+    payload = dict(events[2][1])
+    assert payload["kind"] == "highlight_window"
+    assert payload["reason"], "a view arriving without a reason cannot be labelled"
+    assert payload["zone"] == ZONE
+
+
+def test_a_turn_with_no_proposed_view_emits_none() -> None:
+    """The event is occasional, not structural. A client must not wait for one."""
+    state = _state(key="test-key")
+    state.backend = _StubBackend(  # type: ignore[assignment]
+        [llm.TextDelta("63 gCO2eq/kWh."), llm.TurnFinished("end_turn", 1, 10, 5)]
+    )
+    app.state.agent = state
+
+    with TestClient(app) as client:
+        app.state.agent = state
+        with client.stream("POST", "/api/v1/chat", json={"message": "how clean?"}) as r:
+            events = _collect(r)
+
+    assert "view_intent" not in [name for name, _ in events]
+
+
 def test_a_backend_error_becomes_an_error_event() -> None:
     state = _state(key="test-key")
     state.backend = _StubBackend([llm.AgentError("rate limited", kind="api")])  # type: ignore[assignment]
@@ -236,6 +295,14 @@ def test_max_rounds_is_a_cost_bound_not_a_safety_one() -> None:
     """Worth stating explicitly: every tool is read-only, so a runaway loop wastes tokens
     rather than doing damage. The bound exists for the bill."""
     assert llm.MAX_ROUNDS <= 10
+
+
+def test_adaptive_thinking_is_not_sent_to_haiku() -> None:
+    assert llm._supports_adaptive_thinking("claude-haiku-4-5") is False
+
+
+def test_adaptive_thinking_is_kept_for_default_model() -> None:
+    assert llm._supports_adaptive_thinking("claude-opus-5") is True
 
 
 def _collect(response: httpx.Response) -> list[tuple[str, dict[str, Any]]]:
@@ -270,3 +337,46 @@ async def test_grid_unavailable_carries_the_api_hint() -> None:
     with pytest.raises(GridUnavailable) as exc:
         await ctx.client.snapshot("NOPE")
     assert "available" in str(exc.value).lower()
+
+
+def test_a_proposed_view_carries_iso_8601_times_over_sse() -> None:
+    """Pinning a contract that is already correct.
+
+    A review raised that the SSE layer stringifies with `json.dumps(..., default=str)`,
+    which would give datetimes whatever `__str__` produces — a space instead of `T`. It
+    does not happen: `propose_view` returns `model_dump(mode="json")`, so `at` and `until`
+    are already ISO strings and the fallback never fires for them.
+
+    That is worth a test rather than a comment, because it holds by construction somewhere
+    else. Anyone returning a raw `datetime` from a view-proposing tool would silently move
+    the format to `2026-08-24 09:00:00+00:00`, which the client's `new Date()` parses
+    differently across browsers.
+    """
+    intent = {
+        "kind": "highlight_window",
+        "reason": "the cheap window",
+        "zone": ZONE,
+        "zones": [],
+        "signal": "price",
+        "panel": None,
+        "at": "2026-08-24T09:00:00Z",
+        "until": "2026-08-24T13:00:00Z",
+    }
+    state = _state(key="test-key")
+    state.backend = _StubBackend(  # type: ignore[assignment]
+        [llm.ViewProposed(intent), llm.TurnFinished("end_turn", 1, 10, 5)]
+    )
+    app.state.agent = state
+
+    with TestClient(app) as client:
+        app.state.agent = state
+        with client.stream("POST", "/api/v1/chat", json={"message": "when is it cheap?"}) as r:
+            events = _collect(r)
+
+    payload = next(data for name, data in events if name == "view_intent")
+    for field in ("at", "until"):
+        value = payload[field]
+        assert isinstance(value, str), f"{field} reached the client as {type(value).__name__}"
+        # `T` separator and a UTC marker: the two things `str(datetime)` would lose.
+        assert "T" in value and value.endswith("Z"), f"{field} is not ISO 8601 UTC: {value!r}"
+        assert datetime.fromisoformat(value.replace("Z", "+00:00")).tzinfo is not None

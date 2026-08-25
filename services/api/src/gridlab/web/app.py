@@ -17,7 +17,13 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from gridlab import __version__, telemetry
 from gridlab.config import Mode, get_settings
-from gridlab.web import routes_grid, routes_meta, routes_replay, routes_zones
+from gridlab.web import (
+    routes_analysis,
+    routes_grid,
+    routes_meta,
+    routes_replay,
+    routes_zones,
+)
 from gridlab.web.state import LabState
 
 log = structlog.get_logger(__name__)
@@ -106,3 +112,4 @@ app.include_router(routes_meta.router, prefix="/api/v1")
 app.include_router(routes_zones.router, prefix="/api/v1")
 app.include_router(routes_grid.router, prefix="/api/v1")
 app.include_router(routes_replay.router, prefix="/api/v1")
+app.include_router(routes_analysis.router, prefix="/api/v1")

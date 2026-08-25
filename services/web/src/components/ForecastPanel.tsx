@@ -12,13 +12,13 @@
 
 import { useMemo } from "react";
 
-import { ProvenanceBadge } from "@/components/ProvenanceBadge";
+import { PanelShell } from "@/components/PanelShell";
 import { TimeSeries } from "@/components/charts/TimeSeries";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import type { Series } from "@/lib/api";
 import { formatDateTime, formatNumber } from "@/lib/format";
+import type { PanelId } from "@/lib/viewState";
 
 const SIGNALS = [
   { key: "carbon_intensity", label: "Carbon intensity", unit: "gCO₂eq/kWh", zeroBased: true },
@@ -35,6 +35,10 @@ export function ForecastPanel({
   onSignalChange,
   now,
   forecastUnavailable,
+  highlight,
+  onClearHighlight,
+  focused,
+  onToggleFocus,
 }: {
   history: Series | undefined;
   forecast: Series | undefined;
@@ -42,6 +46,11 @@ export function ForecastPanel({
   onSignalChange: (next: string) => void;
   now: string;
   forecastUnavailable?: boolean;
+  /** A window a finding or the agent asked to be marked. */
+  highlight?: { from: string; to: string };
+  onClearHighlight?: () => void;
+  focused?: boolean;
+  onToggleFocus?: (id: PanelId) => void;
 }) {
   const spec = SIGNALS.find((s) => s.key === signal) ?? SIGNALS[0];
 
@@ -73,43 +82,57 @@ export function ForecastPanel({
   const estimated = Math.max(history?.estimated_fraction ?? 0, forecast?.estimated_fraction ?? 0);
 
   return (
-    <Card>
-      <CardHeader>
-        <div>
-          <CardTitle>Forecast vs actual</CardTitle>
-          {forecast?.issued_at && (
-            <p className="mt-0.5 text-[0.7rem] text-muted-foreground">
-              Forecast issued {formatDateTime(forecast.issued_at)}
-              {forecast.horizon_hours ? ` · ${forecast.horizon_hours}h horizon` : ""}
-            </p>
-          )}
-        </div>
-        <div className="flex items-center gap-1.5">
-          {estimated > 0 && (
-            <Badge
-              variant="warn"
-              title="Share of points Electricity Maps modelled rather than measured."
-            >
-              {formatNumber(estimated * 100)}% est
-            </Badge>
-          )}
-          {provenance && <ProvenanceBadge provenance={provenance} />}
-        </div>
-      </CardHeader>
+    <PanelShell
+      id="forecast"
+      title="Forecast vs actual"
+      subtitle={
+        forecast?.issued_at
+          ? `Forecast issued ${formatDateTime(forecast.issued_at)}${
+              forecast.horizon_hours ? ` · ${forecast.horizon_hours}h horizon` : ""
+            }`
+          : undefined
+      }
+      provenance={provenance}
+      focused={focused}
+      onToggleFocus={onToggleFocus}
+      actions={
+        estimated > 0 ? (
+          <Badge
+            variant="warn"
+            title="Share of points Electricity Maps modelled rather than measured."
+          >
+            {formatNumber(estimated * 100)}% est
+          </Badge>
+        ) : undefined
+      }
+    >
+      <>
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <Select
+            value={signal}
+            onChange={(event) => onSignalChange(event.target.value)}
+            aria-label="Signal"
+          >
+            {SIGNALS.map((option) => (
+              <option key={option.key} value={option.key}>
+                {option.label}
+              </option>
+            ))}
+          </Select>
 
-      <CardContent>
-        <Select
-          value={signal}
-          onChange={(event) => onSignalChange(event.target.value)}
-          className="mb-3"
-          aria-label="Signal"
-        >
-          {SIGNALS.map((option) => (
-            <option key={option.key} value={option.key}>
-              {option.label}
-            </option>
-          ))}
-        </Select>
+          {/* A highlight arrived from somewhere else — a finding, or the agent — so there
+              has to be a visible way back out of it. A mark the reader cannot remove is a
+              mark they will assume is part of the data. */}
+          {highlight && onClearHighlight && (
+            <button
+              onClick={onClearHighlight}
+              className="rounded-md border border-border px-2 py-1 text-[0.7rem] text-muted-foreground hover:bg-accent"
+              title="Stop marking this window"
+            >
+              Clear highlight
+            </button>
+          )}
+        </div>
 
         <TimeSeries
           series={series}
@@ -117,6 +140,7 @@ export function ForecastPanel({
           unit={spec.unit}
           nowAt={now}
           zeroBased={spec.zeroBased}
+          highlight={highlight}
           emptyMessage={
             forecastUnavailable ? "No forecast for this signal" : "No data in this window"
           }
@@ -133,13 +157,14 @@ export function ForecastPanel({
             </>
           ) : (
             <>
-              The forecast and the actuals do not overlap yet, so there is nothing to score.
-              History reaches back about as far as the forecast reaches forward. Record again
-              tomorrow and today&rsquo;s forecast will land on top of tomorrow&rsquo;s actuals.
+              No overlap in <em>this</em> recording, so there is nothing to score here:
+              history reaches back about as far as the forecast reaches forward. Daily
+              recordings are stacking up &mdash; pick a later one in the scenario picker and
+              an earlier day&rsquo;s forecast will reach into its actuals.
             </>
           )}
         </p>
-      </CardContent>
-    </Card>
+      </>
+    </PanelShell>
   );
 }

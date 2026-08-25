@@ -33,6 +33,19 @@ make web   # add the PWA
 The PWA sits behind a Compose profile, so `make up` stays the lean pair when you are only
 working on the backend.
 
+**`make web` is the dev server, and it deliberately registers no service worker** — one
+would fight hot reload, so `vite-plugin-pwa` is configured with `devOptions: { enabled:
+false }`. To see the installed-app behaviour, build it:
+
+```bash
+make preview   # builds and serves the real PWA on :4173, service worker active
+```
+
+The build is verified: 8 precache entries, a `standalone` manifest, and the `NetworkFirst`
+rule for `/api/v1/`. Service-worker *activation* has only been checked in an embedded
+browser that refuses to register one, so confirm the offline behaviour in a real Chrome or
+Safari before relying on it.
+
 **No API key and no network are required.** The lab starts in *replay* mode, playing a
 recorded window of grid time against a virtual clock. That is the default on purpose: the
 14-day Electricity Maps trial should not be started until early September, a hackathon demo
@@ -40,6 +53,7 @@ must not depend on the live grid doing something interesting at 17:00, and venue
 not a dependency worth taking.
 
 ```bash
+make atlas    # cheap-vs-clean across 41 European zones -> data/atlas.json
 make test     # offline test suite: no network, no key
 make lint     # ruff + mypy --strict
 make probe    # ask a real token what it can actually reach
@@ -138,6 +152,7 @@ that does and does not guarantee.
 | [`docs/electricity-maps-api.md`](docs/electricity-maps-api.md) | The API surface, verified against the live API — including four things the first pass guessed wrong |
 | [`docs/adr/`](docs/adr/) | Decisions, and what would reverse them |
 | [`docs/research/`](docs/research/) | Four contradictory research passes. Hypotheses, not requirements. |
+| [`docs/DEMO.md`](docs/DEMO.md) | The runbook: what to record on the morning, what to show, and what breaks |
 | [`CLAUDE.md`](CLAUDE.md) | Working rules for this repository |
 
 ---
@@ -196,6 +211,9 @@ simple, and the forecast overlay and the synthetic hatch want exact control.
 | 3 · PWA — zone picker, now panel, mix, forecast, flows, compare | done |
 | 4 · Agent sandbox — seven read-only tools, visible tool trace | done |
 | 5 · Evals, OpenTelemetry tracing, demo walkthrough | done |
+| 6 · Forward price, deterministic analysis layer, findings | done |
+| 7 · View-state contract, agent proposes views, panel shell | done |
+| 8 · Cross-zone atlas, cached narration | done |
 
 303 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
 

@@ -84,8 +84,99 @@ async def walk(base_url: str, *, steps: int, zone: str | None) -> int:
             )
             await show(get, key, moment.isoformat(), compact=True)
 
+        await show_forward_price(get, key)
+        await show_divergence(get, key)
+        await show_findings(get, key)
+
         print("\n  The clock is left paused. `make up` or the PWA will resume it.\n")
         return 0
+
+
+async def show_divergence(get: Any, zone: str) -> None:
+    """Whether the cheap hours and the clean hours are the same hours.
+
+    The one figure that needs both halves of the plan at once, and the reason forward price
+    was wired up at all.
+    """
+    try:
+        result = await get(f"/analysis/{zone}/divergence")
+    except httpx.HTTPError:
+        print("\n  cheap vs clean  needs a carbon forecast and a forward price that overlap.")
+        return
+
+    best_a, best_b = result.get("best_a"), result.get("best_b")
+    print(f"\n  cheap vs clean  rank correlation {result['correlation']} ({result['agreement']})")
+    if best_a and best_b:
+        unit = result.get("b_unit") or "EUR/MWh"
+        print(
+            f"                  cheapest from {best_b['start'][11:16]} "
+            f"at {best_b['mean']} {unit} (carbon {best_b['other_mean']})"
+        )
+        print(
+            f"                  cleanest from {best_a['start'][11:16]} "
+            f"at {best_a['mean']} gCO2eq/kWh (price {best_a['other_mean']})"
+        )
+        print(f"                  {result['separation_hours']}h apart")
+
+
+async def show_findings(get: Any, zone: str) -> None:
+    """What the detectors found, which is the part to read out loud.
+
+    Deterministic: no model was asked and no key is needed. Worth saying on stage, and
+    worth having in a terminal when a browser is not available.
+    """
+    try:
+        body = await get(f"/analysis/{zone}/findings")
+    except httpx.HTTPError:
+        return
+
+    findings = body.get("findings") or []
+    if not findings:
+        print("\n  findings        nothing unusual in this window — which is a real answer")
+        return
+
+    print(f"\n  findings        {len(findings)}, most significant first. No model involved.")
+    for finding in findings:
+        print(f"                  * {finding['headline']}")
+
+
+async def show_forward_price(get: Any, zone: str) -> None:
+    """What the day-ahead auction has already settled for hours still ahead.
+
+    Worth its own line rather than a column in the walk: it is the only forward-looking
+    thing in this output that is not a forecast. The prices below are a cleared market
+    result waiting for its delivery hour, and saying that out loud is the difference
+    between a prediction and a fact.
+    """
+    try:
+        forward = await get(f"/grid/{zone}/price/forward")
+    except httpx.HTTPError:
+        print(
+            "\n  forward price   none in this scenario."
+            "\n                  Recordings made before forward price was captured have"
+            "\n                  none; re-record with `make scenario-live`."
+        )
+        return
+
+    points = forward.get("points") or []
+    if not points:
+        return
+
+    values = [p["value"] for p in points if p.get("value") is not None]
+    cleared = sum(1 for p in points if p.get("source"))
+    unit = f"{points[0].get('currency', 'EUR')}/{points[0].get('unit', 'MWh')}"
+
+    plural = "" if len(points) == 1 else "s"
+    print(f"\n  forward price   {len(points)} period{plural} to {points[-1]['at'][:16]}")
+    print(f"                  {min(values):.2f} .. {max(values):.2f} {unit}")
+    if forward.get("issued_at"):
+        print(f"                  cleared {forward['issued_at'][:16]} — settled, not forecast")
+    if cleared:
+        print(f"                  {cleared} of {len(points)} set by a published auction")
+    else:
+        print("                  no exchange named: modelled, or generated for this scenario")
+    if any(v < 0 for v in values):
+        print("                  ! goes negative — the market pays you to consume")
 
 
 async def show(get: Any, zone: str, when: str, *, compact: bool = False) -> None:
