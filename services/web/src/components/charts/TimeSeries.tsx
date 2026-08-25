@@ -16,7 +16,7 @@
 import { useId, useMemo, useState } from "react";
 
 import type { Provenance, ScalarObservation } from "@/lib/api";
-import { formatNumber, formatTime } from "@/lib/format";
+import { TIME_ZONE_LABEL, formatNumber, formatTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export interface SeriesSpec {
@@ -158,16 +158,27 @@ export function TimeSeries({
 
         {highlight &&
           (() => {
-            // Clamped to the plot, so a window reaching past the edge of the data marks the
-            // part that is visible instead of vanishing or overflowing the axis.
-            const from = Math.max(PADDING.left, Math.min(x(highlight.from), width - PADDING.right));
-            const to = Math.max(PADDING.left, Math.min(x(highlight.to), width - PADDING.right));
-            const left = Math.min(from, to);
+            /*
+             * A window that does not intersect the data is not drawn at all.
+             *
+             * This used to clamp to the plot edges so a partly-visible window still marked
+             * the part that was on screen. That is right for an overlap and badly wrong for
+             * a window that misses entirely: switching from an August recording to the May
+             * scenario left an August highlight pinned to the right-hand edge as a two-pixel
+             * sliver, which reads as "something happens at the very end of this window".
+             * Nothing is more misleading than a mark that looks meaningful and is not.
+             */
+            const from = new Date(highlight.from).getTime();
+            const to = new Date(highlight.to).getTime();
+            if (Math.max(from, to) < model.tMin || Math.min(from, to) > model.tMax) return null;
+
+            const left = Math.max(PADDING.left, Math.min(x(highlight.from), width - PADDING.right));
+            const right = Math.max(PADDING.left, Math.min(x(highlight.to), width - PADDING.right));
             // A zero-length window is an instant, not nothing: give it enough width to see.
-            const bandWidth = Math.max(Math.abs(to - from), 2);
+            const bandWidth = Math.max(Math.abs(right - left), 2);
             return (
               <rect
-                x={left}
+                x={Math.min(left, right)}
                 y={PADDING.top}
                 width={bandWidth}
                 height={plotHeight}
@@ -285,6 +296,17 @@ export function TimeSeries({
           className="fill-muted-foreground text-[9px]"
         >
           {formatTime(new Date(model.tMin).toISOString())}
+        </text>
+        {/* The zone, once, rather than on every tick. Without it the axis reads as local
+            time and silently disagrees with the finding headlines, which the server
+            composes in UTC. */}
+        <text
+          x={(PADDING.left + width - PADDING.right) / 2}
+          y={height - 5}
+          textAnchor="middle"
+          className="fill-muted-foreground/70 text-[8px]"
+        >
+          {TIME_ZONE_LABEL}
         </text>
         <text
           x={width - PADDING.right}

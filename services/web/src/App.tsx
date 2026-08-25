@@ -32,7 +32,16 @@ import { pollInterval, useQuery } from "@/hooks/useApi";
 import { useViewState } from "@/hooks/useViewState";
 import { api } from "@/lib/api";
 import { zoneLabel } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { isSignal, type PanelId, type ViewIntent } from "@/lib/viewState";
+
+/**
+ * The deepest forecast horizon the lab asks for.
+ *
+ * Used only to decide whether a highlight still refers to something the charts can show:
+ * the replay window covers actuals, and a forecast reaches this far past its end.
+ */
+const MAX_FORECAST_HOURS = 72;
 
 export default function App() {
   const [reload, setReload] = useState(0);
@@ -131,6 +140,34 @@ export default function App() {
     // changes would fight the user for control of it.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zones, zone, set]);
+
+  /*
+   * A highlight belongs to the window it was found in.
+   *
+   * Switching from an August recording to the May scenario used to leave the August
+   * highlight in the URL, and the chart clamped it to a sliver at the right-hand edge —
+   * a mark that looked like a finding and referred to a moment three months outside the
+   * data. The chart no longer draws an out-of-range band, and the state no longer keeps
+   * one: two independent guards, because this one is about honesty rather than layout.
+   *
+   * Overlap is enough to keep it. Consecutive daily recordings of the same zone really do
+   * share hours, and a highlight that is still inside the new window is still about
+   * something the reader can see.
+   */
+  const replayWindow = status.data?.replay?.window;
+  useEffect(() => {
+    if (!view.highlight || !replayWindow?.start || !replayWindow.end) return;
+    const start = new Date(replayWindow.start).getTime();
+    // The replay window covers the *actuals*. Most findings are about the forward view —
+    // a forecast reaches 72 hours past the end of the recording, and forward price to the
+    // end of tomorrow — so the chart legitimately shows time the window does not cover.
+    // Bounding on the window alone stripped every forward finding's highlight the instant
+    // it was applied.
+    const end = new Date(replayWindow.end).getTime() + MAX_FORECAST_HOURS * 3600_000;
+    const from = new Date(view.highlight.from).getTime();
+    const to = new Date(view.highlight.to).getTime();
+    if (Math.max(from, to) < start || Math.min(from, to) > end) clearHighlight();
+  }, [scenarioId, replayWindow?.start, replayWindow?.end, view.highlight, clearHighlight]);
 
   const enabled = Boolean(zone);
   const common = { intervalMs: interval, enabled, refreshToken: reload };
@@ -241,7 +278,9 @@ export default function App() {
 
         {/* Side by side only where there is room for both. Below `lg` they stack, which is
             the whole of the mobile layout for this pair. */}
-        <div className="grid gap-4 lg:grid-cols-2">
+        {/* Two columns normally; one when a panel is focused, so the panel that asked
+            for room actually gets it instead of sitting in half a grid beside a gap. */}
+        <div className={cn("grid gap-4", !view.focused && "lg:grid-cols-2")}>
           {shows("mix") && (
             <MixPanel
               mix={mix.data}

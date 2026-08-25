@@ -130,7 +130,10 @@ export function ModeBar({
               </Select>
             </div>
 
-            <div className="flex w-full min-w-0 flex-1 items-center gap-2 sm:w-auto sm:min-w-[16rem]">
+            {/* `basis-full` rather than `flex-1` on small screens: `flex-1` means `flex: 1 1 0%`,
+                and a zero basis let the scrubber share a wrapped row with the clock and
+                collapse to about 58px on a phone — too narrow to seek with a thumb. */}
+            <div className="flex w-full min-w-0 basis-full items-center gap-2 sm:w-auto sm:flex-1 sm:basis-auto sm:min-w-[16rem]">
               <input
                 type="range"
                 min={0}
@@ -139,7 +142,7 @@ export function ModeBar({
                 onChange={(event) => setScrub(Number(event.target.value) / 1000)}
                 onMouseUp={(event) => seekTo(Number(event.currentTarget.value) / 1000)}
                 onTouchEnd={(event) => seekTo(Number(event.currentTarget.value) / 1000)}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded bg-muted accent-[var(--color-primary)]"
+                className="h-3 w-full cursor-pointer appearance-none rounded bg-muted accent-[var(--color-primary)] sm:h-1.5"
                 aria-label="Position in the recorded window"
               />
             </div>

@@ -404,6 +404,20 @@ async def propose_view(
 
     if signal is not None and signal not in SERIES_SIGNALS:
         raise GridUnavailable(f"signal must be one of {', '.join(SERIES_SIGNALS)}.")
+
+    # A highlight always belongs to a signal, and this is enforced rather than asked for.
+    #
+    # Every deterministic detector names one: a negative-price window sets `price`, a carbon
+    # swing sets `carbon_intensity`. An agent proposing a window without one leaves the band
+    # on whatever chart happened to be showing — observed in a browser as an answer about
+    # price and carbon marking a stretch of a *renewable share* chart, which reads as a
+    # claim nobody made. Refusing here costs the model one round to correct.
+    if intent_kind is IntentKind.HIGHLIGHT_WINDOW and signal is None:
+        raise GridUnavailable(
+            "A highlight_window needs the `signal` it is about, so the chart shows what you "
+            f"are describing rather than whatever was already on screen. One of: "
+            f"{', '.join(SERIES_SIGNALS)}."
+        )
     if panel is not None and panel not in VIEW_PANELS:
         raise GridUnavailable(f"panel must be one of {', '.join(VIEW_PANELS)}.")
 
@@ -681,13 +695,20 @@ def build_tools() -> list[ToolSpec]:
                         "negative-price window tonight', not 'highlighting window'."
                     ),
                 },
+                "signal": {
+                    **_SIGNAL,
+                    "description": (
+                        "Which measurement the view is about. **Required for "
+                        "`highlight_window`** — without it the band lands on whatever chart "
+                        "was already showing, which reads as a claim you did not make."
+                    ),
+                },
                 "zone": _ZONE,
                 "zones": {
                     "type": "array",
                     "items": {"type": "string"},
                     "description": "For `compare`.",
                 },
-                "signal": _SIGNAL,
                 "panel": {
                     "type": "string",
                     "enum": list(VIEW_PANELS),
