@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from gridlab.agent.narrate import Narrator, grounded, template
+from gridlab.agent.narrate import Narrator, claimed_numbers, grounded, template
 
 
 def finding(**over: Any) -> dict[str, Any]:
@@ -160,3 +160,98 @@ async def test_a_discarded_narration_is_not_retried_on_every_poll() -> None:
     await narrator.narrate(finding())
 
     assert backend.calls == 1
+
+
+# --- what counts as a claim -------------------------------------------------
+#
+# The guard used to match against `str(finding)`, which looked thorough and was the
+# opposite. Measured against a live `cheap_clean_divergence` finding, five real figures
+# came with eighteen more: the id hash, the ISO timestamps, the alignment method string and
+# the input point counts. Three invented sentences passed because of it.
+
+
+def test_the_claimed_set_is_evidence_headline_and_magnitude() -> None:
+    claimed = claimed_numbers(finding())
+    assert 82.0 in claimed and 233.0 in claimed, "evidence values are claims"
+    assert 2.8 in claimed, "the ratio in the headline is a claim"
+
+
+def test_an_id_hash_is_not_evidence() -> None:
+    """`cheap_clean_divergence:31a6af6e489b` contributed 31, 6 and 489. A narration saying
+    "prices spike to 489 EUR/MWh" passed the guard because of it."""
+    subject = finding(id="carbon_swing:31a6af6e489b")
+    assert 489.0 not in claimed_numbers(subject)
+
+    ok, invented = grounded("Prices spike to 489 EUR/MWh in the evening.", subject)
+    assert not ok and 489.0 in invented
+
+
+def test_a_timestamp_is_not_evidence() -> None:
+    """The year in `2026-08-23T21:00:00Z` let "around 2026 MW of wind" through."""
+    subject = finding(at="2026-08-23T21:00:00Z", until="2026-08-24T13:00:00Z")
+    assert 2026.0 not in claimed_numbers(subject)
+
+    ok, invented = grounded("Around 2026 MW of wind is displaced overnight.", subject)
+    assert not ok and 2026.0 in invented
+
+
+def test_the_method_string_is_not_evidence() -> None:
+    """`align.step_hold(cadence=3600s)` let "the interconnector carries 3600 MW" through."""
+    subject = finding(
+        derived={
+            "provenance": "recorded",
+            "method": "align.step_hold(cadence=3600s, max_hold=2 steps)",
+            "inputs": [{"points": 73, "estimated_fraction": 0.0}],
+            "caveats": [],
+        }
+    )
+    assert 3600.0 not in claimed_numbers(subject)
+
+    ok, invented = grounded("The interconnector carries 3600 MW at the peak.", subject)
+    assert not ok and 3600.0 in invented
+
+
+# --- valid rounding still passes --------------------------------------------
+#
+# Tightening the claimed set must not start rejecting good writing, so each shape a model
+# actually produces is pinned.
+
+
+def test_rounding_a_claimed_figure_passes() -> None:
+    for text in (
+        "Carbon reaches about 230 gCO2eq/kWh by evening.",  # 233 -> 230
+        "It starts near 80 gCO2eq/kWh overnight.",  # 82 -> 80
+        "Roughly 235 gCO2eq/kWh at the peak.",  # 233 -> 235
+    ):
+        ok, invented = grounded(text, finding())
+        assert ok, f"valid rounding was rejected: {text!r} flagged {sorted(invented)}"
+
+
+def test_the_exact_figures_pass() -> None:
+    ok, _ = grounded("It climbs from 82 to 233 gCO2eq/kWh.", finding())
+    assert ok
+
+
+def test_a_finding_headline_always_passes_its_own_guard() -> None:
+    """The strongest form of "nothing legitimate was lost": whatever the detector itself
+    wrote about the finding must be sayable about it."""
+    subject = finding()
+    ok, invented = grounded(subject["headline"], subject)
+    assert ok, f"a detector's own headline failed the guard: {sorted(invented)}"
+
+
+def test_a_qualitative_sentence_needs_no_numbers_at_all() -> None:
+    ok, _ = grounded("Wind falls away and gas covers the shortfall, setting both.", finding())
+    assert ok
+
+
+def test_a_genuinely_invented_figure_is_still_caught() -> None:
+    ok, invented = grounded("Gas plants run at 450 MW to cover the gap.", finding())
+    assert not ok and 450.0 in invented
+
+
+def test_a_figure_outside_the_rounding_tolerance_is_caught() -> None:
+    """233 described as 180 is not rounding. The tolerance was not widened to make
+    rejections go away — the set being matched against was corrected instead."""
+    ok, invented = grounded("Carbon peaks around 180 gCO2eq/kWh.", finding())
+    assert not ok and 180.0 in invented
