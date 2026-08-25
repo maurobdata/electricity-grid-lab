@@ -278,7 +278,7 @@ export function AgentPanel({
                 ? "Set ANTHROPIC_API_KEY in .env to enable the agent"
                 : "Ask about the grid…"
             }
-            className="h-8 flex-1 rounded-md border border-border bg-muted px-2.5 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-40"
+            className="h-10 flex-1 rounded-md border border-border bg-muted px-2.5 text-xs sm:h-8 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-40"
           />
           <Button type="submit" variant="default" disabled={busy || !input.trim()}>
             {busy ? "…" : "Ask"}
@@ -358,6 +358,11 @@ function apply(turn: Turn, event: string, data: unknown): Turn {
     case "tool_call":
       return {
         ...turn,
+        // A tool call ends a paragraph. The model narrates before calling ("I'll check
+        // whether...") and again after ("Good news: they do align"), and both arrive as
+        // plain text deltas into one string — so without a break they render as
+        // "...show you the window.Good news: they do align".
+        text: turn.text.trim() ? `${turn.text.trimEnd()}\n\n` : turn.text,
         tools: [
           ...turn.tools,
           {

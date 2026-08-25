@@ -117,6 +117,22 @@ export function useQuery<T>(
         setStatus(err instanceof ApiError ? err.status : undefined);
         // Keep whatever is already on screen. Only mark it stale.
         setStale(hasData.current);
+
+        /*
+         * A 404 is an answer, so stop asking.
+         *
+         * 404 means "this scenario does not have that" — a synthetic scenario with no
+         * production mix, a signal it never recorded a forecast for. Polling it every
+         * second changes nothing and writes a console error every time: at 60x replay that
+         * is a wall of red that would hide a real failure during a demo.
+         *
+         * Only 404. A 500 or a dropped connection is worth retrying, and the timer keeps
+         * running for those.
+         */
+        if (err instanceof ApiError && err.status === 404 && timer !== undefined) {
+          window.clearInterval(timer);
+          timer = undefined;
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }

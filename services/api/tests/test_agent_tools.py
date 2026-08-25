@@ -438,8 +438,12 @@ async def test_a_proposed_view_goes_through_the_same_zone_allowlist(
 
 
 async def test_a_proposed_view_rejects_a_time_it_cannot_parse(ctx: t.ToolContext) -> None:
+    # A signal is supplied so the window clears the required-signal check and reaches the
+    # time parsing this test is actually about.
     with pytest.raises(GridUnavailable, match="ISO 8601"):
-        await t.propose_view(ctx, kind="highlight_window", reason="tonight", at="this evening")
+        await t.propose_view(
+            ctx, kind="highlight_window", reason="tonight", signal="price", at="this evening"
+        )
 
 
 async def test_a_proposed_view_reminds_the_model_to_answer_in_words(
@@ -494,3 +498,37 @@ def test_prompt_says_a_proposed_view_moves_nothing() -> None:
     prompt = system_prompt(mode="replay", provenance="recorded", zones=[ZONE], now="X")
     assert "does not move anything" in prompt.lower()
     assert "as though nobody will click" in prompt
+
+
+async def test_a_highlight_must_name_the_signal_it_is_about(ctx: t.ToolContext) -> None:
+    """Enforced in code, not asked for in the prompt.
+
+    Every deterministic detector names one: a negative-price window sets `price`, a carbon
+    swing sets `carbon_intensity`. An agent window without a signal leaves the band on
+    whatever chart was already open — observed in a browser as an answer about price and
+    carbon marking a stretch of a *renewable share* chart.
+    """
+    with pytest.raises(GridUnavailable, match="signal"):
+        await t.propose_view(
+            ctx, kind="highlight_window", reason="the cheap window", at="2026-08-24T10:00:00Z"
+        )
+
+
+async def test_a_highlight_with_a_signal_is_accepted(ctx: t.ToolContext) -> None:
+    result = await t.propose_view(
+        ctx,
+        kind="highlight_window",
+        reason="the cheap window",
+        signal="price",
+        at="2026-08-24T10:00:00Z",
+        until="2026-08-24T13:00:00Z",
+    )
+    assert result["intent"]["signal"] == "price"
+
+
+async def test_other_intent_kinds_still_need_no_signal(ctx: t.ToolContext) -> None:
+    """The requirement is specific to a window. Focusing a panel or picking a zone is not
+    about a measurement, and demanding one would be noise."""
+    assert await t.propose_view(ctx, kind="focus", reason="the mix", panel="mix")
+    assert await t.propose_view(ctx, kind="select_zone", reason="over here", zone=ZONE)
+

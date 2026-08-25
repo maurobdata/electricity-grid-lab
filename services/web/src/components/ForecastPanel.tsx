@@ -157,9 +157,10 @@ export function ForecastPanel({
             </>
           ) : (
             <>
-              The forecast and the actuals do not overlap yet, so there is nothing to score.
-              History reaches back about as far as the forecast reaches forward. Record again
-              tomorrow and today&rsquo;s forecast will land on top of tomorrow&rsquo;s actuals.
+              No overlap in <em>this</em> recording, so there is nothing to score here:
+              history reaches back about as far as the forecast reaches forward. Daily
+              recordings are stacking up &mdash; pick a later one in the scenario picker and
+              an earlier day&rsquo;s forecast will reach into its actuals.
             </>
           )}
         </p>
