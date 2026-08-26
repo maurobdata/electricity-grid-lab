@@ -32,6 +32,14 @@ on:
         description: "Re-record even if today is already present"
         type: boolean
         default: false
+      lab_ref:
+        # Blank means the code repository's default branch, which is what the schedule
+        # always uses. Fill it in to test a branch before merging it -- the first dispatch
+        # of this workflow failed for exactly that reason: the recorder existed only on
+        # `daily-recording`, and `make record-daily` is not a target on `main` yet.
+        description: "Code branch to run (blank = its default branch)"
+        type: string
+        default: ""
 
 concurrency:
   # Two runs writing the archive at once would race on the ledger, and the second would
@@ -70,6 +78,9 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: maurobdata/electricity-grid-lab
+          # Empty resolves to that repository's default branch. On a schedule `inputs` is
+          # null, so scheduled runs always take the default branch and never a test ref.
+          ref: ${{ inputs.lab_ref || '' }}
           path: lab
           persist-credentials: false
 

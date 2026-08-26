@@ -125,6 +125,11 @@ proves it knows when not to. Running only one of them proves half of it.
 why run 1 uses **force** — without it the first run would skip, and the commit path would
 never be exercised.
 
+**Before the recorder is on the code repository's default branch**, fill in **Code branch**
+with the branch that has it (`daily-recording`). The scheduled runs always use the default
+branch and ignore this input, so a schedule cannot silently run a test branch — which also
+means the schedule stays red until that branch is merged.
+
 ### Run 1 — force, proves record + commit + push
 
 **1.** Archive repo → **Actions** → **daily-recording** → **Run workflow**. Branch `main`.
