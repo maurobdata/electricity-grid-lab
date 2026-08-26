@@ -232,7 +232,7 @@ def test_a_failed_write_leaves_the_previous_artifact_intact(tmp_path: Path) -> N
     instead of serving the previous good sweep. Verified by truncating the real file and
     watching the running API return 500.
     """
-    from gridlab.scripts.build_atlas import write_atomic
+    from gridlab.store.atomic import write_atomic
 
     target = tmp_path / "atlas.json"
     write_atomic(target, '{"good": true}')
@@ -254,7 +254,7 @@ def test_a_failed_write_leaves_the_previous_artifact_intact(tmp_path: Path) -> N
 
 def test_the_temporary_file_is_not_left_behind(tmp_path: Path) -> None:
     """Debris beside the artifact would be read by nothing and confuse everyone."""
-    from gridlab.scripts.build_atlas import write_atomic
+    from gridlab.store.atomic import write_atomic
 
     target = tmp_path / "atlas.json"
     write_atomic(target, '{"good": true}')
@@ -266,7 +266,7 @@ def test_the_temporary_file_sits_beside_the_target(tmp_path: Path) -> None:
     """`os.replace` is only atomic within one filesystem. `data/` is a bind mount, so a
     system temp directory would be a different one and the rename would stop being atomic —
     which is the entire point of doing this."""
-    from gridlab.scripts.build_atlas import write_atomic
+    from gridlab.store.atomic import write_atomic
 
     seen: list[Path] = []
     real = Path.write_text
@@ -287,7 +287,7 @@ def test_the_temporary_file_sits_beside_the_target(tmp_path: Path) -> None:
 def test_a_reader_never_sees_a_partial_file(tmp_path: Path) -> None:
     """The property that matters, stated directly: at no point during the write does the
     target path hold anything other than the old content or the new."""
-    from gridlab.scripts.build_atlas import write_atomic
+    from gridlab.store.atomic import write_atomic
 
     target = tmp_path / "atlas.json"
     write_atomic(target, json.dumps({"version": 1}))

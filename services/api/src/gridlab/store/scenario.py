@@ -14,10 +14,12 @@ number can never be presented as a measured one.
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import structlog
 from pydantic import BaseModel, ConfigDict, Field
 
 from gridlab.domain.models import (
@@ -32,6 +34,8 @@ from gridlab.domain.models import (
     Provenance,
     ScalarObservation,
 )
+
+log = structlog.get_logger(__name__)
 
 
 class Point(BaseModel):
@@ -123,6 +127,62 @@ class ZoneData(BaseModel):
     """Day-ahead prices reaching past the end of the replay window. See :class:`PriceForward`."""
 
 
+class EndpointUse(BaseModel):
+    """One request the recorder made, and what came back.
+
+    Recorded per attempt rather than per success. "Which endpoints answered" and "which the
+    plan refused" are the same question asked twice, and a scenario that lists only what it
+    got leaves a reader unable to tell a signal that does not exist on this plan from one
+    that was never asked for.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    signal: str
+    temporality: str
+    zone: str
+    outcome: str
+    """``ok`` or ``skipped``."""
+
+    detail: str | None = None
+    """Breakdown type, horizon, or whatever else distinguished this request."""
+
+    reason: str | None = None
+    """Why it was skipped. The error class name, not its message: messages can quote a URL."""
+
+    rows: int | None = None
+    """How many points it yielded, when it yielded any."""
+
+
+class RecordingMeta(BaseModel):
+    """How this scenario came to exist.
+
+    Separate from ``notes``, which is prose for a human reading the UI. This is the machine
+    -readable answer to the questions a later analysis will ask of an archive: which day was
+    recorded, when the recording actually happened, which Electricity Maps endpoints were
+    used, and whether the result was judged complete enough to use.
+
+    Optional on :class:`Scenario`, so scenarios recorded before this existed still validate.
+    """
+
+    model_config = ConfigDict(frozen=True, extra="forbid")
+
+    recorded_at: datetime
+    """When the recorder ran — not the window it captured. Both are needed and they differ."""
+
+    day: str
+    """The UTC calendar day this recording is *for*, ``YYYY-MM-DD``. The archive's key."""
+
+    tool_version: str
+    api_base_url: str
+    granularity: str
+    zones: tuple[str, ...] = ()
+    endpoints: tuple[EndpointUse, ...] = ()
+    complete: bool | None = None
+    completeness_checks: dict[str, bool] = Field(default_factory=dict)
+    completeness_reasons: tuple[str, ...] = ()
+
+
 class Scenario(BaseModel):
     """A playable window of grid time."""
 
@@ -139,6 +199,10 @@ class Scenario(BaseModel):
     zones: dict[str, ZoneData]
     notes: str = ""
     """Free text shown in the UI. Use it to say what actually happened, and when."""
+
+    recording: RecordingMeta | None = None
+    """Provenance of the *recording act*, when there was one. ``None`` for generated
+    scenarios and for anything recorded before this field existed."""
 
     @property
     def zone_keys(self) -> tuple[str, ...]:
@@ -161,24 +225,43 @@ class Scenario(BaseModel):
 class ScenarioLibrary:
     """The scenarios on disk.
 
-    Loaded eagerly at startup and cached. Scenarios are small (kilobytes) and committed to
-    the repository, so there is no reason to read them lazily — and doing it once at boot
-    means a malformed file fails at startup rather than mid-demo.
+    Loaded eagerly at startup and cached. Scenarios are small (kilobytes), so there is no
+    reason to read them lazily — and doing it once at boot means a malformed file fails at
+    startup rather than mid-demo.
+
+    Reads **several directories**, in order, because the two kinds of scenario now live
+    apart: the generated ones are committed beside the code, while recordings hold
+    Electricity Maps data and are kept in a private archive that the licence permits
+    (ADR 0013). Later directories win on an id collision, so a real recording shadows a
+    generated scenario that happens to share its name rather than the reverse.
     """
 
-    def __init__(self, directory: Path) -> None:
-        self._directory = directory
+    def __init__(self, directories: Path | Sequence[Path]) -> None:
+        self._directories: tuple[Path, ...] = (
+            (directories,) if isinstance(directories, Path) else tuple(directories)
+        )
         self._scenarios: dict[str, Scenario] = {}
         self.reload()
 
+    @property
+    def directories(self) -> tuple[Path, ...]:
+        return self._directories
+
     def reload(self) -> None:
         self._scenarios = {}
-        if not self._directory.is_dir():
-            return
-        for path in sorted(self._directory.glob("*.json")):
-            raw = json.loads(path.read_text(encoding="utf-8"))
-            scenario = Scenario.model_validate(raw)
-            self._scenarios[scenario.id] = scenario
+        for directory in self._directories:
+            if not directory.is_dir():
+                continue
+            for path in sorted(directory.glob("*.json")):
+                raw = json.loads(path.read_text(encoding="utf-8"))
+                scenario = Scenario.model_validate(raw)
+                if scenario.id in self._scenarios:
+                    log.warning(
+                        "gridlab.scenario_shadowed",
+                        scenario=scenario.id,
+                        by=str(path),
+                    )
+                self._scenarios[scenario.id] = scenario
 
     def __contains__(self, scenario_id: str) -> bool:
         return scenario_id in self._scenarios
@@ -193,9 +276,10 @@ class ScenarioLibrary:
         scenario = self._scenarios.get(scenario_id)
         if scenario is None:
             known = ", ".join(sorted(self._scenarios)) or "none found"
+            where = ", ".join(str(d) for d in self._directories)
             raise KeyError(
-                f"No scenario {scenario_id!r} in {self._directory}. Available: {known}. "
-                f"Generate one with `make scenario`, or record one with `make record`."
+                f"No scenario {scenario_id!r} in {where}. Available: {known}. "
+                f"Generate one with `make scenario`, or record one with `make record-daily`."
             )
         return scenario
 

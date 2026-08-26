@@ -16,7 +16,7 @@ NOCONV := MSYS_NO_PATHCONV=1
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live atlas demo eval shell clean
+.PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live record-daily recordings archive-init atlas demo eval shell clean
 
 help:  ## Show this help
 > @grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -74,9 +74,12 @@ probe: .env  ## Ask a real token what it can actually reach -> data/capabilities
 >   --volume "$(CURDIR)/data":/out api \
 >   python -m gridlab.scripts.probe_capabilities --out /out/capabilities.json
 
-record: .env  ## Record raw Electricity Maps responses into fixtures/
+# Into the archive, not the repository: raw API responses are Electricity Maps data and
+# their terms do not permit publishing it (ADR 0013). The container still sees them at
+# /app/fixtures, so nothing above this line changed.
+record: .env  ## Record raw Electricity Maps responses into recordings/fixtures/
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
->   --volume "$(CURDIR)/fixtures":/out api \
+>   --volume "$(CURDIR)/recordings/fixtures":/out api \
 >   python -m gridlab.scripts.record_fixtures --out /out
 
 scenario:  ## Regenerate the bundled (synthetic) replay scenarios
@@ -94,11 +97,33 @@ GRAN  ?= hourly
 atlas: .env  ## Cheap-vs-clean across many zones -> data/atlas.json (live, throttled)
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T --volume "$(CURDIR)/data":/out api python -m gridlab.scripts.build_atlas --out /out $(ARGS)
 
-scenario-live: .env  ## Record a REAL scenario from the live API into scenarios/
+scenario-live: .env  ## Record a REAL scenario once, ad hoc, into recordings/
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
->   --volume "$(CURDIR)/scenarios":/out api \
+>   --volume "$(CURDIR)/recordings":/out api \
 >   python -m gridlab.scripts.make_scenario --from-live --out /out \
 >     --zones "$(ZONES)" --granularity "$(GRAN)"
+
+# The command a scheduler runs, and the same one you run by hand. Idempotent: if today is
+# already recorded and complete it makes no API calls at all, so running it twice costs
+# nothing. Exit 0 recorded or already present, 1 failed or incomplete, 2 no token.
+# See docs/RECORDING.md and ops/README.md.
+record-daily: .env  ## Record today into recordings/ if it is not already there (idempotent)
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
+>   --volume "$(CURDIR)/recordings":/out api \
+>   python -m gridlab.scripts.record_daily --out /out \
+>     --zones "$(ZONES)" --granularity "$(GRAN)" $(ARGS)
+
+recordings:  ## What the archive holds, what is missing, and how the last run went
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
+>   --volume "$(CURDIR)/recordings":/out api \
+>   python -m gridlab.scripts.record_daily --out /out --status
+
+# Recordings are Electricity Maps data and must not be published (ADR 0013), so the archive
+# is a separate private repository cloned into ./recordings, which is gitignored here.
+archive-init:  ## Clone the private recordings archive into ./recordings
+> @test -n "$(ARCHIVE)" || (echo "Usage: make archive-init ARCHIVE=git@github.com:you/your-data-repo.git"; exit 2)
+> @test ! -d recordings/.git || (echo "recordings/ is already a clone."; exit 0)
+> git clone "$(ARCHIVE)" recordings
 
 demo:  ## Walk the current scenario and narrate it in the terminal
 > $(COMPOSE) exec -T api python -m gridlab.scripts.demo $(ARGS)

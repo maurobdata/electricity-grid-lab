@@ -14,8 +14,9 @@ services:
       - ./services/api/src:/app/src
       - ./services/api/tests:/app/tests
       - ./docs/electricity-maps-api.md:/app/docs/electricity-maps-api.md:ro
-      - ./fixtures:/app/fixtures:ro
+      - ./recordings/fixtures:/app/fixtures:ro
       - ./scenarios:/app/scenarios:ro
+      - ./recordings:/app/recordings:ro
       - ./data:/app/data:ro
       - ./evals:/app/evals
       - gridlab-data:/data

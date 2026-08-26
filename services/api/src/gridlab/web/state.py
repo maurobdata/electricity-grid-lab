@@ -16,6 +16,7 @@ from gridlab.clock import ReplayClock
 from gridlab.config import Mode, Settings
 from gridlab.domain.models import Provenance
 from gridlab.emaps.client import EMapsClient
+from gridlab.recording.completeness import assess
 from gridlab.sources.base import GridSource
 from gridlab.sources.live import LiveSource
 from gridlab.sources.replay import ReplaySource
@@ -66,7 +67,14 @@ class LabState:
     def _fallback(available: Sequence[Scenario]) -> Scenario:
         """Which scenario to play when the configured one is missing.
 
-        **The newest real recording**, and the emphasis matters on both words.
+        **The newest complete real recording**, and the emphasis matters on all three words.
+
+        Completeness is checked, not assumed. A recording that a daily run judged too thin
+        to keep can still reach the disk — an older one written before the checks existed,
+        or one copied in by hand — and booting the lab onto three hours of one signal is a
+        demo that fails in the room rather than at startup. `assess` is the same judgement
+        the recorder applies before writing, so the app and the archive cannot disagree
+        about what "usable" means.
 
         Sorting by filename and taking the first gave the *oldest* — recordings are
         date-stamped (`dk-dk2-2026-08-22.json`), so alphabetical order is chronological
@@ -83,12 +91,19 @@ class LabState:
         """
         return max(
             available,
-            key=lambda s: (s.provenance is not Provenance.SYNTHETIC, s.end),
+            key=lambda s: (
+                s.provenance is not Provenance.SYNTHETIC,
+                assess(s).complete,
+                s.end,
+            ),
         )
 
     @classmethod
     def build(cls, settings: Settings) -> LabState:
-        library = ScenarioLibrary(settings.gridlab_scenarios_dir)
+        # Recordings second, so a recording wins an id collision with a generated scenario.
+        library = ScenarioLibrary(
+            [settings.gridlab_scenarios_dir, settings.gridlab_recordings_dir]
+        )
         mode = settings.effective_mode
 
         if mode is Mode.LIVE:
@@ -108,9 +123,10 @@ class LabState:
             available = library.all()
             if not available:
                 raise RuntimeError(
-                    f"No scenarios found in {settings.gridlab_scenarios_dir}. Replay mode "
-                    f"needs at least one. Run `make scenario` to generate the bundled ones, "
-                    f"or `make record` if you have an Electricity Maps token."
+                    f"No scenarios found in {settings.gridlab_scenarios_dir} or "
+                    f"{settings.gridlab_recordings_dir}. Replay mode needs at least one. Run "
+                    f"`make scenario` to generate the bundled ones, or `make record-daily` if "
+                    f"you have an Electricity Maps token."
                 )
             scenario = cls._fallback(available)
             log.warning(

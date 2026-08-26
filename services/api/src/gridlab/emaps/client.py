@@ -129,6 +129,15 @@ class EMapsClient:
     def has_token(self) -> bool:
         return bool(self._token)
 
+    @property
+    def base_url(self) -> str:
+        """Which API this client talks to.
+
+        Exposed so a recording can state its own source. The URL carries no credential —
+        the token is a header — so it is safe to write into an artifact.
+        """
+        return self._base_url
+
     async def __aenter__(self) -> Self:
         return self
 
