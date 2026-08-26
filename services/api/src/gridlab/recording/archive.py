@@ -30,11 +30,10 @@ from pydantic import BaseModel, ConfigDict, Field
 from gridlab.domain.models import Provenance
 from gridlab.recording.completeness import Completeness, assess
 from gridlab.store.atomic import write_atomic
-from gridlab.store.scenario import Scenario
+from gridlab.store.scenario import LEDGER_NAME, Scenario
 
 log = structlog.get_logger(__name__)
 
-LEDGER_NAME = "index.json"
 
 #: How many run entries the ledger keeps.
 #:

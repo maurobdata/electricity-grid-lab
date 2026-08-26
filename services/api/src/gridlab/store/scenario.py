@@ -37,6 +37,16 @@ from gridlab.domain.models import (
 
 log = structlog.get_logger(__name__)
 
+LEDGER_NAME = "index.json"
+"""The recording archive's run log, which lives beside the recordings and is not one.
+
+Named here rather than in :mod:`gridlab.recording.archive` because both modules need to
+agree about it and this is the lower one: the library globs the archive directory, and
+without this it would try to parse the ledger as a scenario and fail the whole API at
+startup. That is not hypothetical — it is exactly what happened the first time the archive
+was mounted.
+"""
+
 
 class Point(BaseModel):
     """One scalar sample."""
@@ -253,6 +263,8 @@ class ScenarioLibrary:
             if not directory.is_dir():
                 continue
             for path in sorted(directory.glob("*.json")):
+                if path.name == LEDGER_NAME:
+                    continue
                 raw = json.loads(path.read_text(encoding="utf-8"))
                 scenario = Scenario.model_validate(raw)
                 if scenario.id in self._scenarios:

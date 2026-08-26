@@ -580,3 +580,22 @@ async def test_the_recorder_runs_with_no_cli_no_env_and_no_container(tmp_path: P
 
     assert receipt.outcome is Outcome.RECORDED
     assert (tmp_path / "anywhere" / "dk-dk2-2026-08-26.json").is_file()
+
+
+async def test_the_scenario_library_ignores_the_ledger(archive: ScenarioArchive) -> None:
+    """The bug that took the whole API down the first time an archive was mounted.
+
+    `index.json` sits beside the recordings and is not one. The library globs `*.json`, so
+    without an exception it tried to validate the run log as a Scenario and the app refused
+    to start — a failure that only appears once there is a ledger to trip over, which is to
+    say once the recorder has run for real.
+    """
+    from gridlab.store.scenario import ScenarioLibrary
+
+    await run_daily(
+        client_factory=_client_factory(), archive=archive, zones=[ZONE], day=DAY, sleep=_noop_sleep
+    )
+    assert archive.ledger_path.is_file(), "no ledger was written, so this proves nothing"
+
+    library = ScenarioLibrary(archive.directory)
+    assert [s.id for s in library.all()] == ["dk-dk2-2026-08-26"]
