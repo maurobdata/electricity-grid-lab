@@ -12,14 +12,20 @@
 name: daily-recording
 
 on:
-  # Twice, deliberately. The recorder is idempotent: if the 05:17 run succeeded, the 15:17
-  # one makes zero API calls and exits 0. So the second slot costs nothing and covers a
-  # morning when Electricity Maps, GitHub, or the network was having a bad hour.
+  # Twice, deliberately. The recorder is idempotent: if the morning run succeeded, the
+  # evening one makes zero API calls and exits 0. So the second slot costs nothing and
+  # covers a morning when Electricity Maps, GitHub, or the network was having a bad hour.
   #
-  # Not on the hour: GitHub's scheduler is busiest then and delays runs by tens of minutes.
+  # **Cron here is always UTC.** These are 07:00 and 19:00 in Copenhagen while CEST is in
+  # force (UTC+2). They become 06:00 and 18:00 local when Denmark returns to CET on
+  # 25 October 2026 -- after the hackathon, and not worth chasing.
+  #
+  # On the hour is a mild pessimisation: GitHub's scheduler is busiest at :00 and delays
+  # runs the most there. Kept anyway because a schedule somebody can predict is worth more
+  # than a few minutes of latency on a job nobody is waiting for.
   schedule:
-    - cron: "17 5 * * *"
-    - cron: "17 15 * * *"
+    - cron: "0 5 * * *"
+    - cron: "0 17 * * *"
   workflow_dispatch:
     inputs:
       force:

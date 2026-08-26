@@ -98,7 +98,7 @@ is reviewed with the recorder, and it is 90 lines that change roughly never.
 ## What it does
 
 ```
-schedule (05:17 and 15:17 UTC)
+schedule (05:00 and 17:00 UTC = 07:00 and 19:00 Copenhagen)
    ↓
 make record-daily
    ↓

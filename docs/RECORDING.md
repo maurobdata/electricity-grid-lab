@@ -21,7 +21,8 @@ recorded and complete it makes **no API calls at all** and exits 0.
 
 ## How it is triggered
 
-A GitHub Actions schedule in the private archive repository, at 05:17 and 15:17 UTC. Its
+A GitHub Actions schedule in the private archive repository, at 05:00 and 17:00 UTC —
+07:00 and 19:00 in Copenhagen while CEST holds. Cron in Actions is always UTC. Its
 entire body is `make record-daily` — see [`ops/README.md`](../ops/README.md) for the setup
 and [ADR 0014](adr/0014-daily-recording-scheduler-outside-the-lab.md) for why it lives
 there rather than here.
