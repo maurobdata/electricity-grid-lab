@@ -118,37 +118,59 @@ a morning when Electricity Maps or the network was unwell.
 The dispatch procedure, in order. Run it once after setup and after any change to the
 workflow.
 
-**1.** Archive repo → **Actions** → **daily-recording** → **Run workflow**.
-Leave *"Re-record even if today is already present"* unticked. Branch `main`. Run.
+Two dispatches, in this order. The first proves the job can *write and push*; the second
+proves it knows when not to. Running only one of them proves half of it.
 
-**2.** Watch the run. Expected, in order:
+**Note:** the archive is already seeded, so today is very likely already recorded. That is
+why run 1 uses **force** — without it the first run would skip, and the commit path would
+never be exercised.
+
+### Run 1 — force, proves record + commit + push
+
+**1.** Archive repo → **Actions** → **daily-recording** → **Run workflow**. Branch `main`.
+**Tick** *"Re-record even if today is already present"*. Run.
+
+**2.** Expected, in order:
 
 | Step | Expected |
 |---|---|
-| Check out the archive | succeeds — fails here if the repo has no commits yet |
+| Check out the archive | succeeds — fails here only if the repo has no commits |
 | Check out the lab | succeeds, no token used |
-| Record today | `outcome  recorded`, five `ok` completeness lines, and `Recorded dk-dk2-<today>` |
-| Commit the recording | `Recording <today>` pushed — or `Nothing new to commit.` if today was already in the archive |
-| Report the archive | a summary naming the latest valid recording and any missing days |
+| Record today | ~26 `emaps.request … status=200` lines, then `outcome  recorded` and five `ok` completeness lines |
+| Commit the recording | `Recording <today>` and a push — the step that would have failed on the uid mismatch |
+| Report the archive | a fenced summary naming the latest valid recording and any missing days |
 
-**3.** Confirm the artifact landed: the archive repo should show a new commit containing
-`dk-dk2-<today>.json` and an updated `index.json`.
+**3.** Confirm on the repo's commits page: a new commit by `github-actions[bot]` touching
+`dk-dk2-<today>.json` and `index.json`.
 
-**4.** Run it a second time, again unticked. This is the important one — it proves
-idempotency in the real environment:
+### Run 2 — no force, proves idempotency
 
-- **Record today** must print `outcome  already_present` and **no `emaps.request` lines at
-  all**;
-- **Commit the recording** must print `Nothing new to commit.`;
-- the run must still be green.
+**4.** Dispatch again, this time leaving force **unticked**. This is the run that matters
+most:
 
-**5.** Check the log for the token. Search the raw log for `auth-token` and for any 35-character
-key-shaped string; GitHub masks secrets, but confirm the recorder is not printing one
-anyway. `params=` lines show the query string only — zone, granularity, horizon — and
-never a header.
+- **Record today** prints `outcome  already_present` and **zero `emaps.request` lines**;
+- **Commit the recording** prints `Nothing new to commit.`;
+- the run is green.
 
-If step 4 makes API calls, idempotency is broken and the schedule is spending the key twice
-a day for nothing. Stop and investigate before leaving it running.
+If run 2 makes any API call, idempotency is broken and the schedule is spending the key
+twice a day for nothing. Stop and investigate before leaving it on.
+
+### Then check the log for leakage
+
+**5.** Open the raw log and search for the token value and for `auth-token`. GitHub masks
+registered secrets, but confirm the recorder is not printing one regardless: `params=` lines
+carry the query string only — zone, granularity, horizon — and never a header. Then confirm
+the committed `index.json` shows `"error": null` or a bare exception class name, never a URL.
+
+### If a step fails
+
+| Symptom | Cause |
+|---|---|
+| `couldn't find remote ref` on the first checkout | The archive has no commits. Push something first |
+| `Permission denied` writing `/out` | `RUN_AS` is missing or the runner's uid is not 1001. Print `id -u` in the job and match it |
+| `403` on `git push` | Settings → Actions → General → Workflow permissions is read-only |
+| `outcome  misconfigured`, exit 2 | The `ELECTRICITY_MAPS_API_TOKEN` secret is missing or empty |
+| `outcome  incomplete` | The API answered thin. Nothing was written; the previous recording is intact. Read the reasons and re-dispatch |
 
 ## When it fails
 
