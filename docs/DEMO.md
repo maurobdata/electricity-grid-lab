@@ -12,10 +12,11 @@ reliable. Keep a live toggle for anyone who challenges it.
 
 ## The day before
 
-- [ ] `make scenario-live` — and check the output says **`price forward: N points`**. A
-      recording without it cannot show the cheap-versus-clean comparison, which is most of
-      the story.
-- [ ] `git status` clean, everything committed.
+- [ ] `make recordings` — the archive should show yesterday and today, and **no missing
+      days** in the run-up. The schedule records twice daily on its own; this checks that it
+      actually did.
+- [ ] `git status` clean, everything committed. The archive is a separate repository — check
+      `git -C recordings status` too.
 - [ ] `make test` and `make lint` green.
 - [ ] Charge the laptop. Bring the charger.
 
@@ -25,9 +26,14 @@ Do these in order. The whole sequence is about five minutes.
 
 ```bash
 make probe          # what the key can reach today — re-check if it is a new key
-make scenario-live  # this morning's recording, with forward price
+make record-daily   # this morning's recording. A no-op if the schedule already ran
+make recordings     # confirm: today is present, nothing is missing
 make atlas          # the cross-zone sweep, ~40 zones, under a minute
 ```
+
+`make record-daily` is safe to run even though the schedule already did — an already-recorded
+day makes no API calls. Check the output says **`price forward: N points`**: a recording
+without it cannot show the cheap-versus-clean comparison, which is most of the story.
 
 Then point the lab at what you just recorded:
 
@@ -89,6 +95,14 @@ is the same claim tested rather than asserted.
 plan does not include this" from "nobody asked". A 404 on `price/forward` means the
 scenario predates it; re-record.
 
+**The badge says `synthetic`.** The archive is not mounted — `recordings/` is missing or
+empty, so the lab fell back to the bundled generated scenarios. `make recordings` says so in
+one line. Do not demo from that state without saying what it is.
+
+**Today was not recorded.** `make record-daily` re-attempts it. If a *previous* day is
+missing it is gone: the API cannot be asked for a window that has rolled away, which is
+exactly why the recording is scheduled rather than remembered.
+
 **The browser will not cooperate.** `make demo` narrates the whole thing in the terminal:
 the walk, the cleared prices, the cheap-versus-clean comparison, and the findings.
 
@@ -129,7 +143,17 @@ changes except the badge.
 ## Known gaps, if asked
 
 - **Forecast versus outcome is not shown.** It needs two consecutive daily recordings
-  joined, and nothing joins them yet. The data to do it is being collected daily.
+  joined, and nothing joins them yet. The data to do it is now collected automatically
+  rather than when somebody remembers ([ADR 0014](adr/0014-daily-recording-scheduler-outside-the-lab.md)),
+  and the archive has a gap on 25 August from the fortnight when it was not.
+
+- **The recordings are not in the public repository, and price display is an open
+  question.** Electricity Maps' terms prohibit making their Data available to third parties,
+  and Nord Pool / EPEX day-ahead prices additionally may not be *displayed* externally
+  without a licence from them — which the price panels arguably do. The data is private
+  ([ADR 0013](adr/0013-recorded-data-is-not-published.md)); **ask the organisers about
+  showing the prices** before the day. If the answer is no, show carbon and mix and describe
+  the price relationship without plotting it.
 - **No historical depth.** `past` and `past-range` are 401 on this plan
   ([ADR 0008](adr/0008-history-not-breadth-is-the-constraint.md)). Everything here is the
   trailing day and the next.

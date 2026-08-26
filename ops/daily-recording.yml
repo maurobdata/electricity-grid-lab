@@ -1,0 +1,97 @@
+# Daily Electricity Maps recording.
+#
+# THIS FILE DOES NOT RUN FROM THIS REPOSITORY. Copy it into the *private archive* repo as
+# `.github/workflows/daily-recording.yml`. See ops/README.md for why, and for the one-time
+# setup. It is versioned here so the scheduler is reviewable alongside the recorder it runs.
+#
+# The whole body is `make record-daily`. Every decision -- whether today is already
+# recorded, whether to retry, whether the result is good enough to keep -- belongs to the
+# recorder and none of it is here. Moving to a different scheduler is deleting this file.
+
+name: daily-recording
+
+on:
+  # Twice, deliberately. The recorder is idempotent: if the 05:17 run succeeded, the 15:17
+  # one makes zero API calls and exits 0. So the second slot costs nothing and covers a
+  # morning when Electricity Maps, GitHub, or the network was having a bad hour.
+  #
+  # Not on the hour: GitHub's scheduler is busiest then and delays runs by tens of minutes.
+  schedule:
+    - cron: "17 5 * * *"
+    - cron: "17 15 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Re-record even if today is already present"
+        type: boolean
+        default: false
+
+concurrency:
+  # Two runs writing the archive at once would race on the ledger. The recording itself is
+  # atomic, but there is no reason to find out.
+  group: daily-recording
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  record:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      # The archive itself, checked out where the recorder writes. The built-in token is
+      # enough: this workflow lives in the repository it pushes to, which is the reason it
+      # lives there and not beside the code.
+      - name: Check out the archive
+        uses: actions/checkout@v4
+        with:
+          path: recordings
+
+      # The code. Public, so no token and no secret is involved in reading it.
+      - name: Check out the lab
+        uses: actions/checkout@v4
+        with:
+          repository: maurobdata/electricity-grid-lab
+          path: lab
+
+      - name: Record today
+        working-directory: lab
+        env:
+          ELECTRICITY_MAPS_API_TOKEN: ${{ secrets.ELECTRICITY_MAPS_API_TOKEN }}
+          ZONES: DK-DK2,DE
+          ARGS: ${{ inputs.force && '--force' || '' }}
+        run: |
+          # The archive is checked out beside the code; the Makefile expects it inside.
+          ln -s "$GITHUB_WORKSPACE/recordings" recordings
+          # .env is how the container receives configuration. The token is written from a
+          # secret and never echoed; GitHub masks it in logs, and the recorder keeps it out
+          # of the artifact and the ledger by design.
+          {
+            echo "ELECTRICITY_MAPS_API_TOKEN=$ELECTRICITY_MAPS_API_TOKEN"
+            echo "GRIDLAB_MODE=replay"
+          } > .env
+          make record-daily
+
+      # Only if something changed. An already-recorded day produces no commit, so the
+      # archive's history is one commit per day actually captured rather than one per run.
+      - name: Commit the recording
+        working-directory: recordings
+        run: |
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "Nothing new to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Recording $(date -u +%Y-%m-%d)"
+          git push
+
+      # Runs even when the recording failed, so a red run says what went wrong on its own
+      # summary page rather than only in the step log.
+      - name: Report the archive
+        if: always()
+        working-directory: lab
+        run: make recordings >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
