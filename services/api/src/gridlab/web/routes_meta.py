@@ -14,6 +14,7 @@ from fastapi import APIRouter, Depends
 
 from gridlab import __version__
 from gridlab.config import Mode
+from gridlab.recording.archive import ScenarioArchive
 from gridlab.web.state import LabState, lab
 
 router = APIRouter(tags=["meta"])
@@ -113,3 +114,28 @@ async def capabilities(state: Lab) -> dict[str, Any]:
             "— not a statement that the token can reach any of them."
         ),
     }
+
+
+@router.get("/recordings", summary="The daily recording archive, and its gaps")
+async def recordings(state: Lab) -> dict[str, Any]:
+    """What the archive holds, what is missing, and how the last run went.
+
+    Reads the archive directory; it never records. The recorder is a scheduled command
+    (`make record-daily`, ADR 0014) and triggering an API call against Electricity Maps from
+    an HTTP request would be the same mistake the capability probe already avoids.
+
+    An empty or absent archive answers 200, not 404. A fresh clone has no recordings — they
+    are Electricity Maps data and are not published with this repository (ADR 0013) — and
+    that is a normal state to report, not an error to raise.
+    """
+    archive = ScenarioArchive(state.settings.gridlab_recordings_dir)
+    status = archive.status()
+
+    if not status["exists"] or not status["recordings"]:
+        status["message"] = (
+            "No recordings archive here. Recordings hold Electricity Maps data and are kept "
+            "in a private archive rather than published with this repository. See "
+            "ops/README.md to point one at ./recordings, or run `make record-daily` with a "
+            "token to start one. The lab runs without it, on the bundled scenarios."
+        )
+    return status

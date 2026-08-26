@@ -38,7 +38,7 @@ from gridlab.emaps import errors
 from gridlab.emaps.client import EMapsClient
 from gridlab.recording.archive import RunEntry, ScenarioArchive
 from gridlab.recording.completeness import Completeness, assess
-from gridlab.scripts.record_scenario import record
+from gridlab.scripts.record_scenario import NoWindowError, record
 from gridlab.store.scenario import RecordingMeta, Scenario
 
 log = structlog.get_logger(__name__)
@@ -53,6 +53,16 @@ TRANSIENT: tuple[type[Exception], ...] = (
     errors.UpstreamError,
     errors.RateLimitError,
 )
+
+_TRANSIENT_NAMES = frozenset(exc.__name__ for exc in TRANSIENT)
+
+
+def _dominant(reasons: tuple[str, ...]) -> str | None:
+    """The most common reason a run came back empty, for the one-line report."""
+    if not reasons:
+        return None
+    return max(set(reasons), key=reasons.count)
+
 
 DEFAULT_ATTEMPTS = 3
 DEFAULT_BACKOFF = 20.0
@@ -143,11 +153,25 @@ async def _record_with_retry(
             # A configuration failure. Retrying spends requests to be told the same thing.
             log.error("gridlab.recording.permanent", error=type(exc).__name__)
             return None, attempt, type(exc).__name__
-        except RuntimeError as exc:
-            # `record` raises this when no zone yielded actuals — usually a plan without
-            # `history`. Not transient, and writing nothing is the correct response.
-            log.error("gridlab.recording.no_window", error=str(exc)[:200])
-            return None, attempt, "RuntimeError"
+        except NoWindowError as exc:
+            # Nothing came back for any signal. Whether that is worth another attempt
+            # depends entirely on *why*, and the reasons are the only way to know: the
+            # recorder swallows per-signal errors by design, so a total outage and a token
+            # without `history` both arrive here looking identical.
+            error = _dominant(exc.reasons)
+            transient = bool(exc.reasons) and all(
+                reason in _TRANSIENT_NAMES for reason in exc.reasons
+            )
+            log.error(
+                "gridlab.recording.no_window",
+                reasons=list(exc.reasons),
+                retryable=transient,
+                attempt=attempt,
+            )
+            if not transient:
+                return None, attempt, error
+            if attempt < attempts:
+                await sleep(backoff * (2 ** (attempt - 1)))
 
     return None, attempts, error
 
@@ -230,24 +254,30 @@ async def run_daily(
             else None
         )
         endpoints = list(meta.endpoints) if meta else []
-        archive.append_run(
-            RunEntry(
-                day=entry.day,
-                scenario_id=entry.scenario_id,
-                outcome=entry.outcome.value,
-                started_at=entry.started_at,
-                finished_at=entry.finished_at,
-                attempts=entry.attempts,
-                zones=tuple(zones),
-                granularity=granularity,
-                points=best,
-                complete=entry.completeness.complete if entry.completeness else None,
-                reasons=entry.completeness.reasons if entry.completeness else (),
-                error=entry.error,
-                endpoints_ok=sum(1 for e in endpoints if e.outcome == "ok") or None,
-                endpoints_skipped=sum(1 for e in endpoints if e.outcome == "skipped") or None,
+        try:
+            archive.append_run(
+                RunEntry(
+                    day=entry.day,
+                    scenario_id=entry.scenario_id,
+                    outcome=entry.outcome.value,
+                    started_at=entry.started_at,
+                    finished_at=entry.finished_at,
+                    attempts=entry.attempts,
+                    zones=tuple(zones),
+                    granularity=granularity,
+                    points=best,
+                    complete=entry.completeness.complete if entry.completeness else None,
+                    reasons=entry.completeness.reasons if entry.completeness else (),
+                    error=entry.error,
+                    endpoints_ok=sum(1 for e in endpoints if e.outcome == "ok") or None,
+                    endpoints_skipped=sum(1 for e in endpoints if e.outcome == "skipped") or None,
+                )
             )
-        )
+        except OSError as exc:
+            # The ledger describes the archive; it is not the archive. A disk that cannot
+            # take the run log must not be able to turn a successful recording into a
+            # traceback, or to hide the real outcome behind a bookkeeping failure.
+            log.error("gridlab.ledger.write_failed", error=type(exc).__name__)
 
     # -- 1. decide -----------------------------------------------------------
     if not force and archive.has_valid_for(scenario_id):

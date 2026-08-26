@@ -19,7 +19,6 @@ complete. A run that fails leaves yesterday's archive exactly as it was.
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from pathlib import Path
@@ -260,6 +259,7 @@ class ScenarioArchive:
         """What an operator wants to know: what is here, what is missing, what last happened."""
         today = today or datetime.now(UTC).date()
         ledger = self.ledger()
+        last_run = ledger.latest_run()
         latest = self.latest_valid()
         days = self.days()
         since = date.fromisoformat(days[0]) if days else today
@@ -284,9 +284,7 @@ class ScenarioArchive:
                 if latest
                 else None
             ),
-            "last_run": (
-                ledger.latest_run().model_dump(mode="json") if ledger.latest_run() else None
-            ),
+            "last_run": last_run.model_dump(mode="json") if last_run else None,
             "runs": len(ledger.runs),
         }
 

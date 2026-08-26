@@ -71,6 +71,25 @@ FORECAST_FIELDS: tuple[str, ...] = (
 )
 
 
+class NoWindowError(RuntimeError):
+    """No zone yielded any actuals, so there is nothing to replay.
+
+    Carries *why*, which the plain message could not. Every signal is fetched inside a
+    ``try`` — a plan that cannot reach one should produce a smaller scenario, not an
+    exception — so by the time the absence of a window is noticed, the errors that caused it
+    have already been swallowed. Without them a caller cannot tell "the network is down and
+    this is worth retrying" from "this token is not allowed to do that and never will be",
+    and those call for opposite responses.
+
+    ``reasons`` holds exception *class names* only. Messages quote URLs and parameters, and
+    this ends up in a log and a ledger.
+    """
+
+    def __init__(self, message: str, reasons: tuple[str, ...] = ()) -> None:
+        super().__init__(message)
+        self.reasons = reasons
+
+
 class Recorder:
     """Turns live API responses into scenario points, remembering what it could not reach."""
 
@@ -254,9 +273,7 @@ class Recorder:
                 reason="empty forecast",
             )
             return None
-        self._note(
-            signal, Temporality.FORECAST, zone, "ok", detail=detail, rows=len(series.points)
-        )
+        self._note(signal, Temporality.FORECAST, zone, "ok", detail=detail, rows=len(series.points))
 
         return sc.Forecast(
             # `issued_at` is the field that makes a later forecast-versus-outcome
@@ -388,9 +405,12 @@ async def record(
 
     stamps = _actual_timestamps(zone_data)
     if not stamps:
-        raise RuntimeError(
+        reasons = tuple(sorted({e.reason for e in recorder.endpoints if e.reason}))
+        raise NoWindowError(
             "No actuals were recorded for any zone, so there is no window to replay. "
-            "Run `make probe`: a token without `history` access cannot produce a scenario."
+            "Run `make probe`: a token without `history` access cannot produce a scenario. "
+            f"What came back instead: {', '.join(reasons) or 'nothing'}.",
+            reasons=reasons,
         )
 
     start, end = min(stamps), max(stamps)

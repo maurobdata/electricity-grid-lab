@@ -101,9 +101,7 @@ class LabState:
     @classmethod
     def build(cls, settings: Settings) -> LabState:
         # Recordings second, so a recording wins an id collision with a generated scenario.
-        library = ScenarioLibrary(
-            [settings.gridlab_scenarios_dir, settings.gridlab_recordings_dir]
-        )
+        library = ScenarioLibrary([settings.gridlab_scenarios_dir, settings.gridlab_recordings_dir])
         mode = settings.effective_mode
 
         if mode is Mode.LIVE:
