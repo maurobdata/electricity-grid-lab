@@ -151,7 +151,7 @@ So recordings and raw fixtures live in a separate **private** archive, cloned in
 `./recordings` and gitignored here ([ADR 0013](docs/adr/0013-recorded-data-is-not-published.md)).
 
 ```bash
-make archive-init ARCHIVE=git@github.com:you/your-data-repo.git
+make archive-init ARCHIVE=git@github.com:maurobdata/electricity-grid-lab-recordings.git
 ```
 
 Without it the lab still runs, on the two committed synthetic scenarios, offline and with no

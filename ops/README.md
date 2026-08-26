@@ -29,30 +29,54 @@ here. See [ADR 0013](../docs/adr/0013-recorded-data-is-not-published.md).
 
 ## One-time setup
 
-**1. Create the private archive repository.** Any name; `electricity-grid-lab-data` is the
-one the docs assume. It must be **private**.
+The archive in use is **`maurobdata/electricity-grid-lab-recordings`** (private).
+
+**1. Create the private archive repository.** It must be **private** — that is the whole
+point. Any name works; the one above is what these docs assume.
 
 **2. Point this checkout at it.**
 
+If the archive already has commits, clone it:
+
 ```bash
-make archive-init ARCHIVE=git@github.com:maurobdata/electricity-grid-lab-data.git
+make archive-init ARCHIVE=git@github.com:maurobdata/electricity-grid-lab-recordings.git
 ```
 
-That clones it into `./recordings`. If you already have recordings locally, move them in
-and push — the archive is just a directory of JSON files.
+If it is **empty**, or you already have recordings on disk, `git clone` will not help —
+initialise in place instead, because `recordings/` is where the data already is:
+
+```bash
+cd recordings
+git init -b main
+git remote add origin git@github.com:maurobdata/electricity-grid-lab-recordings.git
+git add -A && git commit -m "Recordings archive"
+git push -u origin main
+```
 
 **3. Add the token to the *archive* repository**, not to this one:
-Settings → Secrets and variables → Actions → New repository secret,
-named `ELECTRICITY_MAPS_API_TOKEN`.
+Settings → Secrets and variables → Actions → New repository secret, named
+`ELECTRICITY_MAPS_API_TOKEN`.
 
-**4. Copy the workflow into the archive repository:**
+**4. Allow the workflow to commit.** Settings → Actions → General → Workflow permissions →
+**Read and write permissions**. The workflow asks for `contents: write`, but a repository
+whose default is read-only caps it there and the push fails with a 403.
+
+**5. Install the workflow in the archive repository:**
 
 ```bash
-mkdir -p ../electricity-grid-lab-data/.github/workflows
-cp ops/daily-recording.yml ../electricity-grid-lab-data/.github/workflows/
+mkdir -p recordings/.github/workflows
+cp ops/daily-recording.yml recordings/.github/workflows/
+cd recordings && git add .github && git commit -m "Daily recording workflow" && git push
 ```
 
-Commit and push it. Run it once by hand from the Actions tab to confirm, then leave it.
+Then run it once by hand from the Actions tab — see the dispatch procedure below — and
+leave it.
+
+### An empty archive cannot be checked out
+
+`actions/checkout` fails on a repository with no commits: there is no default branch to
+resolve. Step 2 or step 5 gives it its first commit, so do one of them before the first
+workflow run.
 
 ### Why the workflow lives in the archive repo and not here
 
@@ -88,6 +112,43 @@ committed to the private archive
 Twice a day on purpose. The recorder is idempotent, so if the morning run worked the
 afternoon one makes no API calls and exits 0 — which makes the second slot a free retry for
 a morning when Electricity Maps or the network was unwell.
+
+## Testing it by hand
+
+The dispatch procedure, in order. Run it once after setup and after any change to the
+workflow.
+
+**1.** Archive repo → **Actions** → **daily-recording** → **Run workflow**.
+Leave *"Re-record even if today is already present"* unticked. Branch `main`. Run.
+
+**2.** Watch the run. Expected, in order:
+
+| Step | Expected |
+|---|---|
+| Check out the archive | succeeds — fails here if the repo has no commits yet |
+| Check out the lab | succeeds, no token used |
+| Record today | `outcome  recorded`, five `ok` completeness lines, and `Recorded dk-dk2-<today>` |
+| Commit the recording | `Recording <today>` pushed — or `Nothing new to commit.` if today was already in the archive |
+| Report the archive | a summary naming the latest valid recording and any missing days |
+
+**3.** Confirm the artifact landed: the archive repo should show a new commit containing
+`dk-dk2-<today>.json` and an updated `index.json`.
+
+**4.** Run it a second time, again unticked. This is the important one — it proves
+idempotency in the real environment:
+
+- **Record today** must print `outcome  already_present` and **no `emaps.request` lines at
+  all**;
+- **Commit the recording** must print `Nothing new to commit.`;
+- the run must still be green.
+
+**5.** Check the log for the token. Search the raw log for `auth-token` and for any 35-character
+key-shaped string; GitHub masks secrets, but confirm the recorder is not printing one
+anyway. `params=` lines show the query string only — zone, granularity, horizon — and
+never a header.
+
+If step 4 makes API calls, idempotency is broken and the schedule is spending the key twice
+a day for nothing. Stop and investigate before leaving it running.
 
 ## When it fails
 

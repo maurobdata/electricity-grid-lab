@@ -14,6 +14,16 @@ API := $(COMPOSE) run --rm --no-deps -T api
 # "C:/Program Files/Git/out") unless path conversion is switched off.
 NOCONV := MSYS_NO_PATHCONV=1
 
+# Who the container runs as when it writes into recordings/. Empty locally: Docker Desktop
+# maps bind-mount ownership for you, so the image's own uid 10001 can write to a Windows or
+# macOS directory.
+#
+# A Linux CI runner does not do that. Its checkout is owned by the runner's uid, a bind
+# mount preserves real ownership, and uid 10001 writing into a directory owned by uid 1001
+# is a plain EACCES -- every scheduled run would fail on the first write. The scheduler sets
+# RUN_AS="--user 1001:1001" so files land owned by whoever has to `git commit` them.
+RUN_AS ?=
+
 .DEFAULT_GOAL := help
 
 .PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live record-daily recordings archive-init atlas demo eval shell clean
@@ -78,7 +88,7 @@ probe: .env  ## Ask a real token what it can actually reach -> data/capabilities
 # their terms do not permit publishing it (ADR 0013). The container still sees them at
 # /app/fixtures, so nothing above this line changed.
 record: .env  ## Record raw Electricity Maps responses into recordings/fixtures/
-> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T $(RUN_AS) \
 >   --volume "$(CURDIR)/recordings/fixtures":/out api \
 >   python -m gridlab.scripts.record_fixtures --out /out
 
@@ -98,7 +108,7 @@ atlas: .env  ## Cheap-vs-clean across many zones -> data/atlas.json (live, throt
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T --volume "$(CURDIR)/data":/out api python -m gridlab.scripts.build_atlas --out /out $(ARGS)
 
 scenario-live: .env  ## Record a REAL scenario once, ad hoc, into recordings/
-> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T $(RUN_AS) \
 >   --volume "$(CURDIR)/recordings":/out api \
 >   python -m gridlab.scripts.make_scenario --from-live --out /out \
 >     --zones "$(ZONES)" --granularity "$(GRAN)"
@@ -108,20 +118,20 @@ scenario-live: .env  ## Record a REAL scenario once, ad hoc, into recordings/
 # nothing. Exit 0 recorded or already present, 1 failed or incomplete, 2 no token.
 # See docs/RECORDING.md and ops/README.md.
 record-daily: .env  ## Record today into recordings/ if it is not already there (idempotent)
-> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T $(RUN_AS) \
 >   --volume "$(CURDIR)/recordings":/out api \
 >   python -m gridlab.scripts.record_daily --out /out \
 >     --zones "$(ZONES)" --granularity "$(GRAN)" $(ARGS)
 
 recordings:  ## What the archive holds, what is missing, and how the last run went
-> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T $(RUN_AS) \
 >   --volume "$(CURDIR)/recordings":/out api \
 >   python -m gridlab.scripts.record_daily --out /out --status
 
 # Recordings are Electricity Maps data and must not be published (ADR 0013), so the archive
 # is a separate private repository cloned into ./recordings, which is gitignored here.
 archive-init:  ## Clone the private recordings archive into ./recordings
-> @test -n "$(ARCHIVE)" || (echo "Usage: make archive-init ARCHIVE=git@github.com:you/your-data-repo.git"; exit 2)
+> @test -n "$(ARCHIVE)" || (echo "Usage: make archive-init ARCHIVE=git@github.com:you/your-archive.git"; exit 2)
 > @test ! -d recordings/.git || (echo "recordings/ is already a clone."; exit 0)
 > git clone "$(ARCHIVE)" recordings
 

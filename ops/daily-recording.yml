@@ -1,8 +1,9 @@
 # Daily Electricity Maps recording.
 #
-# THIS FILE DOES NOT RUN FROM THIS REPOSITORY. Copy it into the *private archive* repo as
-# `.github/workflows/daily-recording.yml`. See ops/README.md for why, and for the one-time
-# setup. It is versioned here so the scheduler is reviewable alongside the recorder it runs.
+# THIS FILE DOES NOT RUN FROM THIS REPOSITORY. It is installed in the *private archive* repo
+# (maurobdata/electricity-grid-lab-recordings) as `.github/workflows/daily-recording.yml`.
+# See ops/README.md for why, and for the one-time setup. It is versioned here so the
+# scheduler is reviewable alongside the recorder it runs.
 #
 # The whole body is `make record-daily`. Every decision -- whether today is already
 # recorded, whether to retry, whether the result is good enough to keep -- belongs to the
@@ -27,12 +28,15 @@ on:
         default: false
 
 concurrency:
-  # Two runs writing the archive at once would race on the ledger. The recording itself is
-  # atomic, but there is no reason to find out.
+  # Two runs writing the archive at once would race on the ledger, and the second would
+  # fail to push behind the first. The recording itself is atomic; the git history is not.
   group: daily-recording
   cancel-in-progress: false
 
 permissions:
+  # Write, because this job commits the recording. It writes to the repository it runs in,
+  # which is the whole reason the workflow lives here rather than beside the code: the
+  # built-in token is enough and no personal access token is involved.
   contents: write
 
 jobs:
@@ -40,21 +44,28 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    env:
+      # The image runs as uid 10001. A runner's checkout is owned by the runner (uid 1001)
+      # and a Linux bind mount preserves real ownership, so without this every write into
+      # the archive is EACCES. Verified: uid 10001 into a 1001-owned directory is denied;
+      # with this, files land owned by the user that has to `git commit` them.
+      RUN_AS: --user 1001:1001
+
     steps:
-      # The archive itself, checked out where the recorder writes. The built-in token is
-      # enough: this workflow lives in the repository it pushes to, which is the reason it
-      # lives there and not beside the code.
+      # The archive itself, checked out where the recorder writes.
       - name: Check out the archive
         uses: actions/checkout@v4
         with:
           path: recordings
 
-      # The code. Public, so no token and no secret is involved in reading it.
+      # The code. Public, so no token is needed to read it -- and credentials are not
+      # persisted into this checkout, because nothing is ever pushed from it.
       - name: Check out the lab
         uses: actions/checkout@v4
         with:
           repository: maurobdata/electricity-grid-lab
           path: lab
+          persist-credentials: false
 
       - name: Record today
         working-directory: lab
@@ -63,11 +74,17 @@ jobs:
           ZONES: DK-DK2,DE
           ARGS: ${{ inputs.force && '--force' || '' }}
         run: |
+          set -euo pipefail
           # The archive is checked out beside the code; the Makefile expects it inside.
           ln -s "$GITHUB_WORKSPACE/recordings" recordings
+          # docker-compose.yml bind-mounts recordings/fixtures read-only. Docker creates a
+          # missing bind-mount source as root, inside the archive checkout, so it is created
+          # here instead -- owned by the runner, which keeps the git steps sane.
+          mkdir -p "$GITHUB_WORKSPACE/recordings/fixtures"
           # .env is how the container receives configuration. The token is written from a
-          # secret and never echoed; GitHub masks it in logs, and the recorder keeps it out
-          # of the artifact and the ledger by design.
+          # secret and never echoed; GitHub masks it in logs, .env is gitignored in the lab
+          # checkout, and nothing from this directory is ever committed. The recorder keeps
+          # it out of the artifact and the ledger by design, which a test asserts.
           {
             echo "ELECTRICITY_MAPS_API_TOKEN=$ELECTRICITY_MAPS_API_TOKEN"
             echo "GRIDLAB_MODE=replay"
@@ -79,6 +96,7 @@ jobs:
       - name: Commit the recording
         working-directory: recordings
         run: |
+          set -euo pipefail
           if [ -z "$(git status --porcelain)" ]; then
             echo "Nothing new to commit."
             exit 0
@@ -89,9 +107,14 @@ jobs:
           git commit -m "Recording $(date -u +%Y-%m-%d)"
           git push
 
-      # Runs even when the recording failed, so a red run says what went wrong on its own
-      # summary page rather than only in the step log.
+      # Runs even when the recording failed, so a red run says what the archive looks like
+      # on its own summary page rather than only in the step log.
       - name: Report the archive
         if: always()
         working-directory: lab
-        run: make recordings >> "$GITHUB_STEP_SUMMARY" 2>&1 || true
+        run: |
+          {
+            echo '```'
+            make recordings 2>&1 || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
