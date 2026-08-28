@@ -48,7 +48,7 @@ Read before making architectural decisions:
 
 ## Things deliberately not built
 
-Auth, accounts, multi-user, CI/CD, Kubernetes, a world map, RAG, calendar feeds, scoring
+Auth, accounts, multi-user, deployment, Kubernetes, a world map, RAG, calendar feeds, scoring
 engines, optimizers, SLO engines. Each belongs to a product that has not been chosen.
 See the deferred list in `README.md`.
 

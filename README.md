@@ -54,8 +54,8 @@ not a dependency worth taking.
 
 ```bash
 make atlas    # cheap-vs-clean across 41 European zones -> data/atlas.json
-make test     # offline test suite: no network, no key
-make lint     # ruff + mypy --strict
+make test     # offline test suite: no network, no key (test-api / test-web to split)
+make lint     # ruff + mypy --strict (lint-api / lint-web to split)
 make probe    # ask a real token what it can actually reach
 make record   # record raw API responses into recordings/fixtures/
 make scenario # regenerate the bundled (synthetic) scenarios
@@ -67,6 +67,28 @@ make down
 ```
 
 Requirements: Docker with Compose. Nothing else — Python and Node both live in containers.
+
+### What CI checks
+
+Every pull request, and every push to `main`, runs three jobs in parallel
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
+
+| Job | |
+|---|---|
+| `backend` | `make lint-api` + `make test-api` — ruff, `ruff format --check`, `mypy --strict`, pytest |
+| `frontend` | `make lint-web` + `make test-web` + a real `vite build` |
+| `smoke` | Boots the stack from a clean checkout and asserts it is in replay mode, holds no token, and reports `synthetic` provenance |
+
+They call the repository's own `make` targets rather than re-spelling the commands, so CI
+and a laptop cannot drift apart. **No secrets are used and none are needed** — the suite is
+offline and replay-based, so a pull request from a fork runs exactly the same checks.
+
+The smoke job is the interesting one: it turns CLAUDE.md rule 7 — *the repo must run offline
+with no API key* — from a claim into a check, and it fails loudly if Electricity Maps data
+ever reaches this repository, because a clean checkout would then stop reading `synthetic`.
+
+The daily recording deliberately does **not** run here; it lives in the private archive
+repository ([ADR 0014](docs/adr/0014-daily-recording-scheduler-outside-the-lab.md)).
 
 ---
 
@@ -258,6 +280,7 @@ simple, and the forecast overlay and the synthetic hatch want exact control.
 | 7 · View-state contract, agent proposes views, panel shell | done |
 | 8 · Cross-zone atlas, cached narration | done |
 | 9 · Daily recording: reusable recorder, private archive, scheduled off-machine | done |
+| 10 · CI gate: backend, frontend and an offline smoke check on every PR | done |
 
 515 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
 
@@ -362,7 +385,7 @@ anywhere else in the codebase.
 
 ## Deliberately not built
 
-Auth, accounts, multi-user, CI/CD, Kubernetes, a world map, RAG, calendar generation,
+Auth, accounts, multi-user, deployment, Kubernetes, a world map, RAG, calendar generation,
 scoring engines, optimizers, SLO engines, game mechanics.
 
 Each of those belongs to a product that has not been chosen. A world map in particular is
