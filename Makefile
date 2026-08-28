@@ -26,7 +26,7 @@ RUN_AS ?=
 
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live record-daily recordings archive-init atlas demo eval shell clean
+.PHONY: help up down logs restart build web pwa preview test test-api test-web lint lint-api lint-web fmt probe record scenario scenario-live record-daily recordings archive-init atlas demo eval shell clean
 
 help:  ## Show this help
 > @grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -65,12 +65,23 @@ pwa: web  ## Alias for web
 preview:  ## Build the PWA and serve it like production (service worker active), :4173
 > $(COMPOSE) --profile web run --rm --no-deps -p 4173:4173 web sh -c "npm run build && npx vite preview --host 0.0.0.0 --port 4173"
 
-test:  ## Run the offline test suite (no network, no key) -- API and web
+# Split in halves so one side can be run alone -- CI runs them as separate jobs, and it is
+# the obvious thing to want locally while working on one end of the stack. `test` and `lint`
+# stay exactly what they were: both halves, in order.
+test: test-api test-web  ## Run the offline test suite (no network, no key) -- API and web
+
+test-api:  ## Offline pytest only
 > $(API) pytest -q
+
+test-web:  ## Frontend tests only
 > $(COMPOSE) --profile web run --rm --no-deps -T web npm test
 
-lint:  ## Ruff check + mypy --strict, and the web typecheck
+lint: lint-api lint-web  ## Ruff check + mypy --strict, and the web typecheck
+
+lint-api:  ## Ruff check + format check + mypy --strict
 > $(API) sh -c "ruff check src tests && ruff format --check src tests && mypy src"
+
+lint-web:  ## TypeScript typecheck only
 > $(COMPOSE) --profile web run --rm --no-deps -T web npx tsc -b
 
 fmt:  ## Format and auto-fix
