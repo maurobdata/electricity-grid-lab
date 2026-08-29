@@ -24,6 +24,8 @@ def client(scenarios_dir: Path, tmp_path: Path) -> Iterator[TestClient]:
         gridlab_mode=Mode.REPLAY,
         gridlab_scenario="test-scenario",
         gridlab_scenarios_dir=scenarios_dir,
+        # Pinned too, or the mounted archive would leak real recordings into the test.
+        gridlab_recordings_dir=scenarios_dir / "no-archive",
         gridlab_db_path=tmp_path / "analysis.duckdb",
         gridlab_replay_speed=1.0,
         electricity_maps_api_token=None,

@@ -1,0 +1,130 @@
+# The gate: a green check here means the repository is healthy.
+#
+# Three jobs, in parallel, each calling the repository's own `make` targets rather than
+# re-spelling the commands here -- that is the only way CI and a laptop cannot drift apart.
+#
+# **No secrets, and none possible.** Nothing here needs an Electricity Maps token or an
+# Anthropic key: the whole test suite is offline and replay-based by design, and the stack's
+# default mode is replay. The job token is read-only and the trigger is `pull_request`, not
+# `pull_request_target`, so a pull request from a fork runs with no access to anything.
+#
+# The daily recording deliberately does not run from this repository. It lives in the
+# private archive repo -- see ops/README.md and ADR 0014.
+
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A second push to the same branch makes the first run irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Ruff, ruff format --check, mypy --strict, and the offline pytest suite.
+  #
+  # In the container on purpose. Five test modules address `/app/fixtures`,
+  # `/app/scenarios` and `/app/evals/examples` directly and skip themselves when those are
+  # not mounted, so a native runner goes green while running forty fewer tests -- including
+  # every eval-checker test. Measured: 444 passed / 71 skipped in the container against
+  # 404 / 111 natively. A suite that quietly shrinks is the one thing this repository's own
+  # eval docs warn about.
+  backend:
+    name: backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare the workspace
+        run: |
+          set -euo pipefail
+          # compose declares `env_file: [.env]` and fails without one. .env.example holds
+          # ten non-secret values and empty token lines, so this adds no credentials.
+          cp .env.example .env
+          # compose bind-mounts these; Docker would otherwise create them as root inside
+          # the workspace. Empty is correct here -- recordings are private (ADR 0013) and
+          # the tests that need them skip.
+          mkdir -p recordings/fixtures
+
+      - run: make lint-api
+      - run: make test-api
+
+  # Vitest, the TypeScript project build, and a real `vite build`.
+  #
+  # `npm run build` is `tsc -b && vite build`, so it covers strictly more than the
+  # typecheck: the PWA plugin, the manifest and the precache manifest are only exercised by
+  # an actual build.
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare the workspace
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          mkdir -p recordings/fixtures
+
+      - run: make lint-web
+      - run: make test-web
+
+      - name: Production build
+        run: docker compose --profile web run --rm --no-deps -T web npm run build
+
+  # The claim in CLAUDE.md rule 7, tested rather than asserted: a clean checkout with no API
+  # key and no archive must still boot and serve real-looking data.
+  #
+  # This is the only check that exercises the compose file itself, and the only one that
+  # would notice the lab silently falling back to something it should not.
+  smoke:
+    name: smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare the workspace
+        run: |
+          set -euo pipefail
+          cp .env.example .env
+          mkdir -p recordings/fixtures
+
+      - name: Boot the stack
+        run: docker compose up -d --build --wait
+
+      - name: It runs offline, with no key, on data it admits is generated
+        run: |
+          set -euo pipefail
+          status=$(curl -fsS http://localhost:8000/api/v1/status)
+          echo "$status"
+
+          check() {
+            echo "$status" | grep -q "$1" || { echo "FAILED: expected $2"; exit 1; }
+          }
+          # Replay is the default path, not a fallback -- ADR 0004.
+          check '"mode":"replay"' 'mode replay'
+          # No token in CI, and the lab must say so rather than pretend.
+          check '"has_electricity_maps_token":false' 'no Electricity Maps token'
+          # No archive here, so the only scenarios are the two generated ones. If this ever
+          # reads `recorded`, Electricity Maps data has reached the public repository.
+          check '"provenance":"synthetic"' 'synthetic provenance'
+
+          curl -fsS http://localhost:8000/api/v1/healthz | grep -q '"status":"ok"'
+          echo "OK: boots offline, no key, provenance disclosed"
+
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs --tail=80
+
+      - name: Stop the stack
+        if: always()
+        run: docker compose down -v

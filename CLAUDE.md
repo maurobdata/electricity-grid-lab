@@ -21,6 +21,10 @@ Read before making architectural decisions:
    `services/api/src/gridlab/emaps/signals.py`. Add it to the doc first.
 2. **Never commit a secret.** Tokens live in `.env`, which is gitignored. `.env.example`
    documents the shape and holds no values.
+2b. **Never commit Electricity Maps data.** This repository is public and their terms
+   prohibit making Data available to third parties. Recordings and raw fixtures belong in
+   the private archive at `./recordings`, which is gitignored. The two synthetic scenarios
+   are ours and stay. See `docs/adr/0013-recorded-data-is-not-published.md`.
 3. **Never call Electricity Maps from browser code.** Server-side only, cached. Rate limits
    are undocumented; assume they are tight.
 4. **`emaps/normalize.py` is the only module allowed to know an Electricity Maps field
@@ -44,7 +48,7 @@ Read before making architectural decisions:
 
 ## Things deliberately not built
 
-Auth, accounts, multi-user, CI/CD, Kubernetes, a world map, RAG, calendar feeds, scoring
+Auth, accounts, multi-user, deployment, Kubernetes, a world map, RAG, calendar feeds, scoring
 engines, optimizers, SLO engines. Each belongs to a product that has not been chosen.
 See the deferred list in `README.md`.
 
@@ -53,7 +57,8 @@ See the deferred list in `README.md`.
     make up       # everything, replay mode, no key needed
     make test     # offline pytest
     make probe    # ask a real token what it can actually reach
-    make record   # record raw API responses into fixtures/
-    make scenario-live # record a real, replayable scenario
+    make record   # record raw API responses into recordings/fixtures/
+    make record-daily # record today into the private archive (idempotent)
+    make recordings   # what the archive holds, and which days are missing
     make demo     # walk a scenario and narrate it
     make eval     # agent evaluations (ARGS=--offline needs no key)

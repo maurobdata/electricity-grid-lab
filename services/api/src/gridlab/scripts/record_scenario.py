@@ -30,10 +30,11 @@ import argparse
 import asyncio
 import sys
 from collections.abc import Callable, Mapping, Sequence
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
+from gridlab import __version__
 from gridlab.config import get_settings
 from gridlab.domain.models import Price, Provenance
 from gridlab.emaps import errors, normalize
@@ -70,6 +71,25 @@ FORECAST_FIELDS: tuple[str, ...] = (
 )
 
 
+class NoWindowError(RuntimeError):
+    """No zone yielded any actuals, so there is nothing to replay.
+
+    Carries *why*, which the plain message could not. Every signal is fetched inside a
+    ``try`` — a plan that cannot reach one should produce a smaller scenario, not an
+    exception — so by the time the absence of a window is noticed, the errors that caused it
+    have already been swallowed. Without them a caller cannot tell "the network is down and
+    this is worth retrying" from "this token is not allowed to do that and never will be",
+    and those call for opposite responses.
+
+    ``reasons`` holds exception *class names* only. Messages quote URLs and parameters, and
+    this ends up in a log and a ledger.
+    """
+
+    def __init__(self, message: str, reasons: tuple[str, ...] = ()) -> None:
+        super().__init__(message)
+        self.reasons = reasons
+
+
 class Recorder:
     """Turns live API responses into scenario points, remembering what it could not reach."""
 
@@ -77,6 +97,38 @@ class Recorder:
         self._client = client
         self._granularity = Granularity(granularity)
         self.skipped: list[str] = []
+        self.endpoints: list[sc.EndpointUse] = []
+        """Every request attempted, with its outcome.
+
+        ``skipped`` above is the human-readable half and feeds the scenario notes. This is
+        the machine-readable one: an archive needs to distinguish a signal this plan cannot
+        reach from a signal nobody asked for, and only a record of the attempt can.
+        """
+
+    def _note(
+        self,
+        signal: Signal,
+        temporality: Temporality,
+        zone: str,
+        outcome: str,
+        *,
+        detail: str | None = None,
+        reason: str | None = None,
+        rows: int | None = None,
+    ) -> None:
+        self.endpoints.append(
+            sc.EndpointUse(
+                signal=signal.value,
+                temporality=temporality.value,
+                zone=zone,
+                outcome=outcome,
+                detail=detail,
+                # The class name, never the message. Error messages quote the URL and the
+                # parameters, and this record is written to a file and read by other people.
+                reason=reason,
+                rows=rows,
+            )
+        )
 
     async def _history_rows(
         self, signal: Signal, zone: str, **kwargs: Any
@@ -86,6 +138,8 @@ class Recorder:
         Uses the ``history`` temporality rather than ``past-range``: the latter is not in
         every plan, and where it is absent this is the only history there is.
         """
+        breakdown = kwargs.get("breakdown_type")
+        detail = getattr(breakdown, "value", None)
         try:
             body = await self._client.fetch(
                 signal,
@@ -96,8 +150,20 @@ class Recorder:
             )
         except errors.ElectricityMapsError as exc:
             self.skipped.append(f"{zone} {signal.value}/history ({type(exc).__name__})")
+            self._note(
+                signal,
+                Temporality.HISTORY,
+                zone,
+                "skipped",
+                detail=detail,
+                reason=type(exc).__name__,
+            )
             return None
-        return normalize.rows(body)
+        rows = normalize.rows(body)
+        self._note(
+            signal, Temporality.HISTORY, zone, "ok", detail=detail, rows=len(rows) if rows else 0
+        )
+        return rows
 
     async def scalar_series(self, field: str, zone: str) -> tuple[sc.Point, ...]:
         signal, normalizer = SCALAR_SIGNALS[field]
@@ -179,17 +245,35 @@ class Recorder:
             return None
 
         horizon = max(horizons)
+        detail = f"{horizon}h"
         try:
             body = await self._client.fetch(
                 signal, Temporality.FORECAST, zone=zone, horizon_hours=horizon
             )
         except errors.ElectricityMapsError as exc:
             self.skipped.append(f"{zone} {signal.value}/forecast ({type(exc).__name__})")
+            self._note(
+                signal,
+                Temporality.FORECAST,
+                zone,
+                "skipped",
+                detail=detail,
+                reason=type(exc).__name__,
+            )
             return None
 
         series = normalize.series([body], zone=zone, normalizer=normalizer)
         if not series.points:
+            self._note(
+                signal,
+                Temporality.FORECAST,
+                zone,
+                "skipped",
+                detail=detail,
+                reason="empty forecast",
+            )
             return None
+        self._note(signal, Temporality.FORECAST, zone, "ok", detail=detail, rows=len(series.points))
 
         return sc.Forecast(
             # `issued_at` is the field that makes a later forecast-versus-outcome
@@ -213,19 +297,24 @@ class Recorder:
         clock starts wherever the scenario starts — the split belongs to whoever is reading
         it, not to whoever wrote it.
         """
+        signal, temporality = Signal.PRICE_DAY_AHEAD, Temporality.COMBINED
         try:
-            body = await self._client.fetch(Signal.PRICE_DAY_AHEAD, Temporality.COMBINED, zone=zone)
+            body = await self._client.fetch(signal, temporality, zone=zone)
         except errors.ElectricityMapsError as exc:
             self.skipped.append(f"{zone} price-day-ahead/combined ({type(exc).__name__})")
+            self._note(signal, temporality, zone, "skipped", reason=type(exc).__name__)
             return None
 
         series = normalize.series([body], zone=zone, normalizer=normalize.price)
         if not series.points:
+            self._note(signal, temporality, zone, "skipped", reason="empty response")
             return None
 
         points = tuple(sc.from_price(p) for p in series.points if isinstance(p, Price))
         if not points:
+            self._note(signal, temporality, zone, "skipped", reason="no price rows")
             return None
+        self._note(signal, temporality, zone, "ok", rows=len(points))
 
         # When the auction that set these prices was published. Taken from the rows rather
         # than the wall clock: prices for one hour can be re-published, and "when was this
@@ -295,6 +384,7 @@ async def record(
     scenario_id: str | None = None,
     title: str | None = None,
     granularity: str = "hourly",
+    day: date | None = None,
 ) -> sc.Scenario:
     """Record the reachable window for ``zones`` as a replayable scenario.
 
@@ -315,9 +405,12 @@ async def record(
 
     stamps = _actual_timestamps(zone_data)
     if not stamps:
-        raise RuntimeError(
+        reasons = tuple(sorted({e.reason for e in recorder.endpoints if e.reason}))
+        raise NoWindowError(
             "No actuals were recorded for any zone, so there is no window to replay. "
-            "Run `make probe`: a token without `history` access cannot produce a scenario."
+            "Run `make probe`: a token without `history` access cannot produce a scenario. "
+            f"What came back instead: {', '.join(reasons) or 'nothing'}.",
+            reasons=reasons,
         )
 
     start, end = min(stamps), max(stamps)
@@ -355,6 +448,18 @@ async def record(
         granularity=granularity,
         zones=zone_data,
         notes=" ".join(notes),
+        # The notes above say all this in prose, for somebody reading the UI. This says it
+        # again in fields, for the analysis that will read a year of these files and needs
+        # to know which endpoints answered on which day without parsing English.
+        recording=sc.RecordingMeta(
+            recorded_at=recorded_on,
+            day=f"{day or recorded_on.date():%Y-%m-%d}",
+            tool_version=__version__,
+            api_base_url=client.base_url,
+            granularity=granularity,
+            zones=tuple(zones),
+            endpoints=tuple(recorder.endpoints),
+        ),
     )
 
 

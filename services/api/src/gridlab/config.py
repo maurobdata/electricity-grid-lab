@@ -61,6 +61,16 @@ class Settings(BaseSettings):
     gridlab_scenarios_dir: Path = Path("/app/scenarios")
     gridlab_fixtures_dir: Path = Path("/app/fixtures")
 
+    gridlab_recordings_dir: Path = Path("/app/recordings")
+    """The daily archive: real Electricity Maps recordings, and the run ledger.
+
+    Separate from `scenarios/` because the two have different licences. The generated
+    scenarios are ours and are committed; a recording is Electricity Maps data, which their
+    terms forbid making available to third parties, so it lives in a private archive that is
+    mounted here and gitignored (ADR 0013). Absent is a normal state: a fresh clone has no
+    archive and still runs, on the committed synthetic scenarios.
+    """
+
     gridlab_atlas_path: Path = Path("/app/data/atlas.json")
     """Where `make atlas` writes, and where /api/v1/atlas reads.
 

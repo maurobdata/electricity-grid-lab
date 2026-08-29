@@ -28,8 +28,13 @@ services:
       GRIDLAB_DB_PATH: /data/gridlab.duckdb
     ports: ["8000:8000"]
     volumes:
-      - ./fixtures:/app/fixtures:ro
+      - ./recordings/fixtures:/app/fixtures:ro
       - ./scenarios:/app/scenarios:ro
+      # The daily archive: real recordings, kept out of this repository because their
+      # terms forbid redistributing Electricity Maps data (ADR 0013). Read-only here —
+      # only `make record-daily` writes, and it mounts the same directory at /out.
+      # Absent is normal: a fresh clone has no archive and still runs on scenarios/.
+      - ./recordings:/app/recordings:ro
       # The probe result. Mounted as a directory, not a file: `capabilities.json` does
       # not exist until a probe has been run, and Docker turns a bind mount of a missing
       # file into a directory.

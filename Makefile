@@ -14,9 +14,19 @@ API := $(COMPOSE) run --rm --no-deps -T api
 # "C:/Program Files/Git/out") unless path conversion is switched off.
 NOCONV := MSYS_NO_PATHCONV=1
 
+# Who the container runs as when it writes into recordings/. Empty locally: Docker Desktop
+# maps bind-mount ownership for you, so the image's own uid 10001 can write to a Windows or
+# macOS directory.
+#
+# A Linux CI runner does not do that. Its checkout is owned by the runner's uid, a bind
+# mount preserves real ownership, and uid 10001 writing into a directory owned by uid 1001
+# is a plain EACCES -- every scheduled run would fail on the first write. The scheduler sets
+# RUN_AS="--user 1001:1001" so files land owned by whoever has to `git commit` them.
+RUN_AS ?=
+
 .DEFAULT_GOAL := help
 
-.PHONY: help up down logs restart build web pwa preview test lint fmt probe record scenario scenario-live atlas demo eval shell clean
+.PHONY: help up down logs restart build web pwa preview test test-api test-web lint lint-api lint-web fmt probe record scenario scenario-live record-daily recordings archive-init atlas demo eval shell clean
 
 help:  ## Show this help
 > @grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) \
@@ -55,12 +65,23 @@ pwa: web  ## Alias for web
 preview:  ## Build the PWA and serve it like production (service worker active), :4173
 > $(COMPOSE) --profile web run --rm --no-deps -p 4173:4173 web sh -c "npm run build && npx vite preview --host 0.0.0.0 --port 4173"
 
-test:  ## Run the offline test suite (no network, no key) -- API and web
+# Split in halves so one side can be run alone -- CI runs them as separate jobs, and it is
+# the obvious thing to want locally while working on one end of the stack. `test` and `lint`
+# stay exactly what they were: both halves, in order.
+test: test-api test-web  ## Run the offline test suite (no network, no key) -- API and web
+
+test-api:  ## Offline pytest only
 > $(API) pytest -q
+
+test-web:  ## Frontend tests only
 > $(COMPOSE) --profile web run --rm --no-deps -T web npm test
 
-lint:  ## Ruff check + mypy --strict, and the web typecheck
+lint: lint-api lint-web  ## Ruff check + mypy --strict, and the web typecheck
+
+lint-api:  ## Ruff check + format check + mypy --strict
 > $(API) sh -c "ruff check src tests && ruff format --check src tests && mypy src"
+
+lint-web:  ## TypeScript typecheck only
 > $(COMPOSE) --profile web run --rm --no-deps -T web npx tsc -b
 
 fmt:  ## Format and auto-fix
@@ -74,9 +95,12 @@ probe: .env  ## Ask a real token what it can actually reach -> data/capabilities
 >   --volume "$(CURDIR)/data":/out api \
 >   python -m gridlab.scripts.probe_capabilities --out /out/capabilities.json
 
-record: .env  ## Record raw Electricity Maps responses into fixtures/
-> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
->   --volume "$(CURDIR)/fixtures":/out api \
+# Into the archive, not the repository: raw API responses are Electricity Maps data and
+# their terms do not permit publishing it (ADR 0013). The container still sees them at
+# /app/fixtures, so nothing above this line changed.
+record: .env  ## Record raw Electricity Maps responses into recordings/fixtures/
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T $(RUN_AS) \
+>   --volume "$(CURDIR)/recordings/fixtures":/out api \
 >   python -m gridlab.scripts.record_fixtures --out /out
 
 scenario:  ## Regenerate the bundled (synthetic) replay scenarios
@@ -94,11 +118,33 @@ GRAN  ?= hourly
 atlas: .env  ## Cheap-vs-clean across many zones -> data/atlas.json (live, throttled)
 > $(NOCONV) $(COMPOSE) run --rm --no-deps -T --volume "$(CURDIR)/data":/out api python -m gridlab.scripts.build_atlas --out /out $(ARGS)
 
-scenario-live: .env  ## Record a REAL scenario from the live API into scenarios/
-> $(NOCONV) $(COMPOSE) run --rm --no-deps -T \
->   --volume "$(CURDIR)/scenarios":/out api \
+scenario-live: .env  ## Record a REAL scenario once, ad hoc, into recordings/
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T $(RUN_AS) \
+>   --volume "$(CURDIR)/recordings":/out api \
 >   python -m gridlab.scripts.make_scenario --from-live --out /out \
 >     --zones "$(ZONES)" --granularity "$(GRAN)"
+
+# The command a scheduler runs, and the same one you run by hand. Idempotent: if today is
+# already recorded and complete it makes no API calls at all, so running it twice costs
+# nothing. Exit 0 recorded or already present, 1 failed or incomplete, 2 no token.
+# See docs/RECORDING.md and ops/README.md.
+record-daily: .env  ## Record today into recordings/ if it is not already there (idempotent)
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T $(RUN_AS) \
+>   --volume "$(CURDIR)/recordings":/out api \
+>   python -m gridlab.scripts.record_daily --out /out \
+>     --zones "$(ZONES)" --granularity "$(GRAN)" $(ARGS)
+
+recordings:  ## What the archive holds, what is missing, and how the last run went
+> $(NOCONV) $(COMPOSE) run --rm --no-deps -T $(RUN_AS) \
+>   --volume "$(CURDIR)/recordings":/out api \
+>   python -m gridlab.scripts.record_daily --out /out --status
+
+# Recordings are Electricity Maps data and must not be published (ADR 0013), so the archive
+# is a separate private repository cloned into ./recordings, which is gitignored here.
+archive-init:  ## Clone the private recordings archive into ./recordings
+> @test -n "$(ARCHIVE)" || (echo "Usage: make archive-init ARCHIVE=git@github.com:you/your-archive.git"; exit 2)
+> @test ! -d recordings/.git || (echo "recordings/ is already a clone."; exit 0)
+> git clone "$(ARCHIVE)" recordings
 
 demo:  ## Walk the current scenario and narrate it in the terminal
 > $(COMPOSE) exec -T api python -m gridlab.scripts.demo $(ARGS)

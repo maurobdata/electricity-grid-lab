@@ -352,6 +352,7 @@ def test_the_fallback_scenario_is_the_newest_recording(tmp_path: Path) -> None:
             gridlab_mode=Mode.REPLAY,
             gridlab_scenario="does-not-exist",
             gridlab_scenarios_dir=directory,
+            gridlab_recordings_dir=directory / "no-archive",
             gridlab_db_path=tmp_path / "x.duckdb",
             electricity_maps_api_token=None,
             anthropic_api_key=None,
@@ -378,6 +379,7 @@ def test_the_fallback_prefers_a_recording_over_a_generated_scenario(tmp_path: Pa
             gridlab_mode=Mode.REPLAY,
             gridlab_scenario="missing",
             gridlab_scenarios_dir=directory,
+            gridlab_recordings_dir=directory / "no-archive",
             gridlab_db_path=tmp_path / "y.duckdb",
             electricity_maps_api_token=None,
             anthropic_api_key=None,
@@ -432,6 +434,7 @@ def test_a_clone_with_no_env_opens_on_the_newest_recording(tmp_path: Path) -> No
         Settings(
             gridlab_mode=Mode.REPLAY,
             gridlab_scenarios_dir=directory,
+            gridlab_recordings_dir=directory / "no-archive",
             gridlab_db_path=tmp_path / "d.duckdb",
             electricity_maps_api_token=None,
             anthropic_api_key=None,
@@ -456,6 +459,7 @@ def test_a_clone_with_only_generated_scenarios_still_starts(tmp_path: Path) -> N
         Settings(
             gridlab_mode=Mode.REPLAY,
             gridlab_scenarios_dir=directory,
+            gridlab_recordings_dir=directory / "no-archive",
             gridlab_db_path=tmp_path / "e.duckdb",
             electricity_maps_api_token=None,
             anthropic_api_key=None,

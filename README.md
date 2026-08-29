@@ -54,18 +54,41 @@ not a dependency worth taking.
 
 ```bash
 make atlas    # cheap-vs-clean across 41 European zones -> data/atlas.json
-make test     # offline test suite: no network, no key
-make lint     # ruff + mypy --strict
+make test     # offline test suite: no network, no key (test-api / test-web to split)
+make lint     # ruff + mypy --strict (lint-api / lint-web to split)
 make probe    # ask a real token what it can actually reach
-make record   # record raw API responses into fixtures/
+make record   # record raw API responses into recordings/fixtures/
 make scenario # regenerate the bundled (synthetic) scenarios
-make scenario-live  # record a REAL scenario from the live API
+make record-daily   # record today (idempotent) -> recordings/
+make recordings     # what the archive holds, and what is missing
 make demo     # walk the current scenario and narrate it
 make eval ARGS=--offline   # check the eval checkers, no key needed
 make down
 ```
 
 Requirements: Docker with Compose. Nothing else — Python and Node both live in containers.
+
+### What CI checks
+
+Every pull request, and every push to `main`, runs three jobs in parallel
+([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
+
+| Job | |
+|---|---|
+| `backend` | `make lint-api` + `make test-api` — ruff, `ruff format --check`, `mypy --strict`, pytest |
+| `frontend` | `make lint-web` + `make test-web` + a real `vite build` |
+| `smoke` | Boots the stack from a clean checkout and asserts it is in replay mode, holds no token, and reports `synthetic` provenance |
+
+They call the repository's own `make` targets rather than re-spelling the commands, so CI
+and a laptop cannot drift apart. **No secrets are used and none are needed** — the suite is
+offline and replay-based, so a pull request from a fork runs exactly the same checks.
+
+The smoke job is the interesting one: it turns CLAUDE.md rule 7 — *the repo must run offline
+with no API key* — from a claim into a check, and it fails loudly if Electricity Maps data
+ever reaches this repository, because a clean checkout would then stop reading `synthetic`.
+
+The daily recording deliberately does **not** run here; it lives in the private archive
+repository ([ADR 0014](docs/adr/0014-daily-recording-scheduler-outside-the-lab.md)).
 
 ---
 
@@ -102,19 +125,59 @@ trial or event key.
 So the rolling window has to be captured before it rolls away:
 
 ```bash
-make scenario-live                                  # DK-DK2 + DE, hourly
-make scenario-live ZONES=DK-DK2,DE,PL,FR,NO-NO2     # more zones
-make scenario-live GRAN=15_minutes                  # 96 points instead of 24
+make record-daily                                   # DK-DK2 + DE, hourly
+make record-daily ZONES=DK-DK2,DE,PL,FR,NO-NO2     # more zones
+make record-daily GRAN=15_minutes                  # 96 points instead of 24
 ```
 
-That writes `scenarios/<zone>-<date>.json` with `provenance: recorded` — roughly 24 hours
+That writes `recordings/<zone>-<date>.json` with `provenance: recorded` — roughly 24 hours
 of actuals plus the forecast **as issued at the moment of recording**, which reaches 72
 hours past the end of the window.
 
 One recording cannot show forecast-versus-outcome, because the hours a forecast covers have
 not happened yet. **Record daily** and today's forecast lands on top of tomorrow's actuals —
-which is the only way to get that comparison out of a key with no `past-range`. Files are
-date-stamped, so a daily run never overwrites yesterday.
+which is the only way to get that comparison out of a key with no `past-range`.
+
+### That happens by itself now
+
+Relying on somebody remembering did not work. The archive records 22, 23 and 24 August and
+then stops: **25 August is permanently lost**, because the API cannot be asked for a day
+that has rolled out of the trailing window.
+
+```bash
+make record-daily    # record today, if today is not already recorded
+make recordings      # what the archive holds, what is missing, how the last run went
+```
+
+`make record-daily` is the command a schedule runs twice a day, and the same one you run by
+hand. It is idempotent: a day already recorded and complete costs **zero API calls** and
+exits 0, so the second daily run is a free retry for a morning when something was down.
+
+A run that fails, or comes back too thin to be worth keeping, **writes nothing** — the
+previous recording is never at risk. Exit 1 turns the scheduled run red and GitHub emails
+the owner; every attempt is appended to a ledger with its reasons.
+
+The scheduler holds no logic at all: its whole body is `make record-daily`. Moving it
+elsewhere is deleting one YAML file
+([ADR 0014](docs/adr/0014-daily-recording-scheduler-outside-the-lab.md)).
+
+**Runbook:** [`docs/RECORDING.md`](docs/RECORDING.md). **Setup:** [`ops/README.md`](ops/README.md).
+
+### Where recordings live, and why not here
+
+Not in this repository. Electricity Maps' terms prohibit reproducing or publishing their
+Data to any third party, and the day-ahead prices carry a further restriction from Nord Pool
+and EPEX — and this repository is public.
+
+So recordings and raw fixtures live in a separate **private** archive, cloned into
+`./recordings` and gitignored here ([ADR 0013](docs/adr/0013-recorded-data-is-not-published.md)).
+
+```bash
+make archive-init ARCHIVE=git@github.com:maurobdata/electricity-grid-lab-recordings.git
+```
+
+Without it the lab still runs, on the two committed synthetic scenarios, offline and with no
+key. That was already the rule; it is now the default path for anyone cloning this.
 
 ---
 
@@ -153,6 +216,8 @@ that does and does not guarantee.
 | [`docs/adr/`](docs/adr/) | Decisions, and what would reverse them |
 | [`docs/research/`](docs/research/) | Four contradictory research passes. Hypotheses, not requirements. |
 | [`docs/DEMO.md`](docs/DEMO.md) | The runbook: what to record on the morning, what to show, and what breaks |
+| [`docs/RECORDING.md`](docs/RECORDING.md) | The daily archive: how it is triggered, where it writes, how it fails, how to recover |
+| [`ops/README.md`](ops/README.md) | Setting up the private archive and its schedule |
 | [`CLAUDE.md`](CLAUDE.md) | Working rules for this repository |
 
 ---
@@ -214,12 +279,22 @@ simple, and the forecast overlay and the synthetic hatch want exact control.
 | 6 · Forward price, deterministic analysis layer, findings | done |
 | 7 · View-state contract, agent proposes views, panel shell | done |
 | 8 · Cross-zone atlas, cached narration | done |
+| 9 · Daily recording: reusable recorder, private archive, scheduled off-machine | done |
+| 10 · CI gate: backend, frontend and an offline smoke check on every PR | done |
 
-303 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
+515 tests, offline and deterministic. `ruff` and `mypy --strict` clean.
 
-21 real API responses are committed in [`fixtures/`](fixtures/) and every one of them is
-parsed by the test suite, so the adapter is pinned to what the API actually sends rather
-than to what the documentation implies.
+**A clone without the private archive runs about 440 of them.** Three modules —
+`test_fixtures`, `test_live`, `test_record_scenario` — assert against real API responses and
+skip themselves when those are not mounted. That is not a gap that appeared here: those
+guards were written before the licence question was, and they turned out to be exactly the
+right shape.
+
+23 real API responses live in `recordings/fixtures/` and every one of them is parsed by the
+test suite, so the adapter is pinned to what the API actually sends rather than to what the
+documentation implies. They are Electricity Maps data, so they are kept in the private
+archive rather than published here
+([ADR 0013](docs/adr/0013-recorded-data-is-not-published.md)).
 
 ---
 
@@ -310,7 +385,7 @@ anywhere else in the codebase.
 
 ## Deliberately not built
 
-Auth, accounts, multi-user, CI/CD, Kubernetes, a world map, RAG, calendar generation,
+Auth, accounts, multi-user, deployment, Kubernetes, a world map, RAG, calendar generation,
 scoring engines, optimizers, SLO engines, game mechanics.
 
 Each of those belongs to a product that has not been chosen. A world map in particular is
