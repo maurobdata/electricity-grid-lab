@@ -45,7 +45,18 @@ packages = ["src/gridlab"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"
-filterwarnings = ["error::DeprecationWarning"]
+filterwarnings = [
+    # Our own deprecations should stop the build. That is the point of this setting and it
+    # stays.
+    "error::DeprecationWarning",
+    # This one is not ours and cannot be acted on: starlette's TestClient annotates with
+    # `anyio.abc.BlockingPortal`, an alias anyio deprecated in favour of
+    # `anyio.from_thread.BlockingPortal`. Because dependencies here are unpinned, the day
+    # anyio shipped that warning every test module importing TestClient stopped *collecting*
+    # -- four modules, a red CI, and nothing wrong with the code. Narrow rather than
+    # loosening the rule for everything; remove it when starlette catches up.
+    "ignore:The anyio.abc.BlockingPortal alias is deprecated:DeprecationWarning",
+]
 
 [tool.ruff]
 line-length = 100
