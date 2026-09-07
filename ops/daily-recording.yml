@@ -110,7 +110,15 @@ jobs:
 
       # Only if something changed. An already-recorded day produces no commit, so the
       # archive's history is one commit per day actually captured rather than one per run.
-      - name: Commit the recording
+      # `always()`, and that word is load-bearing. A failed run still writes a ledger entry
+      # saying which day failed and why; without this the step is skipped, that entry dies
+      # with the runner, and the archive shows a silent gap instead of a recorded failure.
+      # Observed on 6-7 September 2026: two days of AccessDeniedError left no trace at all
+      # in `index.json`, which is precisely what the ledger exists to prevent.
+      #
+      # This does not turn the job green -- the failed step above already decided that.
+      - name: Commit the recording, or the record of its failure
+        if: always()
         working-directory: recordings
         run: |
           set -euo pipefail
@@ -121,7 +129,13 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
-          git commit -m "Recording $(date -u +%Y-%m-%d)"
+          # Name what actually happened. A commit that says "Recording" on a day nothing was
+          # recorded would make the history lie about the one thing it is for.
+          if ls dk-dk2-"$(date -u +%Y-%m-%d)".json >/dev/null 2>&1; then
+            git commit -m "Recording $(date -u +%Y-%m-%d)"
+          else
+            git commit -m "Failed run $(date -u +%Y-%m-%d) - see index.json"
+          fi
           git push
 
       # Runs even when the recording failed, so a red run says what the archive looks like
